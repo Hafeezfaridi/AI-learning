@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroSim: Epilepsy Pathophysiology & Pharmacology</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --primary: #3498db;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --text: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 10px; }
+        p.subtitle { text-align: center; color: #7f8c8d; max-width: 600px; margin-bottom: 30px; }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .controls, .monitor {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Monitor / Graph Area */
+        .monitor {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        canvas {
+            border: 1px solid #eee;
+            background-color: #fafafa;
+            border-radius: 4px;
+            width: 100%;
+            height: 300px;
+        }
+
+        .status-indicator {
+            margin-top: 10px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .status-normal { background-color: #d5f5e3; color: #27ae60; }
+        .status-seizure { background-color: #fadbd8; color: #c0392b; animation: flash 1s infinite; }
+
+        @keyframes flash {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        /* Controls Area */
+        .control-group { margin-bottom: 20px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; }
+        
+        input[type=range] {
+            width: 100%;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+
+        .value-display {
+            float: right;
+            font-weight: normal;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .glutamate-slider { accent-color: var(--danger); }
+        .gaba-slider { accent-color: var(--success); }
+
+        .medication-panel {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .med-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.1s, opacity 0.2s;
+            text-align: left;
+        }
+
+        .med-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .med-btn:active { transform: translateY(0); }
+
+        .btn-benzo { background-color: #d4efdf; color: #1e8449; border-left: 4px solid #2ecc71; }
+        .btn-sodium { background-color: #ebf5fb; color: #2980b9; border-left: 4px solid #3498db; }
+        .btn-reset { background-color: #f2f3f4; color: #7f8c8d; border-left: 4px solid #bdc3c7; text-align: center;}
+
+        .scenario-box {
+            grid-column: 1 / -1;
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 0;
+            font-size: 0.95rem;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            .dashboard { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🧠 NeuroSim: Seizure Pathophysiology</h1>
+    <p class="subtitle">Analyze the role of Glutamate (Excitation) and GABA (Inhibition) in seizure generation and medication management.</p>
+
+    <div class="dashboard">
+        
+        <div class="scenario-box">
+            <strong>💊 Clinical Scenario:</strong> Patient "Alex" is in <em>Status Epilepticus</em>. The brain is hyperexcitable. Use the controls to simulate the imbalance, then administer medication to restore stability.
+        </div>
+
+        <div class="controls">
+            <h3>Neurotransmitter Levels</h3>
+            
+            <div class="control-group">
+                <label>
+                    Glutamate (Excitation)
+                    <span id="glu-val" class="value-display">50%</span>
+                </label>
+                <input type="range" id="glu-slider" class="glutamate-slider" min="0" max="100" value="50">
+                <small style="color: #e74c3c;">▲ Increases firing probability</small>
+            </div>
+
+            <div class="control-group">
+                <label>
+                    GABA (Inhibition)
+                    <span id="gaba-val" class="value-display">50%</span>
+                </label>
+                <input type="range" id="gaba-slider" class="gaba-slider" min="0" max="100" value="50">
+                <small style="color: #2ecc71;">▼ Hyperpolarizes neuron</small>
+            </div>
+
+            <div class="medication-panel">
+                <h3>Medication Intervention</h3>
+                <button class="med-btn btn-benzo" onclick="administerBenzo()">
+                    💉 Administer Benzodiazepine (Lorazepam)<br>
+                    <small>Mech: GABA Agonist (Boosts Inhibition)</small>
+                </button>
+                <button class="med-btn btn-sodium" onclick="administerSodiumBlocker()">
+                    💊 Administer Na+ Channel Blocker<br>
+                    <small>Mech: Limits rapid firing (Dampens Excitation)</small>
+                </button>
+                <button class="med-btn btn-reset" onclick="resetSim()">
+                    ↺ Reset Simulation
+                </button>
+            </div>
+        </div>
+
+        <div class="monitor">
+            <h3>Live EEG / Membrane Potential</h3>
+            <canvas id="simCanvas"></canvas>
+            <div id="status-badge" class="status-indicator status-normal">Normal Rhythm</div>
+            <p style="font-size: 0.9rem; color: #7f8c8d; margin-top: 15px; text-align: center;">
+                <strong>Graph Legend:</strong><br> 
+                <span style="color:red">Red Line</span> = Seizure Threshold (-40mV)<br>
+                <span style="color:#3498db">Blue Trace</span> = Membrane Potential
+            </p>
+        </div>
+
+    </div>
+
+    <script>
+        // Simulation Parameters
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Adjust canvas resolution for retina displays
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * 2;
+            canvas.height = rect.height * 2;
+            ctx.scale(2, 2);
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // State Variables
+        let time = 0;
+        let potential = -70; // Resting potential (mV)
+        let history = [];
+        const maxHistory = 200;
+        
+        // Thresholds
+        const restingPotential = -70;
+        const threshold = -40;
+        const spikePeak = 30;
+        
+        // Inputs
+        let glutamateLevel = 50; // 0-100
+        let gabaLevel = 50;      // 0-100
+        let medicationDampener = 0; // Effect of Na+ blockers
+
+        // DOM Elements
+        const gluSlider = document.getElementById('glu-slider');
+        const gabaSlider = document.getElementById('gaba-slider');
+        const gluVal = document.getElementById('glu-val');
+        const gabaVal = document.getElementById('gaba-val');
+        const statusBadge = document.getElementById('status-badge');
+
+        // Listeners
+        gluSlider.addEventListener('input', (e) => {
+            glutamateLevel = parseInt(e.target.value);
+            gluVal.innerText = glutamateLevel + '%';
+        });
+
+        gabaSlider.addEventListener('input', (e) => {
+            gabaLevel = parseInt(e.target.value);
+            gabaVal.innerText = gabaLevel + '%';
+        });
+
+        // Physics Loop
+        function updatePhysics() {
+            // 1. Calculate Net Drive
+            // Glutamate adds positive noise/drive, GABA adds negative pull
+            // MedicationDampener reduces the effectiveness of Glutamate
+            
+            const excitation = (glutamateLevel / 100) * (1 - medicationDampener) * 2.0; 
+            const inhibition = (gabaLevel / 100) * 2.0;
+            
+            const netDrive = excitation - inhibition;
+
+            // 2. Noise (Random synaptic fluctuations)
+            const noise = (Math.random() - 0.5) * 5;
+
+            // 3. Update Potential
+            // Tendency to return to resting potential
+            let drift = (restingPotential - potential) * 0.1;
+            
+            // If we are currently spiking (above 0), reset quickly
+            if (potential > 0) {
+                potential = -85; // Hyperpolarization after spike
+            } else {
+                potential += drift + (netDrive * 5) + noise;
+            }
+
+            // 4. Check Threshold (Spike Generation)
+            let isSeizing = false;
+            
+            // Seizure Logic: If excitation is significantly higher than inhibition,
+            // we enter a "burst" mode where resting potential drifts up.
+            if (excitation > inhibition + 0.3) {
+                potential += 2; // Depolarization shift
+                isSeizing = true;
+            }
+
+            if (potential >= threshold) {
+                potential = spikePeak; // Fire!
+            }
+
+            // Status Update
+            if (isSeizing) {
+                statusBadge.className = "status-indicator status-seizure";
+                statusBadge.innerText = "⚠️ SEIZURE ACTIVITY DETECTED";
+            } else {
+                statusBadge.className = "status-indicator status-normal";
+                statusBadge.innerText = "✅ Normal Rhythm";
+            }
+
+            // 5. Record History
+            history.push(potential);
+            if (history.length > maxHistory) history.shift();
+
+            time++;
+        }
+
+        // Drawing Loop
+        function draw() {
+            const w = canvas.width / 2;
+            const h = canvas.height / 2;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Draw Threshold Line
+            const threshY = map(threshold, -90, 40, h, 0);
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(231, 76, 60, 0.5)';
+            ctx.setLineDash([5, 5]);
+            ctx.lineWidth = 2;
+            ctx.moveTo(0, threshY);
+            ctx.lineTo(w, threshY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw Waveform
+            ctx.beginPath();
+            ctx.strokeStyle = '#3498db';
+            ctx.lineWidth = 2;
+            
+            for (let i = 0; i < history.length; i++) {
+                const x = (i / maxHistory) * w;
+                const y = map(history[i], -90, 40, h, 0);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            requestAnimationFrame(draw);
+        }
+
+        // Helper: Map Range
+        function map(value, inMin, inMax, outMin, outMax) {
+            return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+        }
+
+        // Simulation Loop
+        setInterval(updatePhysics, 30); // 30ms physics tick
+        draw();
+
+        // --- Medication Scenarios ---
+
+        function administerBenzo() {
+            // Benzos increase GABA efficiency. 
+            // In this sim, we simulate that by boosting GABA level significantly.
+            let current = parseInt(gabaSlider.value);
+            let target = Math.min(current + 40, 100);
+            
+            // Animate slider movement
+            smoothSlide(gabaSlider, target, gabaVal);
+            
+            // Flash effect
+            document.body.style.backgroundColor = "#d5f5e3";
+            setTimeout(() => document.body.style.backgroundColor = "var(--bg-color)", 300);
+        }
+
+        function administerSodiumBlocker() {
+            // Na+ blockers prevent high freq firing.
+            // We simulate this by dampening the excitation input.
+            medicationDampener = 0.6; // 60% reduction in excitation efficacy
+            
+            // Visual feedback
+            const btn = document.querySelector('.btn-sodium');
+            btn.innerText = "💊 Na+ Block Active (Excitation Dampened)";
+            btn.style.background = "#aed6f1";
+            
+            document.body.style.backgroundColor = "#ebf5fb";
+            setTimeout(() => document.body.style.backgroundColor = "var(--bg-color)", 300);
+        }
+
+        function resetSim() {
+            glutamateLevel = 50;
+            gabaLevel = 50;
+            medicationDampener = 0;
+            
+            gluSlider.value = 50;
+            gabaSlider.value = 50;
+            gluVal.innerText = "50%";
+            gabaVal.innerText = "50%";
+            
+            const btn = document.querySelector('.btn-sodium');
+            btn.innerHTML = "💊 Administer Na+ Channel Blocker<br><small>Mech: Limits rapid firing (Dampens Excitation)</small>";
+            btn.style.background = "#ebf5fb";
+        }
+
+        function smoothSlide(sliderElement, targetVal, displayElement) {
+            let current = parseInt(sliderElement.value);
+            const step = targetVal > current ? 1 : -1;
+            
+            const interval = setInterval(() => {
+                if (current === targetVal) {
+                    clearInterval(interval);
+                    return;
+                }
+                current += step;
+                sliderElement.value = current;
+                displayElement.innerText = current + "%";
+                
+                // Update physics var
+                if (sliderElement.id === 'gaba-slider') gabaLevel = current;
+                if (sliderElement.id === 'glu-slider') glutamateLevel = current;
+            }, 10);
+        }
+
+        // Initial Seizure State for Scenario (optional trigger)
+        // Uncomment to start in seizure mode:
+        // setTimeout(() => { glutamateLevel = 90; gluSlider.value = 90; gluVal.innerText = "90%"; }, 1000);
+
+    </script>
+</body>
+</html>
