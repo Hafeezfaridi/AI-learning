@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAAS Pharmacology Simulator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 { color: #2c3e50; margin-bottom: 10px; }
+        p.subtitle { margin-top: 0; color: #666; max-width: 600px; text-align: center; }
+        
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .diagram-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            flex: 2;
+            min-width: 340px;
+            position: relative;
+        }
+        .control-panel {
+            background: #2c3e50;
+            color: white;
+            border-radius: 10px;
+            padding: 25px;
+            flex: 1;
+            min-width: 280px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        /* SVG Styles */
+        svg { width: 100%; height: 550px; background-color: #f9fbfb; border-radius: 5px; border: 1px solid #eee; }
+        .organ { transition: all 0.5s ease; }
+        .vessel { transition: stroke-width 1s ease, stroke 0.5s ease; }
+        .label { font-size: 12px; font-weight: bold; fill: #555; }
+        
+        /* Blockade Styles */
+        .block-marker { 
+            display: none; /* Hidden by default */
+            fill: #c0392b; 
+            stroke: white; 
+            stroke-width: 2;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+        }
+        .block-text {
+            display: none;
+            font-size: 14px;
+            font-weight: bold;
+            fill: #c0392b;
+        }
+
+        /* Controls */
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: 0.2s;
+            width: 100%;
+        }
+        .btn-trigger { background-color: #3498db; color: white; }
+        .btn-next { background-color: #27ae60; color: white; display: none; }
+        .btn-reset { background-color: #95a5a6; color: white; margin-top: auto;}
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        button:disabled { background-color: #bdc3c7; cursor: not-allowed; transform: none; }
+
+        select {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            width: 100%;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .status-box {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .drug-tag {
+            display: inline-block;
+            background: #f1c40f;
+            color: #2c3e50;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .bp-meter {
+            height: 25px;
+            background: #444;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 10px;
+            position: relative;
+            border: 1px solid #666;
+        }
+        .bp-level {
+            height: 100%;
+            width: 50%;
+            background: linear-gradient(90deg, #27ae60, #f1c40f, #e74c3c);
+            transition: width 1s ease;
+        }
+        .step-desc { 
+            font-size: 0.95em; 
+            line-height: 1.5; 
+            background: rgba(0,0,0,0.2); 
+            padding: 15px; 
+            border-radius: 5px;
+            min-height: 80px;
+        }
+        .highlight-text { color: #f1c40f; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>RAAS & Pharmacology Explorer</h1>
+    <p class="subtitle">Select a medication class to see where it interrupts the Renin-Angiotensin-Aldosterone System.</p>
+    
+    <div class="container">
+        <div class="diagram-panel">
+            <svg viewBox="0 0 600 550" id="svgCanvas">
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#555" />
+                    </marker>
+                    <g id="stop-icon">
+                        <circle cx="15" cy="15" r="12" />
+                        <line x1="8" y1="8" x2="22" y2="22" stroke="white" stroke-width="3" />
+                        <line x1="22" y1="8" x2="8" y2="22" stroke="white" stroke-width="3" />
+                    </g>
+                </defs>
+
+                <path id="vessel-system" d="M 50 280 L 550 280" stroke="#e74c3c" stroke-width="20" stroke-linecap="round" class="vessel"/>
+                <text x="250" y="315" class="label" fill="#e74c3c">Systemic Blood Vessels</text>
+
+                <g id="liver" class="organ" transform="translate(50, 50)">
+                    <path d="M0,30 Q40,-10 90,30 T140,50 L120,100 L20,90 Z" fill="#d35400" />
+                    <text x="45" y="60" fill="white" font-size="12">LIVER</text>
+                </g>
+
+                <g id="kidney" class="organ" transform="translate(50, 380)">
+                    <path d="M20,20 Q60,0 80,40 Q90,60 70,90 Q40,110 20,80 Q0,50 20,20" fill="#8e44ad" />
+                    <text x="25" y="60" fill="white" font-size="12">KIDNEY</text>
+                    <circle cx="45" cy="30" r="5" fill="white" opacity="0.5" />
+                    <text x="35" y="20" font-size="8" fill="white">β1</text>
+                </g>
+
+                <g id="lungs" class="organ" transform="translate(400, 50)">
+                    <path d="M20,80 Q0,40 30,10 Q60,40 90,10 Q120,40 100,80 Q60,110 20,80" fill="#3498db" />
+                    <text x="45" y="50" fill="white" font-size="12">LUNGS</text>
+                </g>
+
+                <g id="adrenal" class="organ" transform="translate(450, 380)">
+                    <path d="M10,30 L40,0 L70,30 Z" fill="#f1c40f" />
+                    <rect x="10" y="32" width="60" height="40" rx="10" fill="#e67e22" opacity="0.8"/>
+                    <text x="20" y="60" fill="white" font-size="10">ADRENAL</text>
+                </g>
+
+                <line id="path-renin" x1="90" y1="400" x2="90" y2="150" stroke="#333" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)" opacity="0" />
+                <text id="txt-renin" x="100" y="280" class="label" opacity="0">Renin</text>
+
+                <line id="path-ang1" x1="140" y1="80" x2="400" y2="80" stroke="#333" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)" opacity="0"/>
+                <text id="txt-ang1" x="240" y="70" class="label" opacity="0">Angiotensin I</text>
+
+                <line id="path-ang2" x1="460" y1="100" x2="460" y2="260" stroke="#333" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)" opacity="0"/>
+                <text id="txt-ang2" x="470" y="180" class="label" opacity="0">Angiotensin II</text>
+
+                <line id="path-aldo" x1="450" y1="400" x2="100" y2="420" stroke="#333" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)" opacity="0"/>
+                <text id="txt-aldo" x="250" y="440" class="label" opacity="0">Aldosterone</text>
+
+                <use id="block-beta" href="#stop-icon" x="75" y="360" class="block-marker" />
+                <text id="lbl-beta" x="110" y="380" class="block-text">β-Blockade</text>
+
+                <use id="block-ace" href="#stop-icon" x="380" y="70" class="block-marker" />
+                <text id="lbl-ace" x="410" y="40" class="block-text">ACE Inhibited</text>
+
+                <use id="block-arb1" href="#stop-icon" x="445" y="260" class="block-marker" />
+                <use id="block-arb2" href="#stop-icon" x="460" y="350" class="block-marker" />
+                <text id="lbl-arb" x="480" y="300" class="block-text">Receptor Blocked</text>
+
+            </svg>
+        </div>
+
+        <div class="control-panel">
+            <h2>Pharmacy Config</h2>
+            
+            <label for="drugSelect">Select Medication/Condition:</label>
+            <select id="drugSelect">
+                <option value="none">No Medication (Normal Physiology)</option>
+                <option value="beta">Beta Blocker (e.g., Metoprolol)</option>
+                <option value="ace">ACE Inhibitor (e.g., Lisinopril)</option>
+                <option value="arb">ARB (e.g., Losartan)</option>
+            </select>
+
+            <div class="status-box">
+                <div id="drugLabel" class="drug-tag" style="display:none;">MEDICATED</div>
+                <p style="margin:5px 0;"><strong>Stage:</strong> <span id="stageName">Homeostasis</span></p>
+                <div class="bp-meter">
+                    <div id="bpLevel" class="bp-level"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.7em; margin-top:2px;">
+                    <span>Low BP</span>
+                    <span>High BP</span>
+                </div>
+            </div>
+
+            <div id="description" class="step-desc">
+                System is balanced. Select a medication context above, then click "Start Simulation".
+            </div>
+
+            <button id="startBtn" class="btn-trigger" onclick="startSimulation()">Start Simulation</button>
+            <button id="nextBtn" class="btn-next" onclick="nextStep()">Next Step</button>
+            <button id="resetBtn" class="btn-reset" onclick="resetSim()">Reset System</button>
+        </div>
+    </div>
+
+    <script>
+        let step = 0;
+        let drugType = 'none';
+        
+        // DOM Elements
+        const bpLevel = document.getElementById('bpLevel');
+        const desc = document.getElementById('description');
+        const stageName = document.getElementById('stageName');
+        const nextBtn = document.getElementById('nextBtn');
+        const startBtn = document.getElementById('startBtn');
+        const vessel = document.getElementById('vessel-system');
+        const drugSelect = document.getElementById('drugSelect');
+        const drugLabel = document.getElementById('drugLabel');
+
+        // Path Elements
+        const paths = {
+            renin: { line: document.getElementById('path-renin'), text: document.getElementById('txt-renin') },
+            ang1: { line: document.getElementById('path-ang1'), text: document.getElementById('txt-ang1') },
+            ang2: { line: document.getElementById('path-ang2'), text: document.getElementById('txt-ang2') },
+            aldo: { line: document.getElementById('path-aldo'), text: document.getElementById('txt-aldo') }
+        };
+
+        // Block Elements
+        const blocks = {
+            beta: { icon: document.getElementById('block-beta'), text: document.getElementById('lbl-beta') },
+            ace: { icon: document.getElementById('block-ace'), text: document.getElementById('lbl-ace') },
+            arb: { icon1: document.getElementById('block-arb1'), icon2: document.getElementById('block-arb2'), text: document.getElementById('lbl-arb') }
+        };
+
+        function startSimulation() {
+            drugType = drugSelect.value;
+            drugSelect.disabled = true;
+            step = 1;
+            startBtn.style.display = 'none';
+            nextBtn.style.display = 'block';
+            
+            // Update Tag
+            if(drugType !== 'none') {
+                drugLabel.style.display = 'inline-block';
+                drugLabel.innerText = "MED: " + drugSelect.options[drugSelect.selectedIndex].text.split('(')[0];
+            }
+
+            updateUI();
+        }
+
+        function nextStep() {
+            step++;
+            updateUI();
+        }
+
+        function resetSim() {
+            step = 0;
+            drugType = 'none';
+            drugSelect.disabled = false;
+            drugSelect.value = 'none';
+            drugLabel.style.display = 'none';
+            startBtn.style.display = 'block';
+            nextBtn.style.display = 'none';
+            nextBtn.disabled = false;
+            nextBtn.innerText = "Next Step";
+            
+            // Reset visuals
+            bpLevel.style.width = '50%';
+            bpLevel.style.background = 'linear-gradient(90deg, #27ae60, #f1c40f, #e74c3c)';
+            vessel.style.strokeWidth = '20';
+            
+            // Hide all paths and blocks
+            Object.values(paths).forEach(p => { p.line.style.opacity = 0; p.text.style.opacity = 0; });
+            
+            blocks.beta.icon.style.display = 'none'; blocks.beta.text.style.display = 'none';
+            blocks.ace.icon.style.display = 'none'; blocks.ace.text.style.display = 'none';
+            blocks.arb.icon1.style.display = 'none'; blocks.arb.icon2.style.display = 'none'; blocks.arb.text.style.display = 'none';
+
+            document.querySelectorAll('.organ').forEach(el => el.classList.remove('active-organ'));
+
+            stageName.innerText = "Homeostasis";
+            desc.innerText = "System Reset. Select condition and start.";
+        }
+
+        function showBlock(type) {
+            if(type === 'beta') {
+                blocks.beta.icon.style.display = 'block';
+                blocks.beta.text.style.display = 'block';
+            } else if (type === 'ace') {
+                blocks.ace.icon.style.display = 'block';
+                blocks.ace.text.style.display = 'block';
+            } else if (type === 'arb') {
+                blocks.arb.icon1.style.display = 'block';
+                blocks.arb.icon2.style.display = 'block';
+                blocks.arb.text.style.display = 'block';
+            }
+            nextBtn.disabled = true;
+            nextBtn.innerText = "Pathway Blocked";
+            nextBtn.style.backgroundColor = "#c0392b";
+        }
+
+        function updateUI() {
+            switch(step) {
+                case 1: // Stimulus
+                    stageName.innerText = "Stimulus: Low BP";
+                    desc.innerHTML = "The body detects low renal perfusion (low BP). The sympathetic nervous system activates to stimulate the kidneys.";
+                    bpLevel.style.width = '20%';
+                    bpLevel.style.background = '#e74c3c';
+                    document.getElementById('kidney').classList.add('active-organ');
+                    
+                    // BETA BLOCKER CHECK
+                    if(drugType === 'beta') {
+                        desc.innerHTML += "<br><br><span class='highlight-text'>DRUG EFFECT:</span> Beta Blockers occupy β1 receptors on the JG cells. The signal to release Renin is inhibited.";
+                        showBlock('beta');
+                    }
+                    break;
+
+                case 2: // Renin
+                    stageName.innerText = "Renin Release";
+                    desc.innerText = "Kidney releases Renin into the bloodstream.";
+                    paths.renin.line.style.opacity = 1;
+                    paths.renin.text.style.opacity = 1;
+                    break;
+
+                case 3: // Ang I
+                    stageName.innerText = "Angiotensin I";
+                    desc.innerText = "Renin acts on Angiotensinogen from the Liver to form Angiotensin I (inactive precursor).";
+                    document.getElementById('liver').classList.add('active-organ');
+                    paths.ang1.line.style.opacity = 1;
+                    paths.ang1.text.style.opacity = 1;
+                    break;
+
+                case 4: // ACE / Ang II
+                    // ACE INHIBITOR CHECK happens right before Ang II is formed
+                    stageName.innerText = "Pulmonary Conversion";
+                    document.getElementById('lungs').classList.add('active-organ');
+
+                    if(drugType === 'ace') {
+                        desc.innerHTML = "Angiotensin I reaches the lungs.<br><br><span class='highlight-text'>DRUG EFFECT:</span> ACE Inhibitor prevents the enzyme from converting Ang I to Ang II. The pathway stops here. Vasoconstriction is prevented.";
+                        showBlock('ace');
+                    } else {
+                        desc.innerText = "ACE enzyme in the lungs converts Angiotensin I into Angiotensin II (the active vasoconstrictor).";
+                        paths.ang2.line.style.opacity = 1;
+                        paths.ang2.text.style.opacity = 1;
+                    }
+                    break;
+
+                case 5: // Action Phase
+                    stageName.innerText = "Angiotensin II Actions";
+                    
+                    // ARB CHECK
+                    if(drugType === 'arb') {
+                        desc.innerHTML = "Angiotensin II attempts to bind to receptors on blood vessels and the adrenal gland.<br><br><span class='highlight-text'>DRUG EFFECT:</span> ARBs physically block the AT1 receptors. Angiotensin II cannot attach. No vasoconstriction or aldosterone release occurs.";
+                        showBlock('arb');
+                    } else {
+                        desc.innerText = "Angiotensin II binds to receptors causing immediate Vasoconstriction.";
+                        vessel.style.strokeWidth = '10'; 
+                        bpLevel.style.width = '35%'; 
+                    }
+                    break;
+
+                case 6: // Aldosterone
+                    stageName.innerText = "Aldosterone Release";
+                    desc.innerText = "Angiotensin II stimulates the Adrenal Cortex to release Aldosterone.";
+                    document.getElementById('adrenal').classList.add('active-organ');
+                    paths.aldo.line.style.opacity = 1;
+                    paths.aldo.text.style.opacity = 1;
+                    break;
+
+                case 7: // Final
+                    stageName.innerText = "BP Restored";
+                    desc.innerText = "Aldosterone increases Na+ and water retention. Combined with vasoconstriction, BP rises to normal levels.";
+                    bpLevel.style.width = '50%';
+                    bpLevel.style.background = '#27ae60';
+                    nextBtn.style.display = 'none';
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>
