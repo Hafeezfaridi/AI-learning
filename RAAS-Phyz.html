@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAAS Pathway Interactive Simulator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 { color: #2c3e50; }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+        }
+        .diagram-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            flex: 2;
+            min-width: 300px;
+            position: relative;
+        }
+        .control-panel {
+            background: #2c3e50;
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            flex: 1;
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        /* SVG Styles */
+        svg { width: 100%; height: 500px; background-color: #eefafa; border-radius: 5px; }
+        .organ { transition: all 0.5s ease; cursor: pointer; }
+        .organ:hover { filter: brightness(1.1); }
+        .vessel { transition: stroke-width 1s ease, stroke 0.5s ease; }
+        .molecule { opacity: 0; transition: all 1s ease; }
+        .label { font-size: 12px; font-weight: bold; fill: #555; }
+        
+        /* Highlights */
+        .active-organ { filter: drop-shadow(0 0 8px gold); }
+        
+        /* Controls */
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn-trigger { background-color: #e74c3c; color: white; }
+        .btn-next { background-color: #27ae60; color: white; display: none; }
+        .btn-reset { background-color: #95a5a6; color: white; }
+        button:hover { opacity: 0.9; }
+
+        .status-box {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .bp-meter {
+            height: 20px;
+            background: #444;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+            position: relative;
+        }
+        .bp-level {
+            height: 100%;
+            width: 50%;
+            background: linear-gradient(90deg, #e74c3c, #f1c40f, #27ae60);
+            transition: width 1s ease;
+        }
+        .step-desc { font-size: 0.95em; line-height: 1.4; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px;}
+        
+    </style>
+</head>
+<body>
+
+    <h1>RAAS Pathway Explorer</h1>
+    
+    <div class="container">
+        <div class="diagram-panel" id="diagramArea">
+            <svg viewBox="0 0 600 500">
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#555" />
+                    </marker>
+                </defs>
+
+                <path id="vessel-system" d="M 50 250 L 550 250" stroke="#e74c3c" stroke-width="20" stroke-linecap="round" class="vessel"/>
+                <text x="250" y="280" class="label" fill="#e74c3c">Systemic Blood Vessels</text>
+
+                <g id="liver" class="organ" transform="translate(50, 50)">
+                    <path d="M0,30 Q40,-10 90,30 T140,50 L120,100 L20,90 Z" fill="#d35400" />
+                    <text x="40" y="60" fill="white" font-size="12">LIVER</text>
+                </g>
+
+                <g id="kidney" class="organ" transform="translate(50, 350)">
+                    <path d="M20,20 Q60,0 80,40 Q90,60 70,90 Q40,110 20,80 Q0,50 20,20" fill="#8e44ad" />
+                    <text x="25" y="60" fill="white" font-size="12">KIDNEY</text>
+                </g>
+
+                <g id="lungs" class="organ" transform="translate(400, 50)">
+                    <path d="M20,80 Q0,40 30,10 Q60,40 90,10 Q120,40 100,80 Q60,110 20,80" fill="#3498db" />
+                    <text x="40" y="50" fill="white" font-size="12">LUNGS</text>
+                </g>
+
+                <g id="adrenal" class="organ" transform="translate(450, 350)">
+                    <path d="M10,30 L40,0 L70,30 Z" fill="#f1c40f" />
+                    <rect x="10" y="32" width="60" height="40" rx="10" fill="#e67e22" opacity="0.8"/>
+                    <text x="20" y="60" fill="white" font-size="10">ADRENAL</text>
+                </g>
+
+                <line id="path-renin" x1="90" y1="370" x2="90" y2="150" stroke="#333" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)" opacity="0" />
+                <text id="txt-renin" x="100" y="250" class="label" opacity="0">Renin</text>
+
+                <line id="path-ang1" x1="140" y1="80" x2="400" y2="80" stroke="#333" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)" opacity="0"/>
+                <text id="txt-ang1" x="240" y="70" class="label" opacity="0">Angiotensin I</text>
+
+                <line id="path-ang2" x1="460" y1="100" x2="460" y2="240" stroke="#333" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)" opacity="0"/>
+                <text id="txt-ang2" x="470" y="180" class="label" opacity="0">Angiotensin II</text>
+
+                <line id="path-aldo" x1="450" y1="370" x2="100" y2="390" stroke="#333" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)" opacity="0"/>
+                <text id="txt-aldo" x="250" y="410" class="label" opacity="0">Aldosterone</text>
+
+            </svg>
+        </div>
+
+        <div class="control-panel">
+            <h2>Control Center</h2>
+            <div class="status-box">
+                <p><strong>Current Stage:</strong> <span id="stageName">Homeostasis</span></p>
+                <div class="bp-meter">
+                    <div id="bpLevel" class="bp-level"></div>
+                </div>
+                <p style="font-size:0.8em; margin-top:5px;">Blood Pressure / Volume</p>
+            </div>
+
+            <div id="description" class="step-desc">
+                System is balanced. Click "Simulate Hemorrhage/Low BP" to begin.
+            </div>
+
+            <button id="startBtn" class="btn-trigger" onclick="startSimulation()">Simulate Low BP</button>
+            <button id="nextBtn" class="btn-next" onclick="nextStep()">Next Step</button>
+            <button id="resetBtn" class="btn-reset" onclick="resetSim()">Reset</button>
+        </div>
+    </div>
+
+    <script>
+        let step = 0;
+        const bpLevel = document.getElementById('bpLevel');
+        const desc = document.getElementById('description');
+        const stageName = document.getElementById('stageName');
+        const nextBtn = document.getElementById('nextBtn');
+        const startBtn = document.getElementById('startBtn');
+        const vessel = document.getElementById('vessel-system');
+
+        function startSimulation() {
+            step = 1;
+            startBtn.style.display = 'none';
+            nextBtn.style.display = 'block';
+            updateUI();
+        }
+
+        function nextStep() {
+            step++;
+            updateUI();
+        }
+
+        function resetSim() {
+            step = 0;
+            startBtn.style.display = 'block';
+            nextBtn.style.display = 'none';
+            
+            // Reset visuals
+            bpLevel.style.width = '50%';
+            bpLevel.style.background = 'linear-gradient(90deg, #e74c3c, #f1c40f, #27ae60)';
+            vessel.style.strokeWidth = '20';
+            
+            // Hide all paths
+            document.querySelectorAll('line[id^="path-"]').forEach(el => el.style.opacity = 0);
+            document.querySelectorAll('text[id^="txt-"]').forEach(el => el.style.opacity = 0);
+            document.querySelectorAll('.organ').forEach(el => el.classList.remove('active-organ'));
+
+            updateUI();
+        }
+
+        function updateUI() {
+            // Clear highlights
+            document.querySelectorAll('.organ').forEach(el => el.classList.remove('active-organ'));
+
+            switch(step) {
+                case 0:
+                    stageName.innerText = "Homeostasis";
+                    desc.innerText = "System is balanced. Organs are functioning normally.";
+                    break;
+
+                case 1: // Drop in BP
+                    stageName.innerText = "Hypotension Detected";
+                    desc.innerText = "EVENT: Hemorrhage or dehydration occurs. Blood pressure drops significantly. Renal perfusion decreases.";
+                    bpLevel.style.width = '20%'; // Low BP
+                    bpLevel.style.background = '#e74c3c'; // Red warning
+                    // Highlight Kidney
+                    document.getElementById('kidney').classList.add('active-organ');
+                    break;
+
+                case 2: // Renin Release
+                    stageName.innerText = "Renin Release";
+                    desc.innerText = "RESPONSE: Juxtaglomerular cells in the KIDNEY release Renin. Renin travels to the blood to find Angiotensinogen.";
+                    document.getElementById('kidney').classList.add('active-organ');
+                    document.getElementById('path-renin').style.opacity = 1;
+                    document.getElementById('txt-renin').style.opacity = 1;
+                    break;
+
+                case 3: // Ang I
+                    stageName.innerText = "Formation of Angiotensin I";
+                    desc.innerText = "INTERACTION: Renin (enzyme) converts Angiotensinogen (from Liver) into Angiotensin I. It is currently inactive.";
+                    document.getElementById('liver').classList.add('active-organ');
+                    document.getElementById('path-ang1').style.opacity = 1;
+                    document.getElementById('txt-ang1').style.opacity = 1;
+                    break;
+
+                case 4: // ACE / Ang II
+                    stageName.innerText = "Conversion to Angiotensin II";
+                    desc.innerText = "ACTIVATION: As Angiotensin I passes through the LUNGS, ACE converts it into Angiotensin II (the active hormone).";
+                    document.getElementById('lungs').classList.add('active-organ');
+                    document.getElementById('path-ang2').style.opacity = 1;
+                    document.getElementById('txt-ang2').style.opacity = 1;
+                    break;
+
+                case 5: // Vasoconstriction
+                    stageName.innerText = "Vasoconstriction";
+                    desc.innerText = "EFFECT 1: Angiotensin II causes blood vessels to constrict (narrow). This increases systemic resistance.";
+                    vessel.style.strokeWidth = '10'; // Narrowing
+                    bpLevel.style.width = '35%'; // BP starts rising
+                    break;
+
+                case 6: // Aldosterone
+                    stageName.innerText = "Aldosterone Release";
+                    desc.innerText = "EFFECT 2: Angiotensin II stimulates the ADRENAL GLAND to release Aldosterone. Aldosterone targets the kidneys.";
+                    document.getElementById('adrenal').classList.add('active-organ');
+                    document.getElementById('path-aldo').style.opacity = 1;
+                    document.getElementById('txt-aldo').style.opacity = 1;
+                    break;
+
+                case 7: // Restoration
+                    stageName.innerText = "BP Restoration";
+                    desc.innerText = "RESULT: Aldosterone causes Kidneys to retain Sodium (and Water). Blood volume increases. Combined with vasoconstriction, BP returns to normal.";
+                    bpLevel.style.width = '50%';
+                    bpLevel.style.background = '#27ae60'; // Green/Normal
+                    nextBtn.style.display = 'none'; // End of sim
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>
