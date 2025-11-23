@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Interactive Renin-Angiotensin-Aldosterone System (RAAS)</title>
+<style>
+  body{font-family:'Segoe UI',Arial,sans-serif;background:linear-gradient(135deg,#e8f5e9,#fff8e1);margin:0;padding:20px;color:#333}
+  h1,h2{text-align:center;color:#1b5e20}
+  .container{max-width:1150px;margin:0 auto;background:white;padding:30px;border-radius:20px;box-shadow:0 12px 40px rgba(0,0,0,0.15)}
+  .diagram{position:relative;height:760px;background:#f9fff9;border-radius:15px;border:3px solid #a5d6a7;overflow:hidden}
+  .organ{position:absolute;width:130px;height:130px;background:#388e3c;color:white;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-weight:bold;font-size:15px;cursor:pointer;transition:all .4s;box-shadow:0 8px 20px rgba(0,0,0,0.2);z-index:10}
+  .organ:hover{transform:scale(1.2);z-index:20}
+  .organ.active{background:#ff6f00;box-shadow:0 0 30px #ff6f00;transform:scale(1.35)}
+  .molecule{position:absolute;padding:12px 18px;background:#1976d2;color:white;border-radius:30px;font-weight:bold;cursor:pointer;box-shadow:0 6px 15px rgba(0,0,0,0.2);transition:all .3s}
+  .molecule:hover{transform:translateY(-5px)}
+  .molecule.active{background:#d50000;box-shadow:0 0 25px #d50000}
+  .arrow{position:absolute;font-size:60px;color:#2e7d32;font-weight:bold;opacity:0.7}
+  .arrow.active{color:#ffca28;text-shadow:0 0 20px #ffca28;opacity:1}
+  .info{margin-top:25px;padding:20px;background:#e8f5e9;border-radius:12px;min-height:100px;font-size:17px;line-height:1.7;border-left:6px solid #4caf50}
+  button{display:block;margin:25px auto;padding:14px 40px;font-size:20px;background:#2e7d32;color:white;border:none;border-radius:50px;cursor:pointer;box-shadow:0 6px 15px rgba(0,0,0,0.2)}
+  button:hover{background:#1b5e20}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Renin–Angiotensin–Aldosterone System (RAAS)</h1>
+  <h2>The body’s main blood-pressure regulation system</h2>
+
+  <div class="diagram" id="diagram">
+    <div class="organ" style="top:50px;left:80px;background:#d32f2f" data-id="kidney"><div style="font-size:20px">Kidneys</div>Juxtaglomerular<br>Cells</div>
+    <div class="organ" style="top:50px;left:480px;background:#f57c00" data-id="liver"><div style="font-size:20px">Liver</div>Produces<br>Angiotensinogen</div>
+    <div class="organ" style="top:50px;left:880px;background:#1976d2" data-id="lungs"><div style="font-size:20px">Lungs</div>ACE</div>
+    <div class="organ" style="top:480px;left:880px;background:#6d4c41" data-id="adrenal"><div style="font-size:20px">Adrenal</div>Cortex</div>
+    <div class="organ" style="top:480px;left:480px;background:#8e24aa" data-id="vessels"><div style="font-size:18px">Blood<br>Vessels</div>Vasoconstriction</div>
+
+    <div class="molecule" style="top:220px;left:200px" data-id="renin">Renin</div>
+    <div class="molecule" style="top:220px;left:550px" data-id="angiotensinogen">Angiotensinogen</div>
+    <div class="molecule" style="top:300px;left:380px" data-id="angiotensin1">Angiotensin I</div>
+    <div class="molecule" style="top:380px;left:720px" data-id="angiotensin2">Angiotensin II</div>
+    <div class="molecule" style="top:560px;left:880px" data-id="aldosterone">Aldosterone</div>
+
+    <div class="arrow" style="top:160px;left:190px">Down</div>
+    <div class="arrow" style="top:240px;left:300px">Right</div>
+    <div class="arrow" style="top:320px;left:680px">Right</div>
+    <div class="arrow" style="top:460px;left:780px">Down</div>
+    <div class="arrow" style="top:460px;left:580px">Down</div>
+    <div class="arrow" style="top:600px;left:780px">Left</div>
+  </div>
+
+  <button onclick="playAnimation()">Play RAAS Animation</button>
+
+  <div class="info" id="info">Click any organ or molecule to learn its role.</div>
+</div>
+
+<script>
+const info=document.getElementById('info');
+const all=[...document.querySelectorAll('.organ'),...document.querySelectorAll('.molecule')];
+const arrows=document.querySelectorAll('.arrow');
+
+const desc={
+  kidney:"Low blood pressure → kidneys release <strong>Renin</strong>.",
+  renin:"Enzyme that converts angiotensinogen → Angiotensin I.",
+  liver:"Constantly produces <strong>angiotensinogen</strong>.",
+  angiotensinogen:"Inactive precursor in blood.",
+  angiotensin1:"Inactive decapeptide.",
+  lungs:"Contain <strong>ACE</strong> → converts Ang I → Ang II.",
+  angiotensin2:"Main effector: vasoconstriction + aldosterone release.",
+  vessels:"Angiotensin II → powerful vasoconstriction → ↑ BP.",
+  adrenal:"Angiotensin II stimulates aldosterone secretion.",
+  aldosterone:"Causes Na⁺ and water retention → ↑ blood volume."
+};
+
+all.forEach(el=>el.addEventListener('click',()=>{
+  document.querySelectorAll('.active').forEach(a=>a.classList.remove('active'));
+  el.classList.add('active');
+  info.innerHTML=`<strong>${el.textContent.trim()}</strong><br>${desc[el.dataset.id]}`;
+}));
+
+function playAnimation(){
+  document.querySelectorAll('.active').forEach(e=>e.classList.remove('active'));
+  info.innerHTML="RAAS activation in progress…";
+  const seq=[
+    {t:'[data-id="kidney"]',txt:"1. Low BP → Kidneys release Renin"},
+    {t:'[data-id="renin"]',txt:"2. Renin in bloodstream"},
+    {t:'[data-id="angiotensinogen"]',txt:"3. Renin cleaves Angiotensinogen"},
+    {t:'[data-id="angiotensin1"]',txt:"4. → Angiotensin I"},
+    {t:'[data-id="lungs"]',txt:"5. ACE in lungs converts it"},
+    {t:'[data-id="angiotensin2"]',txt:"6. → Angiotensin II (ACTIVE)"},
+    {t:'[data-id="vessels"]',txt:"7. Vasoconstriction → instant ↑ BP"},
+    {t:'[data-id="adrenal"]',txt:"8. Stimulates adrenal cortex"},
+    {t:'[data-id="aldosterone"]',txt:"9. Aldosterone → long-term ↑ BP"}
+  ];
+  let i=0;
+  const int=setInterval(()=>{
+    if(i>0) document.querySelector(seq[i-1].t)?.classList.remove('active');
+    if(i<seq.length){
+      document.querySelector(seq[i].t)?.classList.add('active');
+      info.innerHTML=seq[i].txt;
+      if(i<arrows.length) arrows[i].classList.add('active');
+      i++;
+    }else{
+      clearInterval(int);
+      info.innerHTML="<strong>Done!</strong> Blood pressure restored. This is why ACE inhibitors and ARBs lower BP so effectively.";
+    }
+  },2200);
+}
+</script>
+</body>
+</html>
