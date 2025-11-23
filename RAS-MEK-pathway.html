@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Interactive RAS Pathway Illustration</title>
+<style>
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #e0f7fa, #fff3e0);
+    margin: 0;
+    padding: 20px;
+    color: #333;
+  }
+  h1 { text-align: center; color: #1a4971; }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  }
+  .pathway {
+    position: relative;
+    height: 680px;
+    background: #f8fdff;
+    border-radius: 15px;
+    overflow: hidden;
+    border: 2px solid #bbdefb;
+  }
+  .molecule {
+    position: absolute;
+    width: 110px;
+    height: 110px;
+    background: #2196F3;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    z-index: 10;
+  }
+  .molecule:hover { transform: scale(1.15); z-index: 20; }
+  .molecule.active {
+    background: #FF5722;
+    box-shadow: 0 0 25px #FF5722;
+    transform: scale(1.3);
+  }
+  .arrow {
+    position: absolute;
+    font-size: 50px;
+    color: #4CAF50;
+    font-weight: bold;
+    transition: all 0.4s;
+  }
+  .arrow.active { color: #FFEB3B; text-shadow: 0 0 15px #FFEB3B; }
+  .signal {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #FFD700;
+    border-radius: 50%;
+    box-shadow: 0 0 15px #FFD700;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(0); opacity: 1; }
+    100% { transform: scale(4); opacity: 0; }
+  }
+  .info {
+    margin-top: 20px;
+    padding: 20px;
+    background: #e3f2fd;
+    border-radius: 10px;
+    min-height: 120px;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .legend {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+  }
+  button {
+    margin: 20px auto;
+    display: block;
+    padding: 12px 30px;
+    font-size: 18px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+  }
+  button:hover { background: #388E3C; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Interactive RAS → RAF → MEK → ERK Pathway</h1>
+  <p style="text-align:center;">Click any molecule to learn its role • Click <strong>Play Animation</strong> to see the signal flow!</p>
+
+  <div class="pathway" id="pathway">
+
+    <!-- Growth Factor / Ligand -->
+    <div class="molecule" style="top:20px; left:80px; background:#9C27B0;" data-id="ligand">
+      EGF<br>PDGF<br>(Growth Factor)
+    </div>
+
+    <!-- Receptor (RTK) -->
+    <div class="molecule" style="top:180px; left:60px; background:#E91E63;" data-id="rtk">
+      RTK<br>(Receptor Tyrosine Kinase)
+    </div>
+
+    <!-- GRB2 + SOS -->
+    <div class="molecule" style="top:320px; left:40px; background:#FF9800;" data-id="adaptor">
+      GRB2<br>+ SOS
+    </div>
+
+    <!-- RAS -->
+    <div class="molecule" style="top:460px; left:120px; background:#F44336;" data-id="ras">
+      RAS<br>(GTPase)
+    </div>
+
+    <!-- RAF -->
+    <div class="molecule" style="top:460px; left:360px; background:#3F51B5;" data-id="raf">
+      RAF<br>(MAP3K)
+    </div>
+
+    <!-- MEK -->
+    <div class="molecule" style="top:460px; left:600px; background:#009688;" data-id="mek">
+      MEK<br>(MAP2K)
+    </div>
+
+    <!-- ERK -->
+    <div class="molecule" style="top:460px; left:840px; background:#4CAF50;" data-id="erk">
+      ERK<br>(MAPK)
+    </div>
+
+    <!-- Nucleus / Transcription -->
+    <div class="molecule" style="top:180px; left:900px; background:#795548;" data-id="nucleus">
+      <strong>Nucleus</strong><br>Gene Expression<br>→ Cell Proliferation<br>→ Survival
+    </div>
+
+    <!-- Arrows -->
+    <div class="arrow" style="top:120px; left:120px;">↓</div>
+    <div class="arrow" style="top:280px; left:100px;">↓</div>
+    <div class="arrow" style="top:420px; left:220px;">→</div>
+    <div class="arrow" style="top:520px; left:460px;">→</div>
+    <div class="arrow" style="top:520px; left:700px;">→</div>
+    <div class="arrow" style="top:380px; left:920px;">↖</div>
+    <div class="arrow" style="top:300px; left:940px;">↖</div>
+
+  </div>
+
+  <button onclick="playAnimation()">▶ Play Signal Animation</button>
+
+  <div class="info" id="info">
+    Click on any molecule to learn what it does in the pathway.
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-color" style="background:#9C27B0;"></div><span>Growth Factor (EGF, etc.)</span></div>
+    <div class="legend-item"><div class="legend-color" style="background:#E91E63;"></div><span>Receptor Tyrosine Kinase (RTK)</span></div>
+    <div class="legend-item"><div class="legend-color" style="background:#F44336;"></div><span>RAS (often mutated in cancer)</span></div>
+    <div class="legend-item"><div class="legend-color" style="background:#FF5722;"></div><span>Active molecule (during animation)</span></div>
+  </div>
+</div>
+
+<script>
+const infoBox = document.getElementById('info');
+const molecules = document.querySelectorAll('.molecule');
+const arrows = document.querySelectorAll('.arrow');
+
+const descriptions = {
+  ligand: "Growth factors (e.g., EGF, PDGF) bind to receptors on the cell surface, starting the signal.",
+  rtk: "Receptor Tyrosine Kinases (RTKs) dimerize and autophosphorylate, creating docking sites for adaptor proteins.",
+  adaptor: "GRB2 binds to phosphorylated RTK and recruits SOS, which acts as a Guanine nucleotide Exchange Factor (GEF).",
+  ras: "SOS activates RAS by exchanging GDP → GTP. <strong>Activating mutations in RAS</strong> are found in ~30% of all cancers and keep RAS permanently ON.",
+  raf: "Active RAS recruits and activates RAF (a MAP Kinase Kinase Kinase).",
+  mek: "RAF phosphorylates and activates MEK (MAP Kinase Kinase).",
+  erk: "MEK activates ERK (the terminal MAP Kinase). Active ERK enters the nucleus.",
+  nucleus: "ERK phosphorylates transcription factors → increased expression of genes that drive cell proliferation, survival, and metastasis."
+};
+
+molecules.forEach(mol => {
+  mol.addEventListener('click', () => {
+    molecules.forEach(m => m.classList.remove('active'));
+    mol.classList.add('active');
+    const id = mol.dataset.id;
+    infoBox.innerHTML = `<strong>${mol.textContent.trim().split('\n')[0]}</strong><br>${descriptions[id]}`;
+  });
+});
+
+function playAnimation() {
+  // Reset
+  molecules.forEach(m => m.classList.remove('active'));
+  arrows.forEach(a => a.classList.remove('active'));
+  infoBox.innerHTML = "Watch the signal cascade...";
+
+  const steps = [
+    { el: '[data-id="ligand"]', text: "1. Growth factor binds..." },
+    { el: '[data-id="rtk"]', text: "2. RTK activates..." },
+    { el: '[data-id="adaptor"]', text: "3. GRB2-SOS recruited..." },
+    { el: '[data-id="ras"]', text: "4. RAS switches to GTP-bound active state!" },
+    { el: '[data-id="raf"]', text: "5. RAF activated..." },
+    { el: '[data-id="mek"]', text: "6. MEK phosphorylated..." },
+    { el: '[data-id="erk"]', text: "7. ERK activated → enters nucleus!" },
+    { el: '[data-id="nucleus"]', text: "8. Gene expression → Proliferation & Survival" }
+  ];
+
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i > 0) {
+      // deactivate previous
+      const prev = steps[i-1].el;
+      document.querySelector(prev)?.classList.remove('active');
+    }
+    if (i < steps.length) {
+      document.querySelector(steps[i].el)?.classList.add('active');
+      infoBox.innerHTML = steps[i].text;
+      // activate arrows progressively
+      if (i < arrows.length) arrows[i].classList.add('active');
+      
+      // Add sparkling signals
+      steps.slice(0, i+1).forEach((step, idx) => {
+        const el = document.querySelector(step.el);
+        if (el) {
+          for (let j = 0; j < 6; j++) {
+            setTimeout(() => {
+              const signal = document.createElement('div');
+              signal.className = 'signal';
+              signal.style.left = (el.offsetLeft + el.offsetWidth/2 - 4 + Math.random()*40 - 20) + 'px';
+              signal.style.top = (el.offsetTop + el.offsetHeight/2 - 4 + Math.random()*40 - 20) + 'px';
+              document.getElementById('pathway').appendChild(signal);
+              setTimeout(() => signal.remove(), 2000);
+            }, idx*100 + j*80);
+          }
+        }
+      });
+      
+      i++;
+    } else {
+      clearInterval(interval);
+      setTimeout(() => infoBox.innerHTML = "Pathway complete! This cascade is hyperactive in many cancers. Click any molecule to explore.", 2000);
+    }
+  }, 1800);
+}
+</script>
+
+</body>
+</html>
