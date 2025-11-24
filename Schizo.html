@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dopamine Pharmacology Simulator</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --primary: #3498db;
+            --parkinsons: #8e44ad;
+            --schizo: #e74c3c;
+            --normal: #2ecc71;
+            --treatment: #f39c12; /* Orange for drug intervention */
+            --text: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        h1 { margin-bottom: 10px; }
+        p { color: #7f8c8d; max-width: 600px; text-align: center; }
+
+        .container {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+        }
+
+        /* Visualization Area */
+        .synapse-box {
+            width: 100%;
+            height: 250px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 2px solid #bdc3c7;
+            transition: border-color 0.3s;
+        }
+
+        .neuron-terminal {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 40px;
+            background: #34495e;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8rem;
+            z-index: 2;
+        }
+
+        .neuron-receptor {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 40px;
+            background: #34495e;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8rem;
+            z-index: 2;
+            transition: background-color 0.5s ease;
+        }
+
+        .dopamine-molecule {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            opacity: 0.8;
+            transition: top 1s linear;
+        }
+
+        /* Controls */
+        .controls { margin: 20px 0; }
+        
+        input[type=range] {
+            width: 100%;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        .labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #95a5a6;
+            font-weight: bold;
+        }
+
+        /* Treatment Button */
+        .treatment-area {
+            margin: 15px 0;
+            height: 50px; /* Fixed height to prevent jumping */
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.3s;
+            opacity: 0;
+            pointer-events: none;
+            display: none; /* Hidden by default */
+        }
+
+        .btn:active { transform: scale(0.98); }
+
+        .btn-ldopa { background-color: var(--normal); color: white; }
+        .btn-antipsychotic { background-color: var(--treatment); color: white; }
+
+        .btn.visible {
+            opacity: 1;
+            pointer-events: all;
+            display: inline-block;
+        }
+
+        /* Info Panel */
+        .info-panel {
+            background: #fafafa;
+            border-left: 5px solid #ccc;
+            padding: 15px;
+            text-align: left;
+            transition: all 0.3s ease;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .pathway-note {
+            font-size: 0.9rem;
+            margin-top: 10px;
+            font-style: italic;
+            color: #555;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Pharmacology Visualizer</h1>
+    <p>Simulate pathophysiology and apply treatments to observe mechanism of action.</p>
+
+    <div class="container">
+        <div class="synapse-box" id="synapse">
+            <div class="neuron-terminal">Presynaptic Terminal</div>
+            <div class="neuron-receptor" id="receptorBar">Postsynaptic Receptors</div>
+            </div>
+
+        <div class="controls">
+            <div class="labels">
+                <span>Low (Parkinson's)</span>
+                <span>Homeostasis</span>
+                <span>High (Schizophrenia)</span>
+            </div>
+            <input type="range" id="dopamineSlider" min="0" max="100" value="50">
+        </div>
+
+        <div class="treatment-area">
+            <button id="btnLdopa" class="btn btn-ldopa">💊 Administer L-DOPA</button>
+            <button id="btnAnti" class="btn btn-antipsychotic">🛡️ Administer Antipsychotic</button>
+        </div>
+
+        <div class="info-panel" id="infoPanel">
+            <span id="statusBadge" class="status-badge" style="background-color: var(--normal);">Healthy Function</span>
+            <h3 id="conditionTitle">Homeostasis</h3>
+            <p id="symptoms">Normal motor control, regulated mood, and clear cognition.</p>
+            <div class="pathway-note" id="pathwayNote">Target Pathway: All systems balanced.</div>
+        </div>
+    </div>
+
+    <script>
+        const slider = document.getElementById('dopamineSlider');
+        const synapse = document.getElementById('synapse');
+        const receptorBar = document.getElementById('receptorBar');
+        const statusBadge = document.getElementById('statusBadge');
+        const conditionTitle = document.getElementById('conditionTitle');
+        const symptoms = document.getElementById('symptoms');
+        const pathwayNote = document.getElementById('pathwayNote');
+        const infoPanel = document.getElementById('infoPanel');
+        
+        const btnLdopa = document.getElementById('btnLdopa');
+        const btnAnti = document.getElementById('btnAnti');
+
+        let particles = [];
+        let isReceptorsBlocked = false;
+
+        function createParticle() {
+            const p = document.createElement('div');
+            p.classList.add('dopamine-molecule');
+            p.style.left = Math.random() * 95 + '%';
+            p.style.top = Math.random() * 10 + 40 + 'px';
+            synapse.appendChild(p);
+            return p;
+        }
+
+        function updateParticles(level) {
+            const targetCount = Math.floor((level / 100) * 60) + 5;
+            
+            while (particles.length < targetCount) {
+                particles.push(createParticle());
+            }
+            while (particles.length > targetCount) {
+                const p = particles.pop();
+                p.remove();
+            }
+
+            particles.forEach(p => {
+                const currentTop = parseFloat(p.style.top);
+                const speed = (level > 70) ? 15 : 5; 
+                
+                let newTop = currentTop + (Math.random() * speed);
+                if (newTop > 200) newTop = 45; 
+                
+                p.style.top = newTop + 'px';
+            });
+        }
+
+        function animate() {
+            updateParticles(slider.value);
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // Treatment Actions
+        btnLdopa.addEventListener('click', () => {
+            let current = parseInt(slider.value);
+            const interval = setInterval(() => {
+                if (current >= 50) {
+                    clearInterval(interval);
+                    updateState(50);
+                } else {
+                    current++;
+                    slider.value = current;
+                    updateState(current);
+                }
+            }, 20);
+        });
+
+        btnAnti.addEventListener('click', () => {
+            isReceptorsBlocked = true;
+            receptorBar.style.backgroundColor = "var(--treatment)";
+            receptorBar.innerText = "Receptors Blocked (Antagonist Bound)";
+            
+            statusBadge.style.backgroundColor = "var(--treatment)";
+            statusBadge.textContent = "Managed with Medication";
+            conditionTitle.textContent = "Antagonism (Blockade)";
+            symptoms.textContent = "Dopamine levels remain high, but receptors are blocked. The 'signal' for hallucinations is stopped.";
+            pathwayNote.innerHTML = "<strong>Mechanism:</strong> The drug binds to D2 receptors without activating them, preventing dopamine from binding.";
+            
+            btnAnti.classList.remove('visible');
+        });
+
+        function updateState(val) {
+            // Reset block if slider moves manually (simulating new conditions)
+            if (isReceptorsBlocked && val < 70) {
+                isReceptorsBlocked = false;
+                receptorBar.style.backgroundColor = "#34495e";
+                receptorBar.innerText = "Postsynaptic Receptors (Receiving)";
+            }
+
+            // Hide buttons initially
+            btnLdopa.classList.remove('visible');
+            btnAnti.classList.remove('visible');
+
+            // Keep blocked state visualization if active
+            if (isReceptorsBlocked) {
+                // Don't overwrite the "Managed" text
+                return;
+            }
+
+            if (val <= 30) {
+                // Parkinson's
+                infoPanel.style.borderLeftColor = "var(--parkinsons)";
+                statusBadge.style.backgroundColor = "var(--parkinsons)";
+                statusBadge.textContent = "Pathology: Parkinson's Disease";
+                conditionTitle.textContent = "Dopamine Depletion";
+                symptoms.textContent = "Symptoms: Resting tremors, bradykinesia, rigidity.";
+                pathwayNote.innerHTML = "<strong>Treatment Opportunity:</strong> L-DOPA can cross the blood-brain barrier to increase dopamine synthesis.";
+                btnLdopa.classList.add('visible');
+
+            } else if (val > 30 && val < 70) {
+                // Normal
+                infoPanel.style.borderLeftColor = "var(--normal)";
+                statusBadge.style.backgroundColor = "var(--normal)";
+                statusBadge.textContent = "Normal Physiological State";
+                conditionTitle.textContent = "Homeostasis";
+                symptoms.textContent = "Symptoms: Coordinated movement, motivation, and organized thought processes.";
+                pathwayNote.innerHTML = "System Balanced.";
+
+            } else {
+                // Schizophrenia
+                infoPanel.style.borderLeftColor = "var(--schizo)";
+                statusBadge.style.backgroundColor = "var(--schizo)";
+                statusBadge.textContent = "Pathology: Schizophrenia";
+                conditionTitle.textContent = "Dopamine Hyperactivity";
+                symptoms.textContent = "Symptoms: Hallucinations, delusions, disorganized thinking.";
+                pathwayNote.innerHTML = "<strong>Treatment Opportunity:</strong> Antipsychotics act as antagonists, blocking D2 receptors.";
+                btnAnti.classList.add('visible');
+            }
+        }
+
+        slider.addEventListener('input', (e) => {
+            // If we were blocked, dragging the slider resets the experiment
+            if (isReceptorsBlocked) {
+                isReceptorsBlocked = false;
+                receptorBar.style.backgroundColor = "#34495e";
+                receptorBar.innerText = "Postsynaptic Receptors (Receiving)";
+            }
+            updateState(parseInt(e.target.value));
+        });
+
+        // Init
+        updateState(50);
+
+    </script>
+</body>
+</html>
