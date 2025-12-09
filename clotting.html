@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coagulation Cascade Analyzer</title>
+    <style>
+        :root {
+            --primary: #e63946;
+            --secondary: #457b9d;
+            --bg: #f1faee;
+            --text: #1d3557;
+            --success: #2a9d8f;
+            --fail: #e76f51;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; line-height: 1.6; }
+        h1 { text-align: center; color: var(--primary); }
+        .container { max-width: 1000px; margin: 0 auto; display: flex; gap: 20px; flex-wrap: wrap; }
+        
+        /* Controls Section */
+        .controls { flex: 1; min-width: 300px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .pathway-group { margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .pathway-title { font-weight: bold; color: var(--secondary); margin-bottom: 10px; text-transform: uppercase; font-size: 0.9em; }
+        
+        label { display: flex; align-items: center; justify-content: space-between; margin: 8px 0; cursor: pointer; }
+        input[type="checkbox"] { transform: scale(1.2); }
+        
+        .drug-selector { background: #e9ecef; padding: 15px; border-radius: 8px; margin-top: 20px; }
+        select { width: 100%; padding: 8px; margin-top: 5px; border-radius: 4px; border: 1px solid #ccc; }
+
+        /* Visualization Section */
+        .simulation { flex: 2; min-width: 300px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .status-box { text-align: center; padding: 20px; border-radius: 8px; margin-top: 20px; font-weight: bold; font-size: 1.2em; transition: all 0.3s; }
+        .clot-success { background: var(--success); color: white; content: "CLOT FORMED"; }
+        .clot-fail { background: var(--fail); color: white; }
+
+        .flowchart { display: flex; flex-direction: column; gap: 10px; align-items: center; margin-top: 20px; }
+        .step { background: #eee; padding: 10px 20px; border-radius: 20px; width: 80%; text-align: center; border: 2px solid transparent; transition: all 0.3s; opacity: 0.5; }
+        .step.active { background: #a8dadc; opacity: 1; border-color: var(--secondary); color: var(--text); }
+        .step.blocked { background: #ffccd5; opacity: 1; border-color: var(--primary); text-decoration: line-through; }
+        .arrow { font-size: 20px; color: #ccc; }
+        .arrow.active { color: var(--text); }
+
+    </style>
+</head>
+<body>
+
+    <h1>Interactive Coagulation Analyzer</h1>
+    <p style="text-align:center;">Toggle factors to simulate deficiencies, or select an anticoagulant to see its mechanism.</p>
+
+    <div class="container">
+        <div class="controls">
+            <div class="drug-selector">
+                <label><strong>Apply Clinical Scenario:</strong></label>
+                <select id="drugScenario" onchange="applyScenario()">
+                    <option value="none">Healthy / No Drugs</option>
+                    <option value="warfarin">Warfarin (Vitamin K Antagonist)</option>
+                    <option value="heparin">Heparin (Antithrombin Potentiator)</option>
+                    <option value="rivaroxaban">Rivaroxaban (Direct Xa Inhibitor)</option>
+                    <option value="hemophilia_a">Hemophilia A (Factor VIII Def)</option>
+                </select>
+                <p id="scenarioDesc" style="font-size: 0.85em; margin-top:10px; color: #666;"></p>
+            </div>
+
+            <div class="pathway-group">
+                <div class="pathway-title">Intrinsic Pathway Factors</div>
+                <label>Factor XII <input type="checkbox" id="f12" checked onchange="runSimulation()"></label>
+                <label>Factor XI <input type="checkbox" id="f11" checked onchange="runSimulation()"></label>
+                <label>Factor IX <input type="checkbox" id="f9" checked onchange="runSimulation()"></label>
+                <label>Factor VIII <input type="checkbox" id="f8" checked onchange="runSimulation()"></label>
+            </div>
+
+            <div class="pathway-group">
+                <div class="pathway-title">Extrinsic Pathway Factors</div>
+                <label>Tissue Factor (III) <input type="checkbox" id="tf" checked onchange="runSimulation()"></label>
+                <label>Factor VII <input type="checkbox" id="f7" checked onchange="runSimulation()"></label>
+            </div>
+
+            <div class="pathway-group">
+                <div class="pathway-title">Common Pathway Factors</div>
+                <label>Factor X <input type="checkbox" id="f10" checked onchange="runSimulation()"></label>
+                <label>Factor V <input type="checkbox" id="f5" checked onchange="runSimulation()"></label>
+                <label>Factor II (Prothrombin) <input type="checkbox" id="f2" checked onchange="runSimulation()"></label>
+                <label>Factor I (Fibrinogen) <input type="checkbox" id="f1" checked onchange="runSimulation()"></label>
+            </div>
+        </div>
+
+        <div class="simulation">
+            <h3>Cascade Flow</h3>
+            <div class="flowchart">
+                <div id="step-intrinsic" class="step">Intrinsic Activation (XII &rarr; XI &rarr; IX+VIII)</div>
+                <div class="arrow">⬇</div>
+                
+                <div id="step-extrinsic" class="step">Extrinsic Activation (TF &rarr; VII)</div>
+                <div class="arrow">⬇</div>
+
+                <div id="step-x" class="step">Factor X Activation (Tenase Complex)</div>
+                <div class="arrow">⬇</div>
+                <div id="step-thrombin" class="step">Thrombin Burst (II &rarr; IIa)</div>
+                <div class="arrow">⬇</div>
+                <div id="step-fibrin" class="step">Fibrin Mesh Formation (I &rarr; Ia)</div>
+            </div>
+
+            <div id="resultBox" class="status-box">Calculating...</div>
+        </div>
+    </div>
+
+    <script>
+        function applyScenario() {
+            const scenario = document.getElementById('drugScenario').value;
+            const desc = document.getElementById('scenarioDesc');
+            
+            // Reset all checks first
+            document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = true);
+            document.querySelectorAll('input[type="checkbox"]').forEach(c => c.disabled = false);
+
+            if (scenario === 'none') {
+                desc.innerText = "Normal physiological conditions. All factors active.";
+            } else if (scenario === 'warfarin') {
+                desc.innerText = "Inhibits Vitamin K Dependent Factors (II, VII, IX, X). Cascade severely compromised.";
+                document.getElementById('f2').checked = false;
+                document.getElementById('f7').checked = false;
+                document.getElementById('f9').checked = false;
+                document.getElementById('f10').checked = false;
+                // Lock them so user sees they are knocked out
+                ['f2','f7','f9','f10'].forEach(id => document.getElementById(id).disabled = true);
+            } else if (scenario === 'heparin') {
+                desc.innerText = "Potentiates Antithrombin III, primarily inhibiting Thrombin (II) and Factor X.";
+                document.getElementById('f2').checked = false;
+                document.getElementById('f10').checked = false;
+                ['f2','f10'].forEach(id => document.getElementById(id).disabled = true);
+            } else if (scenario === 'rivaroxaban') {
+                desc.innerText = "Directly inhibits Factor Xa. Halts common pathway.";
+                document.getElementById('f10').checked = false;
+                document.getElementById('f10').disabled = true;
+            } else if (scenario === 'hemophilia_a') {
+                desc.innerText = "Genetic deficiency of Factor VIII. Intrinsic pathway fails.";
+                document.getElementById('f8').checked = false;
+                document.getElementById('f8').disabled = true;
+            }
+            runSimulation();
+        }
+
+        function runSimulation() {
+            // Get States
+            const f12 = document.getElementById('f12').checked;
+            const f11 = document.getElementById('f11').checked;
+            const f9 = document.getElementById('f9').checked;
+            const f8 = document.getElementById('f8').checked;
+            
+            const tf = document.getElementById('tf').checked;
+            const f7 = document.getElementById('f7').checked;
+            
+            const f10 = document.getElementById('f10').checked;
+            const f5 = document.getElementById('f5').checked;
+            const f2 = document.getElementById('f2').checked;
+            const f1 = document.getElementById('f1').checked;
+
+            // Logic Flow
+            let intrinsicActive = f12 && f11 && f9 && f8;
+            let extrinsicActive = tf && f7;
+            
+            // Factor X can be activated by either pathway, BUT needs Factor X itself to be healthy
+            let tenaseActive = (intrinsicActive || extrinsicActive) && f10;
+            
+            // Prothrombinase requires Xa (Tenase) AND Factor V
+            let thrombinActive = tenaseActive && f5 && f2;
+            
+            // Fibrin requires Thrombin AND Fibrinogen
+            let fibrinActive = thrombinActive && f1;
+
+            // Update UI
+            updateStep('step-intrinsic', intrinsicActive);
+            updateStep('step-extrinsic', extrinsicActive);
+            
+            // Special handling for X: It works if X is present AND (Intrinsic OR Extrinsic is working)
+            if (f10 && (intrinsicActive || extrinsicActive)) {
+                 document.getElementById('step-x').className = "step active";
+                 document.getElementById('step-x').innerText = "Factor X Activation (Success)";
+            } else {
+                 document.getElementById('step-x').className = "step blocked";
+                 let reason = !f10 ? "(Factor X Missing)" : "(Upstream Fail)";
+                 document.getElementById('step-x').innerText = "Factor X Activation " + reason;
+            }
+
+            updateStep('step-thrombin', thrombinActive);
+            updateStep('step-fibrin', fibrinActive);
+
+            // Final Result
+            const resBox = document.getElementById('resultBox');
+            if (fibrinActive) {
+                resBox.className = "status-box clot-success";
+                resBox.innerText = "HEMOSTASIS ACHIEVED (Clot Formed)";
+            } else {
+                resBox.className = "status-box clot-fail";
+                resBox.innerText = "HEMORRHAGE RISK (Clotting Failed)";
+            }
+        }
+
+        function updateStep(id, isActive) {
+            const el = document.getElementById(id);
+            if (isActive) {
+                el.className = "step active";
+            } else {
+                el.className = "step blocked";
+            }
+        }
+
+        // Init
+        runSimulation();
+    </script>
+</body>
+</html>
