@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neuronal Action Potential Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            padding: 30px;
+        }
+        
+        .neuron-canvas {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 3px solid #e0e0e0;
+        }
+        
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 10px;
+            background: white;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .control-group {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .control-group h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .stimulus-btn {
+            width: 100%;
+            padding: 15px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .stimulus-btn.weak {
+            background: #ffd93d;
+            color: #333;
+        }
+        
+        .stimulus-btn.moderate {
+            background: #ff9a3d;
+            color: white;
+        }
+        
+        .stimulus-btn.strong {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .stimulus-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .stimulus-btn:active {
+            transform: translateY(0);
+        }
+        
+        .info-panel {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .voltage-display {
+            font-size: 2.5em;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .status-display {
+            text-align: center;
+            font-size: 1.3em;
+            margin-top: 10px;
+        }
+        
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            border: 2px solid white;
+        }
+        
+        .educational-content {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+        
+        .educational-content h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .educational-content ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+        
+        .educational-content li {
+            margin-bottom: 10px;
+        }
+        
+        .reset-btn {
+            width: 100%;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .reset-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ Neuronal Action Potential Simulator</h1>
+            <p>Explore how neurons communicate through electrical signals</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="neuron-canvas">
+                <canvas id="neuronCanvas" width="1000" height="400"></canvas>
+            </div>
+            
+            <div class="info-panel">
+                <div class="voltage-display" id="voltageDisplay">-70 mV</div>
+                <div class="status-display" id="statusDisplay">Resting State</div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #4ade80;"></div>
+                        <span>Resting (-70 mV)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #fbbf24;"></div>
+                        <span>Graded Potential</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f97316;"></div>
+                        <span>Threshold (-55 mV)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ef4444;"></div>
+                        <span>Action Potential (+40 mV)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <h3>Apply Stimulus</h3>
+                    <button class="stimulus-btn weak" onclick="applyStimulus(10)">
+                        Weak Stimulus (+10 mV)
+                    </button>
+                    <button class="stimulus-btn moderate" onclick="applyStimulus(15)">
+                        Moderate Stimulus (+15 mV)
+                    </button>
+                    <button class="stimulus-btn strong" onclick="applyStimulus(20)">
+                        Strong Stimulus (+20 mV)
+                    </button>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Controls</h3>
+                    <button class="reset-btn" onclick="resetSimulation()">
+                        🔄 Reset Simulation
+                    </button>
+                </div>
+            </div>
+            
+            <div class="educational-content">
+                <h2>🧠 Understanding Neuronal Conduction</h2>
+                <ul>
+                    <li><strong>Resting Potential (-70 mV):</strong> The neuron's baseline electrical charge when not actively transmitting a signal. Maintained by the sodium-potassium pump.</li>
+                    
+                    <li><strong>Graded Potential:</strong> Small changes in membrane potential that vary in amplitude. These are localized and can either depolarize (make more positive) or hyperpolarize (make more negative) the membrane.</li>
+                    
+                    <li><strong>Threshold Potential (-55 mV):</strong> The critical voltage level that must be reached to trigger an action potential. This is the "point of no return."</li>
+                    
+                    <li><strong>Action Potential:</strong> An all-or-nothing electrical signal that propagates along the axon. Once threshold is reached, voltage-gated sodium channels open rapidly, causing depolarization to +40 mV, followed by repolarization and a brief hyperpolarization period.</li>
+                    
+                    <li><strong>Depolarization:</strong> Sodium ions rush into the cell, making the inside more positive.</li>
+                    
+                    <li><strong>Repolarization:</strong> Potassium ions flow out, restoring the negative charge.</li>
+                    
+                    <li><strong>Refractory Period:</strong> A brief period after an action potential when the neuron cannot fire again, ensuring one-way signal transmission.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('neuronCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let voltage = -70;
+        let isAnimating = false;
+        let animationFrame = 0;
+        const RESTING = -70;
+        const THRESHOLD = -55;
+        const PEAK = 40;
+        
+        function drawNeuron() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw soma (cell body)
+            const somaX = 150;
+            const somaY = 200;
+            const somaRadius = 60;
+            
+            const somaColor = getColorForVoltage(voltage);
+            
+            // Soma with gradient
+            const gradient = ctx.createRadialGradient(somaX, somaY, 0, somaX, somaY, somaRadius);
+            gradient.addColorStop(0, lightenColor(somaColor));
+            gradient.addColorStop(1, somaColor);
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(somaX, somaY, somaRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Draw nucleus
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.beginPath();
+            ctx.arc(somaX, somaY, 25, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw dendrites
+            drawDendrites(somaX, somaY, somaRadius);
+            
+            // Draw axon
+            drawAxon(somaX, somaY, somaRadius);
+            
+            // Draw voltage indicators along axon
+            drawVoltageIndicators();
+            
+            // Labels
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Soma', somaX, somaY + 5);
+            ctx.fillText('Dendrites', somaX - 100, 100);
+            ctx.fillText('Axon', 600, 150);
+            ctx.fillText('Axon Terminal', 920, 280);
+        }
+        
+        function drawDendrites(x, y, radius) {
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            
+            // Multiple dendrite branches
+            for (let i = 0; i < 5; i++) {
+                const angle = Math.PI + (i - 2) * 0.3;
+                const length = 70 + Math.random() * 30;
+                
+                ctx.beginPath();
+                ctx.moveTo(x + Math.cos(angle) * radius, y + Math.sin(angle) * radius);
+                ctx.lineTo(x + Math.cos(angle) * (radius + length), y + Math.sin(angle) * (radius + length));
+                ctx.stroke();
+                
+                // Sub-branches
+                const subAngle = angle + (Math.random() - 0.5) * 0.5;
+                ctx.beginPath();
+                ctx.moveTo(x + Math.cos(angle) * (radius + length), y + Math.sin(angle) * (radius + length));
+                ctx.lineTo(x + Math.cos(subAngle) * (radius + length + 40), y + Math.sin(subAngle) * (radius + length + 40));
+                ctx.stroke();
+            }
+        }
+        
+        function drawAxon(somaX, somaY, somaRadius) {
+            const axonStartX = somaX + somaRadius;
+            const axonY = somaY;
+            const axonEndX = 900;
+            
+            // Axon hillock (slightly wider)
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 25;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(axonStartX, axonY);
+            ctx.lineTo(axonStartX + 100, axonY);
+            ctx.stroke();
+            
+            // Main axon with myelin sheaths
+            ctx.lineWidth = 20;
+            const myelinSegments = 5;
+            const segmentLength = (axonEndX - axonStartX - 100) / myelinSegments;
+            
+            for (let i = 0; i < myelinSegments; i++) {
+                const segX = axonStartX + 100 + i * segmentLength;
+                
+                // Myelin sheath
+                ctx.strokeStyle = '#f0f0f0';
+                ctx.lineWidth = 25;
+                ctx.beginPath();
+                ctx.moveTo(segX, axonY);
+                ctx.lineTo(segX + segmentLength * 0.8, axonY);
+                ctx.stroke();
+                
+                // Node of Ranvier
+                ctx.strokeStyle = '#555';
+                ctx.lineWidth = 15;
+                ctx.beginPath();
+                ctx.moveTo(segX + segmentLength * 0.8, axonY);
+                ctx.lineTo(segX + segmentLength, axonY);
+                ctx.stroke();
+            }
+            
+            // Axon terminal
+            ctx.fillStyle = '#667eea';
+            for (let i = 0; i < 3; i++) {
+                const termX = axonEndX + i * 15;
+                const termY = axonY + (i - 1) * 30;
+                ctx.beginPath();
+                ctx.arc(termX, termY, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+        
+        function drawVoltageIndicators() {
+            const positions = [300, 450, 600, 750];
+            
+            positions.forEach((x, i) => {
+                const delay = i * 5;
+                const activeFrame = animationFrame - delay;
+                
+                if (activeFrame > 0 && activeFrame < 30) {
+                    const alpha = 1 - (activeFrame / 30);
+                    const size = 15 + (activeFrame * 0.5);
+                    
+                    ctx.fillStyle = `rgba(239, 68, 68, ${alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(x, 200, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+        }
+        
+        function getColorForVoltage(v) {
+            if (v >= PEAK - 10) return '#ef4444'; // Red - Action potential
+            if (v >= THRESHOLD) return '#f97316'; // Orange - Threshold
+            if (v > RESTING) return '#fbbf24'; // Yellow - Graded potential
+            return '#4ade80'; // Green - Resting
+        }
+        
+        function lightenColor(color) {
+            const colors = {
+                '#ef4444': '#fca5a5',
+                '#f97316': '#fdba74',
+                '#fbbf24': '#fde047',
+                '#4ade80': '#86efac'
+            };
+            return colors[color] || color;
+        }
+        
+        function updateDisplay() {
+            document.getElementById('voltageDisplay').textContent = voltage.toFixed(0) + ' mV';
+            
+            let status = 'Resting State';
+            if (voltage >= PEAK - 10) status = '⚡ Action Potential!';
+            else if (voltage >= THRESHOLD) status = '🔥 Threshold Reached!';
+            else if (voltage > RESTING) status = '📈 Graded Potential';
+            
+            document.getElementById('statusDisplay').textContent = status;
+        }
+        
+        function applyStimulus(change) {
+            if (isAnimating) return;
+            
+            voltage += change;
+            
+            if (voltage >= THRESHOLD) {
+                triggerActionPotential();
+            } else {
+                isAnimating = true;
+                animateGradedPotential();
+            }
+        }
+        
+        function animateGradedPotential() {
+            const targetVoltage = RESTING;
+            const steps = 30;
+            let step = 0;
+            
+            const interval = setInterval(() => {
+                step++;
+                voltage = voltage + (targetVoltage - voltage) * 0.1;
+                
+                drawNeuron();
+                updateDisplay();
+                
+                if (step >= steps || Math.abs(voltage - targetVoltage) < 0.5) {
+                    voltage = RESTING;
+                    drawNeuron();
+                    updateDisplay();
+                    isAnimating = false;
+                    clearInterval(interval);
+                }
+            }, 50);
+        }
+        
+        function triggerActionPotential() {
+            isAnimating = true;
+            animationFrame = 0;
+            let phase = 'depolarization';
+            
+            const interval = setInterval(() => {
+                animationFrame++;
+                
+                if (phase === 'depolarization' && voltage < PEAK) {
+                    voltage += 8;
+                } else if (phase === 'depolarization') {
+                    phase = 'repolarization';
+                } else if (phase === 'repolarization' && voltage > -80) {
+                    voltage -= 8;
+                } else if (phase === 'repolarization') {
+                    phase = 'hyperpolarization';
+                } else if (phase === 'hyperpolarization' && voltage < RESTING) {
+                    voltage += 2;
+                } else {
+                    voltage = RESTING;
+                    drawNeuron();
+                    updateDisplay();
+                    isAnimating = false;
+                    animationFrame = 0;
+                    clearInterval(interval);
+                    return;
+                }
+                
+                drawNeuron();
+                updateDisplay();
+            }, 50);
+        }
+        
+        function resetSimulation() {
+            voltage = RESTING;
+            isAnimating = false;
+            animationFrame = 0;
+            drawNeuron();
+            updateDisplay();
+        }
+        
+        // Initialize
+        drawNeuron();
+        updateDisplay();
+    </script>
+</body>
+</html>
