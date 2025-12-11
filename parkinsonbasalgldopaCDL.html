@@ -690,4 +690,127 @@
                         <h3>Pathophysiology</h3>
                         <p><strong>CAG repeat expansion</strong> → mutant huntingtin protein</p>
                         <p><strong>Loss of GABAergic medium spiny neurons</strong> in striatum</p>
-                        <p style="color: #e74c3c; font-weight: 600;">Red striatum = neurodegeneration</p
+                        <p style="color: #e74c3c; font-weight: 600;">Red striatum = neurodegeneration</p>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>Circuit Changes (Early Stage)</h3>
+                        <p><strong>Indirect pathway preferentially affected:</strong></p>
+                        <ul>
+                            <li>↓ Striatal inhibition of GPe</li>
+                            <li>↑ GPe inhibition of STN</li>
+                            <li>↓ STN excitation of GPi</li>
+                            <li>↓ GPi activity → less thalamic inhibition</li>
+                            <li>↑ Thalamic excitation of cortex</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>Clinical Features</h3>
+                        <p><strong>Early: Chorea (hyperkinesia)</strong></p>
+                        <ul>
+                            <li>Involuntary, dance-like movements</li>
+                            <li>Excessive thalamo-cortical activity</li>
+                            <li>Loss of movement suppression</li>
+                        </ul>
+                        <p><strong>Late: Bradykinesia & rigidity</strong></p>
+                        <ul>
+                            <li>Direct pathway also degenerates</li>
+                            <li>Progressive cognitive decline</li>
+                            <li>Psychiatric symptoms</li>
+                        </ul>
+                    </div>
+                `;
+            } else if (currentState === 'huntington-treated') {
+                content = `
+                    <div class="disease-state state-treated">
+                        <strong>HUNTINGTON'S DISEASE + VMAT2 INHIBITOR</strong>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>Medications: VMAT2 Inhibitors</h3>
+                        <p><span class="medication">Tetrabenazine</span> (Xenazine)</p>
+                        <p><span class="medication">Deutetrabenazine</span> (Austedo)</p>
+                        <p><span class="medication">Valbenazine</span> (Ingrezza)</p>
+                        <p><strong>Mechanism of Action:</strong></p>
+                        <ul>
+                            <li>Inhibit VMAT2 (vesicular monoamine transporter 2)</li>
+                            <li>Block <span class="neurotransmitter nt-dopamine">dopamine</span> packaging into vesicles</li>
+                            <li>Reduce dopamine release in striatum</li>
+                            <li>Dampens excessive thalamo-cortical activity</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>Therapeutic Effects</h3>
+                        <p><strong>Reduces chorea through dopamine depletion:</strong></p>
+                        <ul>
+                            <li>↓ Dopamine → moderates both pathways</li>
+                            <li>↓ Direct pathway activity (D1)</li>
+                            <li>↑ Indirect pathway tone (less D2 inhibition)</li>
+                            <li>↑ GPi activity → more thalamic inhibition</li>
+                            <li>↓ Excessive cortical excitation</li>
+                        </ul>
+                        <p><strong>Clinical Improvement:</strong></p>
+                        <ul>
+                            <li>30-50% reduction in chorea severity</li>
+                            <li>Improved functional capacity</li>
+                            <li>Better quality of life</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>Side Effects & Monitoring</h3>
+                        <ul>
+                            <li><strong>Parkinsonism:</strong> Can cause PD-like symptoms if dose too high</li>
+                            <li><strong>Depression/suicidality:</strong> Screen before treatment</li>
+                            <li><strong>Sedation:</strong> Dose-dependent</li>
+                            <li><strong>Akathisia:</strong> Restlessness</li>
+                            <li>Deutetrabenazine has longer half-life, better tolerability</li>
+                        </ul>
+                    </div>
+
+                    <div class="animation-info">
+                        <strong>Visualization:</strong> Reduced dopamine (faded yellow), increased GPi activity, normalized thalamic output reducing chorea
+                    </div>
+                `;
+            }
+
+            panel.innerHTML = content;
+        }
+
+        function setState(state) {
+            currentState = state;
+            
+            document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            drawPathways();
+            updateInfoPanel();
+        }
+
+        function highlightPathway(pathway) {
+            highlightedPathway = pathway;
+            
+            document.querySelectorAll('.pathway-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            drawPathways();
+        }
+
+        function animate() {
+            animationFrame = (animationFrame + 1) % 100;
+            drawPathways();
+            requestAnimationFrame(animate);
+        }
+
+        setState('normal');
+        animate();
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            drawPathways();
+        });
+    </script>
+</body>
+</html>
