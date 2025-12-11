@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synaptic Transmission Interactive</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .canvas-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 3px solid #e2e8f0;
+        }
+        
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .control-group {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .control-group h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+        
+        .btn-excitatory {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+        
+        .btn-excitatory:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+        
+        .btn-inhibitory {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            color: white;
+        }
+        
+        .btn-inhibitory:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 101, 101, 0.4);
+        }
+        
+        .btn-reset {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .info-panel {
+            background: #edf2f7;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .info-panel h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .info-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            border-left: 4px solid #cbd5e0;
+        }
+        
+        .info-item strong {
+            color: #4a5568;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            border: 2px solid #2d3748;
+        }
+        
+        .status {
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .pulsing {
+            animation: pulse 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Synaptic Transmission Simulator</h1>
+            <p>Interactive visualization of excitatory and inhibitory synapses</p>
+        </div>
+        
+        <div class="content">
+            <div class="canvas-container">
+                <canvas id="neuronCanvas" width="900" height="500"></canvas>
+            </div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <h3>⚡ Excitatory Synapse</h3>
+                    <button class="btn btn-excitatory" onclick="fireExcitatory()">
+                        Fire Glutamatergic Synapse
+                    </button>
+                    <div class="status" id="excitatoryStatus" style="color: #38a169;">Ready</div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>🛑 Inhibitory Synapse</h3>
+                    <button class="btn btn-inhibitory" onclick="fireInhibitory()">
+                        Fire GABAergic Synapse
+                    </button>
+                    <div class="status" id="inhibitoryStatus" style="color: #e53e3e;">Ready</div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>🔄 Controls</h3>
+                    <button class="btn btn-reset" onclick="resetSimulation()">
+                        Reset Simulation
+                    </button>
+                    <div class="status" id="postsynapticStatus" style="color: #667eea;">Resting (-70mV)</div>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <h3>📚 Understanding Synaptic Transmission</h3>
+                
+                <div class="info-item">
+                    <strong>Excitatory Synapse (Glutamatergic):</strong>
+                    Glutamate is the primary excitatory neurotransmitter in the CNS. When released, it binds to receptors on the postsynaptic neuron, causing depolarization by opening ion channels that allow Na⁺ and Ca²⁺ to enter. This increases the likelihood of generating an action potential.
+                </div>
+                
+                <div class="info-item">
+                    <strong>Inhibitory Synapse (GABAergic):</strong>
+                    GABA (gamma-aminobutyric acid) is the primary inhibitory neurotransmitter. When released, it binds to receptors causing hyperpolarization by opening Cl⁻ channels or closing Ca²⁺ channels. This decreases the likelihood of the postsynaptic neuron firing.
+                </div>
+                
+                <div class="info-item">
+                    <strong>Integration:</strong>
+                    The postsynaptic neuron integrates all excitatory (EPSPs) and inhibitory (IPSPs) signals. If the sum reaches the threshold (~-55mV), an action potential is generated and propagates down the axon.
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #48bb78;"></div>
+                        <span>Glutamate (Excitatory)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f56565;"></div>
+                        <span>GABA (Inhibitory)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffd700;"></div>
+                        <span>Action Potential</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #4299e1;"></div>
+                        <span>Resting Neuron</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('neuronCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let postsynapticPotential = -70;
+        const threshold = -55;
+        const restingPotential = -70;
+        
+        let particles = [];
+        let actionPotential = null;
+        
+        class Particle {
+            constructor(x, y, color, targetX, targetY) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.targetX = targetX;
+                this.targetY = targetY;
+                this.speed = 3;
+                this.size = 8;
+                this.alpha = 1;
+            }
+            
+            update() {
+                const dx = this.targetX - this.x;
+                const dy = this.targetY - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist > this.speed) {
+                    this.x += (dx / dist) * this.speed;
+                    this.y += (dy / dist) * this.speed;
+                    return false;
+                } else {
+                    this.alpha -= 0.05;
+                    return this.alpha <= 0;
+                }
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+        
+        class ActionPotential {
+            constructor(startX, startY) {
+                this.x = startX;
+                this.y = startY;
+                this.speed = 5;
+                this.size = 15;
+                this.targetX = 750;
+            }
+            
+            update() {
+                this.x += this.speed;
+                return this.x >= this.targetX;
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#ffd700';
+                ctx.fillStyle = '#ffd700';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.strokeStyle = '#ff8c00';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size + 5, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+        
+        function drawNeuron(x, y, label, color, active = false) {
+            ctx.save();
+            
+            if (active) {
+                ctx.shadowBlur = 25;
+                ctx.shadowColor = color;
+            }
+            
+            ctx.fillStyle = active ? color : '#4299e1';
+            ctx.strokeStyle = '#2d3748';
+            ctx.lineWidth = 3;
+            
+            ctx.beginPath();
+            ctx.arc(x, y, 40, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            const dendriteLength = 60;
+            for (let i = 0; i < 4; i++) {
+                const angle = (Math.PI / 3) * i - Math.PI / 6;
+                const startX = x - Math.cos(angle) * 40;
+                const startY = y - Math.sin(angle) * 40;
+                const endX = x - Math.cos(angle) * dendriteLength;
+                const endY = y - Math.sin(angle) * dendriteLength;
+                
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+            }
+            
+            const axonEndX = x + 100;
+            ctx.beginPath();
+            ctx.moveTo(x + 40, y);
+            ctx.lineTo(axonEndX, y);
+            ctx.stroke();
+            
+            for (let i = 0; i < 3; i++) {
+                const terminalX = axonEndX + 15 + i * 10;
+                ctx.beginPath();
+                ctx.arc(terminalX, y, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+            
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x, y + 5);
+            
+            ctx.restore();
+        }
+        
+        function drawSynapse(x, y, width, label, color) {
+            ctx.save();
+            
+            ctx.strokeStyle = '#cbd5e0';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.rect(x - 10, y - 30, width + 20, 60);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 0.2;
+            ctx.fillRect(x - 10, y - 30, width + 20, 60);
+            ctx.globalAlpha = 1;
+            
+            ctx.fillStyle = '#2d3748';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x + width / 2, y - 40);
+            
+            ctx.restore();
+        }
+        
+        function drawMembranePotential() {
+            const barX = 750;
+            const barY = 420;
+            const barWidth = 120;
+            const barHeight = 20;
+            
+            ctx.save();
+            
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(barX, barY, barWidth, barHeight);
+            
+            const range = 40;
+            const normalizedPotential = (postsynapticPotential - (restingPotential - range)) / (range * 2);
+            const fillWidth = barWidth * normalizedPotential;
+            
+            let barColor;
+            if (postsynapticPotential >= threshold) {
+                barColor = '#ffd700';
+            } else if (postsynapticPotential > restingPotential) {
+                barColor = '#48bb78';
+            } else if (postsynapticPotential < restingPotential) {
+                barColor = '#f56565';
+            } else {
+                barColor = '#4299e1';
+            }
+            
+            ctx.fillStyle = barColor;
+            ctx.fillRect(barX, barY, fillWidth, barHeight);
+            
+            ctx.strokeStyle = '#2d3748';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(barX, barY, barWidth, barHeight);
+            
+            const thresholdX = barX + (barWidth * ((threshold - (restingPotential - range)) / (range * 2)));
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(thresholdX, barY);
+            ctx.lineTo(thresholdX, barY + barHeight);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#2d3748';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${postsynapticPotential.toFixed(1)} mV`, barX + barWidth / 2, barY - 10);
+            ctx.font = '10px Arial';
+            ctx.fillText('Threshold: -55mV', barX + barWidth / 2, barY + barHeight + 15);
+            
+            ctx.restore();
+        }
+        
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const excitatoryActive = particles.some(p => p.color === '#48bb78' && p.alpha > 0.5);
+            const inhibitoryActive = particles.some(p => p.color === '#f56565' && p.alpha > 0.5);
+            const postsynapticActive = postsynapticPotential >= threshold || actionPotential !== null;
+            
+            drawNeuron(100, 150, 'Neuron 1', '#48bb78', excitatoryActive);
+            drawNeuron(100, 350, 'Neuron 2', '#f56565', inhibitoryActive);
+            drawNeuron(600, 250, 'Neuron 3', '#ffd700', postsynapticActive);
+            
+            drawSynapse(220, 150, 260, 'Excitatory (Glutamate)', '#48bb78');
+            drawSynapse(220, 350, 260, 'Inhibitory (GABA)', '#f56565');
+            
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const particle = particles[i];
+                if (particle.update()) {
+                    particles.splice(i, 1);
+                } else {
+                    particle.draw();
+                }
+            }
+            
+            if (actionPotential) {
+                if (actionPotential.update()) {
+                    actionPotential = null;
+                } else {
+                    actionPotential.draw();
+                }
+            }
+            
+            drawMembranePotential();
+            
+            if (postsynapticPotential > restingPotential) {
+                postsynapticPotential -= 0.5;
+            } else if (postsynapticPotential < restingPotential) {
+                postsynapticPotential += 0.5;
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        function fireExcitatory() {
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    particles.push(new Particle(220, 150, '#48bb78', 560, 250));
+                }, i * 50);
+            }
+            
+            setTimeout(() => {
+                postsynapticPotential += 20;
+                document.getElementById('excitatoryStatus').textContent = 'Depolarizing...';
+                document.getElementById('excitatoryStatus').classList.add('pulsing');
+                
+                if (postsynapticPotential >= threshold) {
+                    setTimeout(() => {
+                        actionPotential = new ActionPotential(640, 250);
+                        document.getElementById('postsynapticStatus').textContent = 'Action Potential!';
+                        document.getElementById('postsynapticStatus').style.color = '#ffd700';
+                    }, 500);
+                }
+                
+                setTimeout(() => {
+                    document.getElementById('excitatoryStatus').textContent = 'Ready';
+                    document.getElementById('excitatoryStatus').classList.remove('pulsing');
+                }, 1000);
+            }, 750);
+            
+            setTimeout(() => {
+                document.getElementById('postsynapticStatus').textContent = `Resting (${postsynapticPotential.toFixed(0)}mV)`;
+                document.getElementById('postsynapticStatus').style.color = '#667eea';
+            }, 3000);
+        }
+        
+        function fireInhibitory() {
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    particles.push(new Particle(220, 350, '#f56565', 560, 250));
+                }, i * 50);
+            }
+            
+            setTimeout(() => {
+                postsynapticPotential -= 15;
+                document.getElementById('inhibitoryStatus').textContent = 'Hyperpolarizing...';
+                document.getElementById('inhibitoryStatus').classList.add('pulsing');
+                
+                setTimeout(() => {
+                    document.getElementById('inhibitoryStatus').textContent = 'Ready';
+                    document.getElementById('inhibitoryStatus').classList.remove('pulsing');
+                }, 1000);
+            }, 750);
+            
+            setTimeout(() => {
+                document.getElementById('postsynapticStatus').textContent = `Resting (${postsynapticPotential.toFixed(0)}mV)`;
+                document.getElementById('postsynapticStatus').style.color = '#667eea';
+            }, 3000);
+        }
+        
+        function resetSimulation() {
+            postsynapticPotential = restingPotential;
+            particles = [];
+            actionPotential = null;
+            document.getElementById('excitatoryStatus').textContent = 'Ready';
+            document.getElementById('inhibitoryStatus').textContent = 'Ready';
+            document.getElementById('postsynapticStatus').textContent = 'Resting (-70mV)';
+            document.getElementById('postsynapticStatus').style.color = '#667eea';
+        }
+        
+        animate();
+    </script>
+</body>
+</html>
