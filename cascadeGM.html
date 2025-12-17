@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hemostasis Strategist Tool</title>
+    <style>
+        :root {
+            --blood-red: #8b0000;
+            --plasma-yellow: #fdf5e6;
+            --med-blue: #2c3e50;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f4f4; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 8px solid var(--blood-red); }
+        h1 { color: var(--blood-red); text-align: center; }
+        .scenario-box { background: var(--plasma-yellow); border-left: 5px solid var(--med-blue); padding: 15px; margin: 20px 0; font-style: italic; }
+        .quiz-section { margin-top: 20px; }
+        .option-btn { display: block; width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; transition: 0.3s; text-align: left; font-size: 1rem; }
+        .option-btn:hover { background: #f0f0f0; border-color: var(--med-blue); }
+        .feedback { display: none; margin-top: 15px; padding: 15px; border-radius: 6px; line-height: 1.5; }
+        .correct { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .incorrect { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .pathway-map { font-size: 0.9rem; background: #eee; padding: 10px; border-radius: 5px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Hemostasis Strategist</h1>
+    <p><strong>Learning Objective:</strong> Match the anticoagulant mechanism to the physiological factor and clinical disease.</p>
+
+    <div class="scenario-box">
+        <strong>Case Study:</strong> A 65-year-old male presents with <strong>Atrial Fibrillation</strong>. Because the atria are not contracting effectively, blood pools, increasing the risk of a thrombus forming. You need to provide long-term prophylaxis to prevent a stroke by inhibiting the synthesis of <strong>Vitamin K-dependent factors (II, VII, IX, X)</strong>.
+    </div>
+
+    <div class="quiz-section">
+        <p><strong>Which pharmacological agent should you choose?</strong></p>
+        <button class="option-btn" onclick="checkAnswer('warfarin')"><strong>A. Warfarin:</strong> Inhibits Vitamin K Epoxide Reductase.</button>
+        <button class="option-btn" onclick="checkAnswer('heparin')"><strong>B. Heparin:</strong> Activates Antithrombin III to neutralize Thrombin and Xa.</button>
+        <button class="option-btn" onclick="checkAnswer('rivaroxaban')"><strong>C. Rivaroxaban:</strong> Directly inhibits Factor Xa.</button>
+        <button class="option-btn" onclick="checkAnswer('aspirin')"><strong>D. Aspirin:</strong> Irreversibly inhibits COX-1 to prevent TXA2 synthesis.</button>
+    </div>
+
+    <div id="feedback-box" class="feedback"></div>
+</div>
+
+<script>
+    function checkAnswer(choice) {
+        const feedback = document.getElementById('feedback-box');
+        feedback.style.display = 'block';
+        
+        if (choice === 'warfarin') {
+            feedback.className = 'feedback correct';
+            feedback.innerHTML = `<strong>Correct!</strong> Warfarin is the classic choice for long-term AFib prophylaxis. 
+            <div class="pathway-map">
+                <strong>Physiology Link:</strong> Factors II, VII, IX, and X require gamma-carboxylation to be active. Warfarin prevents the recycling of Vitamin K, halting this process. 
+                <br><strong>Monitoring:</strong> PT/INR is used because Factor VII (Extrinsic) has the shortest half-life.
+            </div>`;
+        } else if (choice === 'rivaroxaban') {
+            feedback.className = 'feedback correct';
+            feedback.innerHTML = `<strong>Correct (Modern Choice)!</strong> Rivaroxaban is a DOAC (Direct Oral Anticoagulant). 
+            <div class="pathway-map">
+                <strong>Physiology Link:</strong> It targets the <strong>Common Pathway</strong> by binding directly to Factor Xa, preventing the conversion of Prothrombin to Thrombin.
+            </div>`;
+        } else {
+            feedback.className = 'feedback incorrect';
+            if (choice === 'heparin') {
+                feedback.innerHTML = "<strong>Incorrect:</strong> Heparin is used for immediate anticoagulation (like an active PE or DVT) because it works instantly via Antithrombin III. It is not typically the first choice for long-term out-patient AFib management.";
+            } else {
+                feedback.innerHTML = "<strong>Incorrect:</strong> Aspirin is an <em>antiplatelet</em> agent, not an anticoagulant. It is more effective for arterial disease (like preventing MI) rather than preventing stasis-induced clots in AFib.";
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
