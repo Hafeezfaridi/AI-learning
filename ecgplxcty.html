@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Interactive ECG Learning Tool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --bg: #050910;
+      --grid: #143040;
+      --accent: #00ff9c;
+      --accent-soft: rgba(0, 255, 156, 0.25);
+      --text-main: #f5f7fb;
+      --text-soft: #a8b5c7;
+      --danger: #ff4d6a;
+      --warning: #ffcc33;
+      --card: #0b1524;
+      --card-soft: #151f30;
+      --shadow-soft: 0 16px 30px rgba(0, 0, 0, 0.55);
+      --border-radius: 10px;
+      --transition-fast: 0.2s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #13293d 0, #02030a 45%, #000 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1200px;
+      background: linear-gradient(145deg, #050b15, #02040a);
+      border-radius: 18px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(0, 255, 156, 0.14);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 2fr);
+      gap: 0;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .left-pane,
+    .right-pane {
+      padding: 20px 22px;
+    }
+
+    .left-pane {
+      border-right: 1px solid rgba(0, 255, 156, 0.12);
+    }
+
+    @media (max-width: 900px) {
+      .left-pane {
+        border-right: none;
+        border-bottom: 1px solid rgba(0, 255, 156, 0.12);
+      }
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text-soft);
+      font-size: 0.7rem;
+      margin-bottom: 4px;
+    }
+
+    .title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .title span {
+      color: var(--accent);
+    }
+
+    .scenario {
+      margin: 10px 0 16px;
+      padding: 10px 12px;
+      background: rgba(11, 21, 36, 0.9);
+      border-left: 3px solid var(--accent);
+      border-radius: 8px;
+      font-size: 0.82rem;
+      color: var(--text-soft);
+      line-height: 1.4;
+    }
+
+    .scenario strong {
+      color: var(--text-main);
+    }
+
+    /* ECG Monitor Area */
+    .monitor-wrapper {
+      background: radial-gradient(circle at top, #071520 0, #02030a 55%);
+      border-radius: 14px;
+      border: 1px solid rgba(0, 255, 156, 0.25);
+      padding: 12px 10px 12px 10px;
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.85);
+      margin-bottom: 14px;
+    }
+
+    .monitor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--text-soft);
+      margin-bottom: 6px;
+    }
+
+    .monitor-header span.label {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.7rem;
+    }
+
+    .monitor-header span.leads {
+      font-size: 0.75rem;
+      color: var(--accent);
+    }
+
+    .monitor-header span.hr {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .grid {
+      position: relative;
+      width: 100%;
+      height: 230px;
+      background-image: linear-gradient(
+          rgba(10, 48, 75, 0.6) 1px,
+          transparent 1px
+        ),
+        linear-gradient(
+          to right,
+          rgba(10, 48, 75, 0.6) 1px,
+          transparent 1px
+        );
+      background-size: 20px 20px;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .grid::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(
+          rgba(10, 48, 75, 0.4) 1px,
+          transparent 1px
+        ),
+        linear-gradient(
+          to right,
+          rgba(10, 48, 75, 0.4) 1px,
+          transparent 1px
+        );
+      background-size: 4px 4px;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .lead-labels {
+      position: absolute;
+      left: 6px;
+      top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      font-size: 0.6rem;
+      color: var(--text-soft);
+      text-shadow: 0 0 3px #000;
+      z-index: 3;
+    }
+
+    /* Lines & highlights */
+    .lead-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 2;
+      filter: drop-shadow(0 0 6px rgba(0, 255, 156, 0.6));
+      opacity: 0.65;
+      transition: opacity var(--transition-fast);
+    }
+
+    .lead-line.active-lead {
+      opacity: 1;
+      stroke-width: 2.5;
+    }
+
+    .highlight-region {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 50% 50%, var(--accent-soft), transparent 65%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition-fast);
+    }
+
+    .highlight-region.visible {
+      opacity: 1;
+    }
+
+    /* Column positions (X axis segments) for P, QRS, ST, T */
+    .region-labels {
+      position: absolute;
+      bottom: 3px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.58rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-soft);
+      padding: 0 24px;
+      pointer-events: none;
+    }
+
+    .region-labels span.active-region-label {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Controls */
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.7rem;
+    }
+
+    .control-label {
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      font-size: 0.6rem;
+    }
+
+    .select-like {
+      position: relative;
+      background: var(--card);
+      border-radius: 8px;
+      border: 1px solid rgba(0, 255, 156, 0.25);
+      padding: 4px 8px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 26px;
+    }
+
+    .select-like span {
+      font-size: 0.72rem;
+      color: var(--text-main);
+    }
+
+    .select-like small {
+      color: var(--text-soft);
+      font-size: 0.6rem;
+    }
+
+    /* Lead buttons */
+    .lead-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .lead-btn {
+      border: 1px solid rgba(0, 255, 156, 0.25);
+      background: var(--card-soft);
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 0.64rem;
+      cursor: pointer;
+      color: var(--text-soft);
+      transition: background var(--transition-fast), color var(--transition-fast),
+        border-color var(--transition-fast), transform 0.08s ease;
+    }
+
+    .lead-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent);
+    }
+
+    .lead-btn.active-lead-btn {
+      background: linear-gradient(135deg, var(--accent), #2cd6b3);
+      color: #000;
+      border-color: transparent;
+      font-weight: 600;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.4);
+      font-size: 0.6rem;
+      color: var(--text-soft);
+    }
+
+    .tag-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 6px rgba(0, 255, 156, 0.8);
+    }
+
+    /* Detail panes */
+    .detail-card {
+      background: rgba(5, 12, 24, 0.95);
+      border-radius: 10px;
+      border: 1px solid rgba(0, 255, 156, 0.2);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+
+    .detail-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--text-soft);
+      margin-bottom: 4px;
+    }
+
+    .detail-main {
+      font-size: 0.8rem;
+      margin-bottom: 4px;
+    }
+
+    .detail-main strong {
+      color: var(--accent);
+    }
+
+    .detail-sub {
+      font-size: 0.78rem;
+      color: var(--text-soft);
+      line-height: 1.35;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .pill {
+      font-size: 0.65rem;
+      border-radius: 999px;
+      padding: 2px 7px;
+      border: 1px solid rgba(0, 255, 156, 0.28);
+      color: var(--text-soft);
+      background: rgba(6, 18, 30, 0.9);
+    }
+
+    .pill.danger {
+      border-color: rgba(255, 77, 106, 0.7);
+      color: var(--danger);
+    }
+
+    .pill.warning {
+      border-color: rgba(255, 204, 51, 0.7);
+      color: var(--warning);
+    }
+
+    .pill.primary {
+      color: var(--accent);
+      border-color: rgba(0, 255, 156, 0.8);
+    }
+
+    /* Quiz section */
+    .quiz-card {
+      background: rgba(7, 14, 28, 0.9);
+      border-radius: 10px;
+      border: 1px dashed rgba(0, 255, 156, 0.4);
+      padding: 10px 12px;
+      margin-top: 10px;
+    }
+
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      margin-bottom: 4px;
+    }
+
+    .quiz-question {
+      font-size: 0.78rem;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .quiz-btn {
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 0.68rem;
+      background: var(--card);
+      border: 1px solid rgba(0, 255, 156, 0.25);
+      color: var(--text-soft);
+      cursor: pointer;
+      transition: background var(--transition-fast), transform 0.08s ease,
+        border-color var(--transition-fast), color var(--transition-fast);
+    }
+
+    .quiz-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent);
+      color: var(--text-main);
+    }
+
+    .quiz-btn.correct {
+      background: rgba(0, 255, 156, 0.16);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .quiz-btn.incorrect {
+      background: rgba(255, 77, 106, 0.08);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .quiz-feedback {
+      font-size: 0.74rem;
+      color: var(--text-soft);
+      margin-top: 2px;
+    }
+
+    /* Right pane: Content */
+    .section-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-soft);
+      margin-bottom: 6px;
+    }
+
+    .section-title span {
+      color: var(--accent);
+    }
+
+    .info-block {
+      background: rgba(4, 12, 24, 0.95);
+      border-radius: 10px;
+      border: 1px solid rgba(0, 255, 156, 0.14);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+
+    .info-block h3 {
+      font-size: 0.8rem;
+      margin-bottom: 4px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .info-block ul {
+      margin-left: 16px;
+      margin-top: 3px;
+    }
+
+    .info-block li {
+      font-size: 0.78rem;
+      color: var(--text-soft);
+      margin-bottom: 3px;
+    }
+
+    .mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.76rem;
+      margin-top: 4px;
+    }
+
+    .mini-table th,
+    .mini-table td {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 3px 4px;
+      text-align: left;
+    }
+
+    .mini-table th {
+      color: var(--text-soft);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.68rem;
+    }
+
+    .mini-table td.key {
+      color: var(--accent);
+    }
+
+    .mini-table td.risk {
+      color: var(--danger);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- LEFT: INTERACTIVE ECG -->
+    <section class="left-pane">
+      <header class="header">
+        <div class="subtitle">Interactive ECG Trainer</div>
+        <div class="title">
+          Learn ECG Regions
+          <span>by Activity & Disease</span>
+        </div>
+      </header>
+
+      <div class="scenario">
+        <strong>Scenario:</strong>
+        A 58‑year‑old man presents with crushing central chest pain radiating to
+        the left arm, nausea, and diaphoresis. Blood pressure is 90/60 mmHg and
+        the ECG shows suspicious ST‑segment changes. Use the tool to explore
+        which heart regions and coronary arteries are likely affected, and how
+        different disease states alter P‑waves, QRS complexes, ST‑segments and
+        T‑waves.
+      </div>
+
+      <div class="monitor-wrapper">
+        <div class="monitor-header">
+          <span class="label">12‑lead ECG View</span>
+          <span class="leads">Focus lead: <span id="currentLeadLabel">II (Inferior)</span></span>
+          <span class="hr">HR ~ 96 bpm</span>
+        </div>
+
+        <div class="grid" id="ecgGrid">
+          <!-- Lead labels -->
+          <div class="lead-labels">
+            <span>I / II / III</span>
+            <span>aVR / aVL / aVF</span>
+            <span>V1 / V2 / V3 / V4</span>
+            <span>V5 / V6</span>
+          </div>
+
+          <!-- Highlight regions -->
+          <!-- P wave region -->
+          <div
+            class="highlight-region"
+            id="regionP"
+            style="left: 6%; right: 70%;"
+          ></div>
+          <!-- QRS region -->
+          <div
+            class="highlight-region"
+            id="regionQRS"
+            style="left: 28%; right: 48%;"
+          ></div>
+          <!-- ST segment region -->
+          <div
+            class="highlight-region"
+            id="regionST"
+            style="left: 48%; right: 30%;"
+          ></div>
+          <!-- T wave region -->
+          <div
+            class="highlight-region"
+            id="regionT"
+            style="left: 70%; right: 6%;"
+          ></div>
+
+          <!-- ECG waves (simplified paths for visual learning) -->
+          <svg
+            width="100%"
+            height="100%"
+            viewBox="0 0 1000 260"
+            preserveAspectRatio="none"
+          >
+            <!-- Baseline -->
+            <polyline
+              class="lead-line"
+              points="0,130 1000,130"
+              style="stroke-width: 0.7; opacity: 0.15;"
+            ></polyline>
+
+            <!-- Normal-ish sinus beat path -->
+            <path
+              id="leadPath"
+              class="lead-line active-lead"
+              d="
+                M 0 130
+                L 120 130
+                Q 140 110 160 130
+                L 200 130
+                Q 210 135 220 130
+                L 230 190
+                L 260 60
+                L 290 130
+                L 340 130
+                Q 360 132 380 130
+                L 430 130
+                Q 470 70 510 130
+                L 560 130
+                Q 600 70 640 130
+                L 700 130
+                Q 720 132 740 130
+                L 780 130
+                Q 800 110 820 130
+                L 880 130
+                Q 900 110 920 130
+                L 1000 130
+              "
+            />
+          </svg>
+
+          <!-- Region labels -->
+          <div class="region-labels">
+            <span id="labelP">P wave</span>
+            <span id="labelQRS">QRS</span>
+            <span id="labelST">ST segment</span>
+            <span id="labelT">T wave</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <!-- Lead / Territory -->
+        <div class="control-group">
+          <div class="control-label">Lead group / territory</div>
+          <div class="select-like">
+            <span id="territoryLabel">Inferior (II, III, aVF)</span>
+            <small>Click buttons</small>
+          </div>
+          <div class="lead-buttons">
+            <button class="lead-btn active-lead-btn" data-territory="inferior">
+              Inferior
+            </button>
+            <button class="lead-btn" data-territory="anterior">
+              Anterior
+            </button>
+            <button class="lead-btn" data-territory="lateral">
+              Lateral
+            </button>
+            <button class="lead-btn" data-territory="septal">
+              Septal
+            </button>
+          </div>
+        </div>
+
+        <!-- ECG region -->
+        <div class="control-group">
+          <div class="control-label">Region of ECG</div>
+          <div class="select-like">
+            <span id="segmentLabel">ST segment</span>
+            <small>Click buttons</small>
+          </div>
+          <div class="lead-buttons">
+            <button class="lead-btn" data-region="P">P‑wave</button>
+            <button class="lead-btn" data-region="QRS">QRS</button>
+            <button class="lead-btn active-lead-btn" data-region="ST">
+              ST
+            </button>
+            <button class="lead-btn" data-region="T">T‑wave</button>
+          </div>
+        </div>
+
+        <!-- Disease pattern -->
+        <div class="control-group">
+          <div class="control-label">Pattern / disease state</div>
+          <div class="select-like">
+            <span id="diseaseLabel">Acute STEMI</span>
+            <small>Quiz me</small>
+          </div>
+          <div class="lead-buttons">
+            <button class="lead-btn active-lead-btn" data-disease="stemi">
+              STEMI
+            </button>
+            <button class="lead-btn" data-disease="nstemi">
+              NSTEMI / Ischaemia
+            </button>
+            <button class="lead-btn" data-disease="lvh">
+              LVH
+            </button>
+            <button class="lead-btn" data-disease="af">
+              Atrial fibrillation
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detail cards: change dynamically -->
+      <div class="detail-card">
+        <div class="detail-title">Territory & Heart Region</div>
+        <div class="detail-main" id="territoryInfoMain">
+          <strong>Inferior wall</strong> supplied mainly by the right coronary
+          artery (RCA).
+        </div>
+        <div class="detail-sub" id="territoryInfoSub">
+          ST elevation in II, III and aVF classically points to an inferior
+          acute myocardial infarction. Reciprocal ST depression may be seen in
+          I and aVL.
+        </div>
+        <div class="pill-row" id="territoryPills">
+          <span class="pill primary">Leads: II, III, aVF</span>
+          <span class="pill">Dominant artery: RCA</span>
+        </div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-title">ECG Segment & Electrophysiology</div>
+        <div class="detail-main" id="segmentInfoMain">
+          <strong>ST segment</strong> represents the plateau phase when both
+          ventricles are fully depolarised.
+        </div>
+        <div class="detail-sub" id="segmentInfoSub">
+          In acute transmural ischaemia, injury currents shift the ST segment
+          above the baseline in the leads facing the infarcted territory.
+        </div>
+        <div class="pill-row" id="segmentPills">
+          <span class="pill warning">Key for ischaemia</span>
+          <span class="pill">J‑point & ST‑shape</span>
+        </div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-title">Disease Pattern & Clinical Significance</div>
+        <div class="detail-main" id="diseaseInfoMain">
+          <strong>Acute STEMI</strong> causes localised ST elevation with
+          reciprocal ST depression in electrically opposite leads.
+        </div>
+        <div class="detail-sub" id="diseaseInfoSub">
+          In inferior STEMI, watch for hypotension and bradycardia due to
+          right ventricular involvement or AV nodal ischaemia. Immediate
+          reperfusion is life‑saving.
+        </div>
+        <div class="pill-row" id="diseasePills">
+          <span class="pill danger">Time‑critical emergency</span>
+          <span class="pill">Localised ST elevation</span>
+        </div>
+      </div>
+
+      <!-- Quiz -->
+      <div class="quiz-card">
+        <div class="quiz-header">
+          <span>Active recall quiz</span>
+          <span class="tag">
+            <span class="tag-dot"></span>
+            Scenario‑linked
+          </span>
+        </div>
+        <div class="quiz-question" id="quizQuestion">
+          In this patient with chest pain, ST elevation in II, III and aVF most
+          strongly suggests occlusion of which coronary territory?
+        </div>
+        <div class="quiz-options" id="quizOptions">
+          <!-- Buttons injected by JS -->
+        </div>
+        <div class="quiz-feedback" id="quizFeedback">
+          Select an answer to check your reasoning.
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: EXPLANATION & TABLES -->
+    <section class="right-pane">
+      <div class="section-title">
+        Map ECG to <span>Heart & Disease</span>
+      </div>
+
+      <div class="info-block">
+        <h3>Key ECG regions & what they represent</h3>
+        <ul>
+          <li>
+            P‑wave: atrial depolarisation; morphology and regularity change in
+            atrial enlargement and atrial fibrillation.
+          </li>
+          <li>
+            QRS complex: rapid ventricular depolarisation; width and axis help
+            identify bundle branch block, ventricular rhythms and hypertrophy.
+          </li>
+          <li>
+            ST segment & T‑wave: ventricular repolarisation behaviour; primary
+            window for detecting ischaemia, infarction and electrolyte
+            disturbances.
+          </li>
+        </ul>
+      </div>
+
+      <div class="info-block">
+        <h3>Lead groups & anatomical regions</h3>
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>Lead group</th>
+              <th>Surface region</th>
+              <th>Typical artery</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="key">Inferior (II, III, aVF)</td>
+              <td>Inferior LV ± RV</td>
+              <td>RCA (± dominant LCx)</td>
+            </tr>
+            <tr>
+              <td class="key">Anterior (V3–V4)</td>
+              <td>Anterior LV septum & apex</td>
+              <td>LAD</td>
+            </tr>
+            <tr>
+              <td class="key">Septal (V1–V2)</td>
+              <td>Interventricular septum</td>
+              <td>Proximal LAD</td>
+            </tr>
+            <tr>
+              <td class="key">Lateral (I, aVL, V5–V6)</td>
+              <td>Lateral LV wall</td>
+              <td>LCx or diagonal branches</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="info-block">
+        <h3>Typical disease‑segment relationships</h3>
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>State</th>
+              <th>ECG region</th>
+              <th>Typical change</th>
+              <th>Risk</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="key">STEMI</td>
+              <td>ST segment ± T</td>
+              <td>Localised ST elevation; reciprocal depression</td>
+              <td class="risk">Transmural infarction</td>
+            </tr>
+            <tr>
+              <td class="key">NSTEMI / demand ischaemia</td>
+              <td>ST segment, T‑wave</td>
+              <td>ST depression, T‑wave inversion</td>
+              <td class="risk">Subendocardial injury</td>
+            </tr>
+            <tr>
+              <td class="key">Atrial fibrillation</td>
+              <td>P‑wave</td>
+              <td>Absent P; fibrillatory baseline; irregular RR</td>
+              <td class="risk">Thrombo‑embolism</td>
+            </tr>
+            <tr>
+              <td class="key">LVH</td>
+              <td>QRS, ST–T</td>
+              <td>High voltage QRS; “strain” ST‑T in lateral leads</td>
+              <td class="risk">Heart failure, arrhythmias</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="info-block">
+        <h3>Suggested student tasks with this tool</h3>
+        <ul>
+          <li>
+            For the scenario, select each lead group and decide which artery is
+            most likely occluded and how that explains the blood pressure.
+          </li>
+          <li>
+            Switch between STEMI and NSTEMI patterns and describe aloud how the
+            ST segment and T‑waves change in each territory.
+          </li>
+          <li>
+            Change to atrial fibrillation and observe how the emphasis shifts
+            from ST‑segment to P‑wave and RR interval regularity.
+          </li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // Simple data model to drive the learning tool
+    const territoryData = {
+      inferior: {
+        label: "Inferior (II, III, aVF)",
+        leadLabel: "II (Inferior)",
+        main: "Inferior wall supplied mainly by the right coronary artery (RCA) in right‑dominant circulation.",
+        sub: "ST elevation in II, III and aVF with reciprocal depression in I and aVL suggests inferior MI. Watch for bradycardia and hypotension from RV or AV nodal involvement.",
+        pills: ["Leads: II, III, aVF", "Common artery: RCA", "Possible RV infarction"]
+      },
+      anterior: {
+        label: "Anterior (V3–V4)",
+        leadLabel: "V3 (Anterior)",
+        main: "Anterior wall and septal apex are supplied by the left anterior descending (LAD) artery.",
+        sub: "ST elevation in V3–V4 (often extending to V2–V6) indicates anterior MI and large myocardial territory at risk.",
+        pills: ["Leads: V3–V4", "Artery: LAD", "High‑risk large infarct"]
+      },
+      lateral: {
+        label: "Lateral (I, aVL, V5–V6)",
+        leadLabel: "V5 (Lateral)",
+        main: "Lateral LV wall is usually supplied by the left circumflex or diagonal branches of the LAD.",
+        sub: "ST elevation in I, aVL and V5–V6 indicates lateral involvement, often with reciprocal inferior changes.",
+        pills: ["Leads: I, aVL, V5–V6", "Artery: LCx / diagonal", "Posterolateral extension possible"]
+      },
+      septal: {
+        label: "Septal (V1–V2)",
+        leadLabel: "V1 (Septal)",
+        main: "Septal region is supplied by proximal LAD septal perforators.",
+        sub: "ST elevation in V1–V2 may indicate septal infarction; new right bundle branch block can appear if the conduction system is involved.",
+        pills: ["Leads: V1–V2", "Artery: Proximal LAD", "Conduction system at risk"]
+      }
+    };
+
+    const segmentData = {
+      P: {
+        label: "P‑wave",
+        main: "P‑wave represents atrial depolarisation originating from the sinoatrial node.",
+        sub: "P‑wave absence or chaotic baseline suggests atrial fibrillation, while tall or broad P‑waves point to atrial enlargement.",
+        pills: ["Atrial depolarisation", "Look for morphology & axis"]
+      },
+      QRS: {
+        label: "QRS complex",
+        main: "QRS complex represents rapid depolarisation of the ventricles via the His‑Purkinje system.",
+        sub: "A wide QRS suggests bundle branch block or ventricular origin; extreme axis deviation may indicate ventricular rhythm or severe conduction disease.",
+        pills: ["Ventricular depolarisation", "Width & axis are key"]
+      },
+      ST: {
+        label: "ST segment",
+        main: "ST segment is the plateau phase when both ventricles are fully depolarised.",
+        sub: "ST elevation or depression is a core sign of acute ischaemia or infarction; morphology and distribution help distinguish STEMI from pericarditis or benign variants.",
+        pills: ["Injury currents", "Elevation vs depression"]
+      },
+      T: {
+        label: "T‑wave",
+        main: "T‑wave reflects ventricular repolarisation and is normally concordant with the QRS in most leads.",
+        sub: "Deep inversion or hyperacute, bulky T‑waves can be early markers of ischaemia, infarction or intracranial events.",
+        pills: ["Repolarisation behaviour", "Electrolyte & ischaemia sensitive"]
+      }
+    };
+
+    const diseaseData = {
+      stemi: {
+        label: "Acute STEMI",
+        main: "Acute STEMI produces localised ST elevation in contiguous leads facing the infarct with reciprocal ST depression in opposite leads.",
+        sub: "Transmural injury rapidly progresses to irreversible necrosis; early reperfusion (PCI or thrombolysis) strongly improves survival.",
+        pills: ["Time‑critical emergency", "Localised ST ↑ + reciprocal ST ↓"]
+      },
+      nstemi: {
+        label: "NSTEMI / Ischaemia",
+        main: "NSTEMI and demand ischaemia typically show ST depression and/or T‑wave inversion rather than focal ST elevation.",
+        sub: "Involvement is often subendocardial; troponin elevation defines NSTEMI, while normal biomarkers with similar ECG changes suggest unstable angina.",
+        pills: ["ST ↓ or T inversion", "Subendocardial injury"]
+      },
+      lvh: {
+        label: "Left ventricular hypertrophy",
+        main: "LVH causes high‑voltage QRS complexes with secondary 'strain' ST‑T changes in lateral leads.",
+        sub: "Chronic pressure overload from hypertension or aortic stenosis thickens the LV, predisposing to diastolic dysfunction and arrhythmias.",
+        pills: ["High‑voltage QRS", "Lateral strain pattern"]
+      },
+      af: {
+        label: "Atrial fibrillation",
+        main: "Atrial fibrillation abolishes organised P‑waves and produces an irregularly irregular ventricular response.",
+        sub: "Loss of atrial contraction promotes thrombus formation, especially in the left atrial appendage, increasing the risk of stroke.",
+        pills: ["No P‑waves; irregular RR", "Stroke risk"]
+      }
+    };
+
+    // Quiz bank keyed loosely to combinations but kept simple
+    const quizBank = [
+      {
+        id: "inferior-stemi",
+        question:
+          "In this patient with chest pain, ST elevation in II, III and aVF most strongly suggests occlusion of which coronary territory?",
+        options: ["Proximal LAD", "Right coronary artery", "Left main stem", "Diagonal branch"],
+        correct: "Right coronary artery",
+        explanation:
+          "II, III and aVF view the inferior wall, usually supplied by the right coronary artery in a right‑dominant system."
+      },
+      {
+        id: "anterior-stemi",
+        question:
+          "ST elevation in V3–V4 with loss of R‑wave progression most strongly points to which artery?",
+        options: ["Left anterior descending", "Right coronary artery", "Left circumflex", "Posterior descending"],
+        correct: "Left anterior descending",
+        explanation:
+          "V3–V4 face the anterior wall and septal apex supplied by the LAD."
+      },
+      {
+        id: "septal-bbb",
+        question:
+          "New ST changes in V1–V2 with right bundle branch block raise concern for which key structure being ischaemic?",
+        options: ["AV node", "His‑Purkinje system in the septum", "SA node", "Right atrium"],
+        correct: "His‑Purkinje system in the septum",
+        explanation:
+          "The proximal conduction system courses through the interventricular septum, reflected in V1–V2."
+      },
+      {
+        id: "af-pwave",
+        question:
+          "In atrial fibrillation, which ECG region is most characteristically altered?",
+        options: ["P‑wave", "QRS complex", "ST segment", "U‑wave"],
+        correct: "P‑wave",
+        explanation:
+          "Organised P‑waves disappear, replaced by fibrillatory baseline and irregular RR intervals."
+      }
+    ];
+
+    // Current selections
+    let currentTerritory = "inferior";
+    let currentRegion = "ST";
+    let currentDisease = "stemi";
+
+    // DOM references
+    const territoryLabel = document.getElementById("territoryLabel");
+    const currentLeadLabel = document.getElementById("currentLeadLabel");
+    const territoryInfoMain = document.getElementById("territoryInfoMain");
+    const territoryInfoSub = document.getElementById("territoryInfoSub");
+    const territoryPills = document.getElementById("territoryPills");
+
+    const segmentLabel = document.getElementById("segmentLabel");
+    const segmentInfoMain = document.getElementById("segmentInfoMain");
+    const segmentInfoSub = document.getElementById("segmentInfoSub");
+    const segmentPills = document.getElementById("segmentPills");
+
+    const diseaseLabel = document.getElementById("diseaseLabel");
+    const diseaseInfoMain = document.getElementById("diseaseInfoMain");
+    const diseaseInfoSub = document.getElementById("diseaseInfoSub");
+    const diseasePills = document.getElementById("diseasePills");
+
+    const regionP = document.getElementById("regionP");
+    const regionQRS = document.getElementById("regionQRS");
+    const regionST = document.getElementById("regionST");
+    const regionT = document.getElementById("regionT");
+
+    const labelP = document.getElementById("labelP");
+    const labelQRS = document.getElementById("labelQRS");
+    const labelST = document.getElementById("labelST");
+    const labelT = document.getElementById("labelT");
+
+    const quizQuestion = document.getElementById("quizQuestion");
+    const quizOptions = document.getElementById("quizOptions");
+    const quizFeedback = document.getElementById("quizFeedback");
+
+    // Helpers
+    function clearChildren(node) {
+      while (node.firstChild) node.removeChild(node.firstChild);
+    }
+
+    function setPills(container, items, type = "default") {
+      clearChildren(container);
+      items.forEach((txt, index) => {
+        const span = document.createElement("span");
+        span.classList.add("pill");
+        if (type === "territory" && index === 0) span.classList.add("primary");
+        if (type === "segment" && index === 0) span.classList.add("warning");
+        if (type === "disease" && index === 0) span.classList.add("danger");
+        span.textContent = txt;
+        container.appendChild(span);
+      });
+    }
+
+    function updateTerritory() {
+      const t = territoryData[currentTerritory];
+      territoryLabel.textContent = t.label;
+      currentLeadLabel.textContent = t.leadLabel;
+      territoryInfoMain.innerHTML =
+        "<strong>" + t.main.split(".")[0] + ".</strong>" + t.main.slice(t.main.indexOf(".") + 1);
+      territoryInfoSub.textContent = t.sub;
+      setPills(territoryPills, t.pills, "territory");
+    }
+
+    function updateSegment() {
+      const s = segmentData[currentRegion];
+      segmentLabel.textContent = s.label;
+      segmentInfoMain.innerHTML =
+        "<strong>" + s.main.split(".")[0] + ".</strong>" + s.main.slice(s.main.indexOf(".") + 1);
+      segmentInfoSub.textContent = s.sub;
+      setPills(segmentPills, s.pills, "segment");
+
+      // Highlight the chosen ECG region
+      [regionP, regionQRS, regionST, regionT].forEach((el) =>
+        el.classList.remove("visible")
+      );
+      [labelP, labelQRS, labelST, labelT].forEach((el) =>
+        el.classList.remove("active-region-label")
+      );
+
+      if (currentRegion === "P") {
+        regionP.classList.add("visible");
+        labelP.classList.add("active-region-label");
+      } else if (currentRegion === "QRS") {
+        regionQRS.classList.add("visible");
+        labelQRS.classList.add("active-region-label");
+      } else if (currentRegion === "ST") {
+        regionST.classList.add("visible");
+        labelST.classList.add("active-region-label");
+      } else if (currentRegion === "T") {
+        regionT.classList.add("visible");
+        labelT.classList.add("active-region-label");
+      }
+    }
+
+    function updateDisease() {
+      const d = diseaseData[currentDisease];
+      diseaseLabel.textContent = d.label;
+      diseaseInfoMain.innerHTML =
+        "<strong>" + d.main.split(".")[0] + ".</strong>" + d.main.slice(d.main.indexOf(".") + 1);
+      diseaseInfoSub.textContent = d.sub;
+      setPills(diseasePills, d.pills, "disease");
+      updateQuiz();
+    }
+
+    function pickQuiz() {
+      // Simple rule: map some combinations to specific questions, otherwise default to first
+      if (currentTerritory === "inferior" && currentDisease === "stemi")
+        return quizBank[0];
+      if (currentTerritory === "anterior" && currentDisease === "stemi")
+        return quizBank[1];
+      if (currentTerritory === "septal")
+        return quizBank[2];
+      if (currentDisease === "af" && currentRegion === "P")
+        return quizBank[3];
+      return quizBank[0];
+    }
+
+    function updateQuiz() {
+      const q = pickQuiz();
+      quizQuestion.textContent = q.question;
+      clearChildren(quizOptions);
+      quizFeedback.textContent = "Select an answer to check your reasoning.";
+
+      q.options.forEach((opt) => {
+        const btn = document.createElement("button");
+        btn.classList.add("quiz-btn");
+        btn.textContent = opt;
+        btn.addEventListener("click", () => {
+          [...quizOptions.children].forEach((c) => {
+            c.classList.remove("correct", "incorrect");
+          });
+          if (opt === q.correct) {
+            btn.classList.add("correct");
+            quizFeedback.textContent = "Correct: " + q.explanation;
+          } else {
+            btn.classList.add("incorrect");
+            quizFeedback.textContent =
+              "Not quite: " + q.explanation + " Try linking the lead group to its arterial supply.";
+          }
+        });
+        quizOptions.appendChild(btn);
+      });
+    }
+
+    // Event listeners for lead / region / disease buttons
+    document.querySelectorAll(".lead-btn[data-territory]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document
+          .querySelectorAll(".lead-btn[data-territory]")
+          .forEach((b) => b.classList.remove("active-lead-btn"));
+        btn.classList.add("active-lead-btn");
+        currentTerritory = btn.getAttribute("data-territory");
+        updateTerritory();
+        updateQuiz();
+      });
+    });
+
+    document.querySelectorAll(".lead-btn[data-region]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document
+          .querySelectorAll(".lead-btn[data-region]")
+          .forEach((b) => b.classList.remove("active-lead-btn"));
+        btn.classList.add("active-lead-btn");
+        currentRegion = btn.getAttribute("data-region");
+        updateSegment();
+        updateQuiz();
+      });
+    });
+
+    document.querySelectorAll(".lead-btn[data-disease]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document
+          .querySelectorAll(".lead-btn[data-disease]")
+          .forEach((b) => b.classList.remove("active-lead-btn"));
+        btn.classList.add("active-lead-btn");
+        currentDisease = btn.getAttribute("data-disease");
+        updateDisease();
+      });
+    });
+
+    // Initial setup
+    updateTerritory();
+    updateSegment();
+    updateDisease();
+  </script>
+</body>
+</html>
