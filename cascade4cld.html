@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coagulation Cascade Learning Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .scenario-box {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .scenario-box h2 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .scenario-box p {
+            line-height: 1.6;
+            font-size: 1.05em;
+            margin: 5px 0;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: #e0e7ff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            color: #4c1d95;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #c7d2fe;
+            transform: translateY(-2px);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .cascade-diagram {
+            background: #f8fafc;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #e2e8f0;
+        }
+
+        .pathway {
+            margin: 20px 0;
+        }
+
+        .pathway h3 {
+            color: #1e3c72;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .factor-box {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .factor-box:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .factor-box.clicked {
+            background: #e0e7ff;
+            border-left-color: #4c1d95;
+        }
+
+        .factor-name {
+            font-weight: bold;
+            color: #1e3c72;
+            font-size: 1.1em;
+        }
+
+        .factor-detail {
+            display: none;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .factor-box.clicked .factor-detail {
+            display: block;
+        }
+
+        .arrow {
+            text-align: center;
+            font-size: 2em;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .quiz-section {
+            background: #f0fdf4;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #86efac;
+        }
+
+        .question {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .question h4 {
+            color: #166534;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option {
+            padding: 15px;
+            background: white;
+            border: 2px solid #d1fae5;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .option:hover {
+            background: #d1fae5;
+            border-color: #86efac;
+        }
+
+        .option.correct {
+            background: #86efac;
+            border-color: #22c55e;
+            cursor: default;
+        }
+
+        .option.incorrect {
+            background: #fecaca;
+            border-color: #ef4444;
+            cursor: default;
+        }
+
+        .feedback {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .feedback.show {
+            display: block;
+        }
+
+        .feedback.correct {
+            background: #d1fae5;
+            color: #166534;
+        }
+
+        .feedback.incorrect {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+        .anticoagulant-card {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border-top: 4px solid #8b5cf6;
+        }
+
+        .anticoagulant-card h4 {
+            color: #6d28d9;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .drug-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            background: #f5f3ff;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #8b5cf6;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #6d28d9;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .disease-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 12px;
+            border-left: 5px solid #f59e0b;
+        }
+
+        .disease-card h4 {
+            color: #92400e;
+            margin-bottom: 10px;
+        }
+
+        .disease-card p {
+            margin: 8px 0;
+            color: #78350f;
+            line-height: 1.6;
+        }
+
+        .score-box {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-size: 1.2em;
+        }
+
+        .interactive-cascade {
+            position: relative;
+            padding: 30px;
+            background: #f8fafc;
+            border-radius: 15px;
+        }
+
+        .cascade-step {
+            background: white;
+            padding: 15px;
+            margin: 15px auto;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+        }
+
+        .cascade-step:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .cascade-step.activated {
+            border-color: #22c55e;
+            background: #d1fae5;
+        }
+
+        .cascade-step.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .reset-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            margin: 20px auto;
+            display: block;
+            transition: all 0.3s;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .clinical-pearl {
+            background: #fef3c7;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border-left: 5px solid #f59e0b;
+        }
+
+        .clinical-pearl h4 {
+            color: #92400e;
+            margin-bottom: 10px;
+        }
+
+        .clinical-pearl p {
+            color: #78350f;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 1.5em;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                width: 100%;
+            }
+
+            .drug-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🩸 Blood Coagulation & Anticoagulants</h1>
+            <p style="font-size: 1.2em; margin-bottom: 5px;">Hafeez Faridi Ph.D.</p>
+            <p>Interactive Learning Tool for Medical Students</p>
+        </div>
+
+        <div class="content">
+            <div class="scenario-box">
+                <h2>📋 Clinical Scenario</h2>
+                <p><strong>Patient:</strong> Margaret Chen, 68-year-old female</p>
+                <p><strong>Chief Complaint:</strong> Sudden onset of left leg pain and swelling</p>
+                <p><strong>History:</strong> Recently underwent hip replacement surgery 5 days ago. Currently immobile and on bed rest. No prior history of clotting disorders.</p>
+                <p><strong>Physical Exam:</strong> Left calf is swollen, warm to touch, and tender. Positive Homan's sign.</p>
+                <p><strong>Diagnosis:</strong> Deep Vein Thrombosis (DVT)</p>
+                <p><strong>Your Task:</strong> Understand the coagulation cascade that led to this clot formation and determine the appropriate anticoagulant therapy.</p>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('cascade')">Coagulation Cascade</button>
+                <button class="tab" onclick="switchTab('interactive')">Interactive Pathway</button>
+                <button class="tab" onclick="switchTab('anticoagulants')">Anticoagulants</button>
+                <button class="tab" onclick="switchTab('diseases')">Coagulation Disorders</button>
+                <button class="tab" onclick="switchTab('quiz')">Knowledge Check</button>
+            </div>
+
+            <div id="cascade" class="tab-content active">
+                <div class="cascade-diagram">
+                    <h3>The Coagulation Cascade</h3>
+                    <p style="margin-bottom: 20px; color: #475569;">Click on each factor to learn more about its role in coagulation:</p>
+
+                    <div class="pathway">
+                        <h3 style="color: #dc2626;">🔴 Intrinsic Pathway (Contact Activation)</h3>
+                        <div class="factor-box" onclick="this.classList.toggle('clicked')">
+                            <div class="factor-name">Factor XII (Hageman Factor) → XIIa</div>
+                            <div class="factor-detail">
+                                <strong>Activation:</strong> Activated by contact with negatively charged surfaces (collagen, basement membrane)<br>
+                                <strong>Function:</strong> Initiates the intrinsic pathway<br>
+                                <strong>Clinical Note:</strong> Deficiency does NOT cause bleeding (important for exams!)
+                            </div>
+                        </div>
+
+                        <div class="arrow">↓</div>
+
+                        <div class="factor-box" onclick="this.classList.toggle('clicked')">
+                            <div class="factor-name">Factor XI → XIa</div>
+                            <div class="factor-detail">
+                                <strong>Activated by:</strong> Factor XIIa<br>
+                                <strong>Function:</strong> Activates Factor IX<br>
+                                <strong>Clinical Note:</strong> Deficiency causes hemophilia C (rare, mild bleeding)
+                            </div>
+                        </div>
+
+                        <div class="arrow">↓</div>
+
+                        <div class="factor-box" onclick="this.classList.toggle('clicked')">
+                            <div class="factor-name">Factor IX (Christmas Factor) → IXa</div>
+                            <div class="factor-detail">
+                                <strong>Activated by:</strong> Factor XIa or Factor VIIa (extrinsic)<br>
+                                <strong>Cofactor:</strong> Factor VIIIa, Calcium, Phospholipids<br>
+                                <strong>Clinical Note:</strong> Deficiency causes Hemophilia B (Christmas disease)<br>
+                                <strong>Vitamin K dependent:</strong> Yes
+                            </div>
+                        </div>
+
+                        <div class="arrow">↓</div>
+
+                        <div class="factor-box" onclick="this.classList.toggle('clicked')">
+                            <div class="factor-name">Factor X → Xa (Common Pathway)</div>
+                            <div class="factor-detail">
+                                <strong>Activated by:</strong> Factor IXa-VIIIa complex OR Factor VIIa-TF complex<br>
+                                <strong>Function:</strong> Converts prothrombin to thrombin<br>
+                                <strong>Vitamin K dependent:</strong> Yes
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pathway">
+                        <h3 style="color: #059669;">🟢 Extrinsic Pathway (Tissue Factor)</h3>
+                        <div class="factor-box" onclick="this.classList.toggle('clicked')">
+                            <div class="factor-name">Tissue Factor (TF) + Factor VII → VIIa</div>
+                            <div class="factor-detail">
+                                <strong>Trigger:</strong> Vascular injury exposes Tissue Factor<br>
+                                <strong>Function:</strong> Binds Factor VII, activating the extrinsic pathway<br>
+                                <strong>Clinical Note:</strong> Primary initiator of coagulation in vivo<br>
+                                <strong>Speed:</strong> Fastest pathway (seconds)
+                            </div>
+                        </div>
+
+                        <div class="arrow">↓</div>
+
+                        <div class="factor-box" onclick="this.classList.toggle('clicked')">
+                            <div class="factor-name">Factor X → Xa (Converges to Common Pathway)</div>
+                            <div class="factor-detail">
+                                <strong>Activated by:</strong> TF-VIIa complex<br>
+                                <strong>Note:</strong> This is where intrinsic and extrinsic pathways merge
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pathway">
+                        <h3 style="color: #7c3aed;">🟣 Common Pathway (Final Steps)</h3>
+                        <div class="factor-box" onclick="this.classList.toggle('clicked')">
+                            <div class="factor-name">Prothrombin (Factor II) → Thrombin (IIa)</div>
+                            <div class="factor-detail">
+                                <strong>Activated by:</strong> Factor Xa with cofactor Va<br>
+                                <strong>Function:</strong> Central enzyme in coagulation<br>
+                                <strong>Multiple roles:</strong> Converts fibrinogen to fibrin, activates factors V, VIII, XI, XIII, and platelets<br>
+                                <strong>Vitamin K dependent:</strong> Yes
+                            </div>
+                        </div>
+
+                        <div class="arrow">↓</div>
+
+                        <div class="factor-box" onclick="this.classList.toggle('clicked')">
+                            <div class="factor-name">Fibrinogen (Factor I) → Fibrin</div>
+                            <div class="factor-detail">
+                                <strong>Converted by:</strong> Thrombin<br>
+                                <strong>Function:</strong> Forms the mesh framework of the clot<br>
+                                <strong>Structure:</strong> Initially forms soft clot, then cross-linked by Factor XIIIa
+                            </div>
+                        </div>
+
+                        <div class="arrow">↓</div>
+
+                        <div class="factor-box" onclick="this.classList.toggle('clicked')">
+                            <div class="factor-name">Factor XIII → XIIIa (Fibrin Stabilizing Factor)</div>
+                            <div class="factor-detail">
+                                <strong>Activated by:</strong> Thrombin<br>
+                                <strong>Function:</strong> Cross-links fibrin polymers to form stable clot<br>
+                                <strong>Result:</strong> Mechanically strong, insoluble clot
+                            </div>
+                        </div>
+
+                        <div class="arrow">↓</div>
+
+                        <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; border-radius: 12px; font-size: 1.3em; font-weight: bold;">
+                            🩸 STABLE FIBRIN CLOT FORMATION
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="interactive" class="tab-content">
+                <div class="interactive-cascade">
+                    <h3 style="margin-bottom: 20px; color: #1e3c72;">Click the steps in order to activate the cascade!</h3>
+                    <p style="margin-bottom: 20px; color: #475569;">Start with "Vascular Injury" and click each step in the correct sequence.</p>
+                    
+                    <div class="cascade-step" data-step="1" onclick="activateStep(1)">
+                        <strong>1. Vascular Injury</strong><br>
+                        Damage to blood vessel exposes collagen and tissue factor
+                    </div>
+                    
+                    <div class="cascade-step disabled" data-step="2" onclick="activateStep(2)">
+                        <strong>2. Platelet Adhesion & Activation</strong><br>
+                        von Willebrand Factor helps platelets stick to injury site
+                    </div>
+                    
+                    <div class="cascade-step disabled" data-step="3" onclick="activateStep(3)">
+                        <strong>3. Tissue Factor Pathway (Extrinsic)</strong><br>
+                        TF + Factor VII → Factor Xa
+                    </div>
+                    
+                    <div class="cascade-step disabled" data-step="4" onclick="activateStep(4)">
+                        <strong>4. Contact Activation (Intrinsic)</strong><br>
+                        XII → XI → IX → X (amplification loop)
+                    </div>
+                    
+                    <div class="cascade-step disabled" data-step="5" onclick="activateStep(5)">
+                        <strong>5. Thrombin Generation</strong><br>
+                        Factor Xa converts prothrombin → thrombin
+                    </div>
+                    
+                    <div class="cascade-step disabled" data-step="6" onclick="activateStep(6)">
+                        <strong>6. Fibrin Formation</strong><br>
+                        Thrombin converts fibrinogen → fibrin
+                    </div>
+                    
+                    <div class="cascade-step disabled" data-step="7" onclick="activateStep(7)">
+                        <strong>7. Clot Stabilization</strong><br>
+                        Factor XIIIa cross-links fibrin strands
+                    </div>
+                    
+                    <button class="reset-btn" onclick="resetCascade()">Reset Cascade</button>
+                    
+                    <div id="cascadeScore" class="score-box" style="display: none;">
+                        🎉 Excellent! You've completed the coagulation cascade!
+                    </div>
+                </div>
+            </div>
+
+            <div id="anticoagulants" class="tab-content">
+                <h3 style="margin-bottom: 20px; color: #1e3c72;">Pharmacology of Anticoagulants</h3>
+                
+                <div class="anticoagulant-card">
+                    <h4>🔵 Warfarin (Coumadin) - Vitamin K Antagonist</h4>
+                    <p style="margin: 10px 0; line-height: 1.6;">Inhibits vitamin K epoxide reductase, preventing regeneration of reduced vitamin K needed for synthesis of factors II, VII, IX, X and proteins C & S.</p>
+                    <div class="drug-info">
+                        <div class="info-item">
+                            <div class="info-label">Mechanism</div>
+                            Blocks vitamin K dependent clotting factors
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Onset</div>
+                            3-5 days (must deplete existing factors)
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Monitoring</div>
+                            INR (target usually 2-3)
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Reversal</div>
+                            Vitamin K, Fresh Frozen Plasma, PCC
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Key Interactions</div>
+                            Many drug & food interactions (leafy greens)
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Indications</div>
+                            DVT, PE, A-fib, mechanical heart valves
+                        </div>
+                    </div>
+                </div>
+
+                <div class="anticoagulant-card">
+                    <h4>💉 Heparin & Low Molecular Weight Heparin (LMWH)</h4>
+                    <p style="margin: 10px 0; line-height: 1.6;">Binds to antithrombin III, increasing its activity 1000-fold. Antithrombin III then inactivates thrombin (IIa) and Factor Xa.</p>
+                    <div class="drug-info">
+                        <div class="info-item">
+                            <div class="info-label">Mechanism</div>
+                            Activates antithrombin III → inactivates IIa & Xa
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Onset</div>
+                            Immediate (IV/SC)
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Monitoring</div>
+                            aPTT for UFH; anti-Xa for LMWH
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Reversal</div>
+                            Protamine sulfate (binds heparin)
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Adverse Effects</div>
+                            HIT (Heparin-Induced Thrombocytopenia)
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">LMWH Advantage</div>
+                            More predictable, less monitoring needed
+                        </div>
+                    </div>
+                </div>
+
+                <div class="anticoagulant-card">
+                    <h4>🔴 Direct Oral Anticoagulants (DOACs)</h4>
+                    <p style="margin: 10px 0; line-height: 1.6;"><strong>Direct Thrombin Inhibitors:</strong> Dabigatran<br><strong>Factor Xa Inhibitors:</strong> Rivaroxaban, Apixaban, Edoxaban</p>
+                    <div class="drug-info">
+                        <div class="info-item">
+                            <div class="info-label">Mechanism</div>
+                            Directly inhibit thrombin or Factor Xa
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Onset</div>
+                            1-4 hours (rapid)
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Monitoring</div>
+                            Generally not required
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Reversal</div>
+                            Idarucizumab (dabigatran), Andexanet alfa (Xa inhibitors)
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Advantages</div>
+                            Fixed dosing, fewer interactions, no INR monitoring
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Contraindications</div>
+                            Severe renal impairment, mechanical valves
+                        </div>
+                    </div>
+                </div>
+
+                <div class="anticoagulant-card">
+                    <h4>🟡 Antiplatelet Agents</h4>
+                    <p style="margin: 10px 0; line-height: 1.6;">While not true anticoagulants, these prevent platelet aggregation.</p>
+                    <div class="drug-info">
+                        <div class="info-item">
+                            <div class="info-label">Aspirin</div>
+                            Irreversibly inhibits COX-1 → ↓ TXA2 production
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Clopidogrel</div>
+                            P2Y12 inhibitor → blocks ADP-induced aggregation
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">GP IIb/IIIa Inhibitors</div>
+                            Block final common pathway of platelet aggregation
+                        </div>
+                    </div>
+                </div>
+
+                <div class="clinical-pearl">
+                    <h4>⚠️ Clinical Pearl for Margaret's Case</h4>
+                    <p>For acute DVT treatment, initial therapy typically involves LMWH (enoxaparin) or fondaparinux for rapid anticoagulation, bridged to warfarin OR starting a DOAC directly. DOACs are increasingly preferred for their convenience and safety profile.</p>
+                </div>
+            </div>
+
+            <div id="diseases" class="tab-content">
+                <h3 style="margin-bottom: 20px; color: #1e3c72;">Coagulation Disorders</h3>
+
+                <div class="disease-card">
+                    <h4>🩸 Hemophilia A (Factor VIII Deficiency)</h4>
+                    <p><strong>Inheritance:</strong> X-linked recessive</p>
+                    <p><strong>Clinical Features:</strong> Spontaneous bleeding into joints (hemarthrosis), muscles, soft tissues</p>
+                    <p><strong>Lab Findings:</strong> Prolonged aPTT, normal PT, normal platelets</p>
+                    <p><strong>Treatment:</strong> Recombinant Factor VIII replacement, Desmopressin (mild cases), Emicizumab (prophylaxis)</p>
+                </div>
+
+                <div class="disease-card">
+                    <h4>🩸 Hemophilia B (Factor IX Deficiency - Christmas Disease)</h4>
+                    <p><strong>Inheritance:</strong> X-linked recessive</p>
+                    <p><strong>Clinical Features:</strong> Similar to Hemophilia A but often milder</p>
+                    <p><strong>Lab Findings:</strong> Prolonged aPTT, normal PT</p>
+                    <p><strong>Treatment:</strong> Recombinant Factor IX replacement</p>
+                </div>
+
+                <div class="disease-card">
+                    <h4>🩸 von Willebrand Disease (vWD)</h4>
+                    <p><strong>Inheritance:</strong> Autosomal dominant (most common inherited bleeding disorder)</p>
+                    <p><strong>Pathophysiology:</strong> Deficiency or dysfunction of von Willebrand Factor (vWF) → impaired platelet adhesion and Factor VIII stabilization</p>
+                    <p><strong>Clinical Features:</strong> Mucosal bleeding (epistaxis, menorrhagia), easy bruising, prolonged bleeding after procedures</p>
+                    <p><strong>Lab Findings:</strong> ↓ vWF antigen, ↓ vWF activity, may have ↓ Factor VIII, prolonged bleeding time</p>
+                    <p><strong>Treatment:</strong> Desmopressin (releases vWF stores), vWF concentrates</p>
+                </div>
+
+                <div class="disease-card">
+                    <h4>⚡ Disseminated Intravascular Coagulation (DIC)</h4>
+                    <p><strong>Pathophysiology:</strong> Widespread activation of coagulation → consumption of platelets & clotting factors → paradoxical bleeding</p>
+                    <p><strong>Causes:</strong> Sepsis, trauma, malignancy, obstetric complications, transfusion reactions</p>
+                    <p><strong>Clinical Features:</strong> Both bleeding (from factor depletion) and thrombosis (microthrombi)</p>
+                    <p><strong>Lab Findings:</strong> ↓ platelets, ↓ fibrinogen, ↑ PT/aPTT, ↑ D-dimer, schistocytes on blood smear</p>
+                    <p><strong>Treatment:</strong> Treat underlying cause, supportive care with platelets/FFP/cryoprecipitate as needed</p>
+                </div>
+
+                <div class="disease-card">
+                    <h4>🔵 Thrombophilias (Hypercoagulable States)</h4>
+                    <p><strong>Factor V Leiden:</strong> Most common inherited thrombophilia; resistance to activated protein C</p>
+                    <p><strong>Prothrombin G20210A:</strong> Mutation causing elevated prothrombin levels</p>
+                    <p><strong>Protein C/S Deficiency:</strong> Loss of natural anticoagulants → increased clotting</p>
+                    <p><strong>Antithrombin Deficiency:</strong> Severe thrombophilia; antithrombin inhibits multiple factors</p>
+                    <p><strong>Antiphospholipid Syndrome:</strong> Antibodies against phospholipids → recurrent thrombosis, pregnancy loss</p>
+                </div>
+            </div>
+
+            <div id="quiz" class="tab-content">
+                <div class="quiz-section">
+                    <h3 style="color: #166534; margin-bottom: 20px;">Test Your Knowledge</h3>
+                    
+                    <div class="question">
+                        <h4>Question 1: Which anticoagulant would be MOST appropriate for Margaret's acute DVT treatment in the emergency department?</h4>
+                        <div class="options">
+                            <div class="option" data-correct="false" onclick="checkQuizAnswer(this)">
+                                A. Warfarin (start immediately)
+                            </div>
+                            <div class="option" data-correct="true" onclick="checkQuizAnswer(this)">
+                                B. Low molecular weight heparin (enoxaparin)
+                            </div>
+                            <div class="option" data-correct="false" onclick="checkQuizAnswer(this)">
+                                C. Aspirin
+                            </div>
+                            <div class="option" data-correct="false" onclick="checkQuizAnswer(this)">
+                                D. Clopidogrel
+                            </div>
+                        </div>
+                        <div class="feedback"></div>
+                    </div>
+
+                    <div class="question">
+                        <h4>Question 2: Warfarin works by inhibiting which enzyme?</h4>
+                        <div class="options">
+                            <div class="option" data-correct="false" onclick="checkQuizAnswer(this)">
+                                A. Antithrombin III
+                            </div>
+                            <div class="option" data-correct="true" onclick="checkQuizAnswer(this)">
+                                B. Vitamin K epoxide reductase
+                            </div>
+                            <div class="option" data-correct="false" onclick="checkQuizAnswer(this)">
+                                C. Factor Xa directly
+                            </div>
+                            <div class="option" data-correct="false" onclick="checkQuizAnswer(this)">
+                                D. Thrombin directly
+                            </div>
+                        </div>
+                        <div class="feedback"></div>
+                    </div>
+
+                    <div class="question">
+                        <h4>Question 3: A patient with Factor VIII deficiency would have which laboratory findings?</h4>
+                        <div class="options">
+                            <div class="option" data-correct="true" onclick="checkQuizAnswer(this)">
+                                A. Prolonged aPTT, normal PT
+                            </div>
+                            <div class="option" data-correct="false" onclick="checkQuizAnswer(this)">
+                                B. Normal aPTT, prolonged PT
+                            </div>
+                            <div class="option" data-correct="false" onclick="checkQuizAnswer(this)">
+                                C. Prolonged aPTT, prolonged PT
+                            </div>
+                            <div class="option" data-correct="false" onclick="checkQuizAnswer(this)">
+                                D. Normal aPTT, normal PT
+                            </div>
+                        </div>
+                        <div class="feedback"></div>
+                    </div>
+
+                    <div class="question">
+                        <h4>Question 4: What is the reversal agent for dabigatran toxicity?</h4>
+                        <div class="options">
+                            <div class="option" data-correct="false" onclick="checkQuizAnswer(this)">
+                                A. Vitamin K
+                            </div>
+                            <div class="option" data-correct="false" onclick="checkQuizAnswer(this)">
+                                B. Protamine sulfate
+                            </div>
+                            <div class="option" data-correct="true" onclick="checkQuizAnswer(this)">
+                                C. Idarucizumab
+                            </div>
+                            <div class="option" data-correct="false" onclick="checkQuizAnswer(this)">
+                                D. Andexanet alfa
+                            </div>
+                        </div>
+                        <div class="feedback"></div>
+                    </div>
+
+                    <div class="question">
+                        <h4>Question 5: Which pathway is FASTEST in initiating coagulation in vivo?</h4>
+                        <div class="options">
+                            <div class="option" data-correct="false" onclick="checkQuizAnswer(this)">
+                                A. Intrinsic pathway
+                            </div>
+                            <div class="option" data-correct="true" onclick="checkQuizAnswer(this)">
+                                B. Extrinsic pathway (Tissue Factor)
+                            </div>
+                            <div class="option" data-correct="false" onclick="checkQuizAnswer(this)">
+                                C. Common pathway
+                            </div>
+                            <div class="option" data-correct="false" onclick="checkQuizAnswer(this)">
+                                D. All pathways activate simultaneously
+                            </div>
+                        </div>
+                        <div class="feedback"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+
+        // Tab switching function
+        function switchTab(tabName) {
+            // Hide all tab contents
+            const allContents = document.querySelectorAll('.tab-content');
+            allContents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Remove active class from all tabs
+            const allTabs = document.querySelectorAll('.tab');
+            allTabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab content
+            const targetContent = document.getElementById(tabName);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+
+            // Add active class to clicked tab
+            const clickedTab = event.target;
+            if (clickedTab) {
+                clickedTab.classList.add('active');
+            }
+        }
+
+        // Interactive cascade activation
+        function activateStep(stepNum) {
+            const step = document.querySelector(`[data-step="${stepNum}"]`);
+            
+            if (stepNum === currentStep + 1) {
+                step.classList.add('activated');
+                step.classList.remove('disabled');
+                currentStep++;
+                
+                // Enable next step
+                const nextStep = document.querySelector(`[data-step="${currentStep + 1}"]`);
+                if (nextStep) {
+                    nextStep.classList.remove('disabled');
+                }
+                
+                // Check if all steps completed
+                if (currentStep === 7) {
+                    document.getElementById('cascadeScore').style.display = 'block';
+                }
+            }
+        }
+
+        // Reset cascade
+        function resetCascade() {
+            currentStep = 0;
+            const steps = document.querySelectorAll('.cascade-step');
+            steps.forEach((step, index) => {
+                step.classList.remove('activated');
+                if (index > 0) {
+                    step.classList.add('disabled');
+                }
+            });
+            document.getElementById('cascadeScore').style.display = 'none';
+        }
+
+        // Quiz answer checking
+        function checkQuizAnswer(option) {
+            const question = option.closest('.question');
+            const options = question.querySelectorAll('.option');
+            const feedback = question.querySelector('.feedback');
+            const isCorrect = option.getAttribute('data-correct') === 'true';
+            
+            // Disable all options in this question
+            options.forEach(opt => {
+                opt.style.pointerEvents = 'none';
+                if (opt.getAttribute('data-correct') === 'true') {
+                    opt.classList.add('correct');
+                }
+            });
+            
+            // Mark selected answer
+            if (!isCorrect) {
+                option.classList.add('incorrect');
+            }
+            
+            // Show feedback
+            feedback.classList.add('show');
+            if (isCorrect) {
+                feedback.classList.add('correct');
+                feedback.textContent = '✓ Correct! Great job!';
+            } else {
+                feedback.classList.add('incorrect');
+                feedback.textContent = '✗ Incorrect. The correct answer is highlighted in green.';
+            }
+        }
+    </script>
+</body>
+</html>
