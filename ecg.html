@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive ECG & Cardiac Dynamics Learning Tool</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #e74c3c;
+            --accent: #3498db;
+            --bg: #f4f7f6;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--primary);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--white);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: var(--primary);
+        }
+
+        /* ECG Visualizer */
+        .ecg-display {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            background: #fff;
+            border: 2px solid #ddd;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: 
+                linear-gradient(90deg, rgba(255,0,0,0.1) 1px, transparent 1px),
+                linear-gradient(rgba(255,0,0,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .svg-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .wave-path {
+            fill: none;
+            stroke: #222;
+            stroke-width: 3;
+            transition: all 0.3s;
+        }
+
+        .interactive-zone {
+            cursor: pointer;
+            fill: transparent;
+            transition: fill 0.3s;
+        }
+
+        .interactive-zone:hover {
+            fill: rgba(52, 152, 219, 0.2);
+        }
+
+        /* Info Box */
+        #info-panel {
+            background: #edf2f7;
+            padding: 20px;
+            border-left: 5px solid var(--accent);
+            border-radius: 4px;
+            min-height: 120px;
+            margin-bottom: 30px;
+        }
+
+        /* Scenario Section */
+        .scenario-box {
+            background: #fff5f5;
+            border: 1px solid #feb2b2;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: var(--accent);
+        }
+
+        #feedback {
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .correct { color: #2f855a; }
+        .incorrect { color: #c53030; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>ECG Master: Interactive Waveform Guide</h1>
+    <p>Hover over the <strong>colored regions</strong> of the ECG wave below to understand the relationship between electrical signals and cardiac mechanics.</p>
+
+    <div class="ecg-display">
+        <svg viewBox="0 0 800 200" class="svg-container">
+            <path class="wave-path" d="M 0,100 L 100,100 L 120,80 L 140,100 L 250,100 L 260,120 L 280,20 L 300,180 L 320,100 L 450,100 C 480,100 500,60 530,100 L 800,100" />
+            
+            <rect class="interactive-zone" x="100" y="50" width="60" height="100" onmouseover="updateInfo('P')" />
+            <rect class="interactive-zone" x="250" y="20" width="80" height="160" onmouseover="updateInfo('QRS')" />
+            <rect class="interactive-zone" x="450" y="50" width="100" height="100" onmouseover="updateInfo('T')" />
+        </svg>
+    </div>
+
+    <div id="info-panel">
+        <h3 id="info-title">Select a Waveform</h3>
+        <p id="info-text">Hover over the P wave, QRS complex, or T wave to start learning.</p>
+    </div>
+
+    <hr>
+
+    <div class="scenario-box">
+        <h2>Clinical Scenario Challenge</h2>
+        <p id="scenario-text">A 65-year-old patient presents with chest pain and shortness of breath. You look at the ECG and notice the <strong>ST segment is significantly elevated</strong> above the baseline following the QRS complex.</p>
+        <p><strong>What is the most likely physiological cause?</strong></p>
+        
+        <div class="options-grid">
+            <button onclick="checkAnswer(false)">Atrial Fibrillation</button>
+            <button onclick="checkAnswer(true)">Acute Myocardial Infarction (STEMI)</button>
+            <button onclick="checkAnswer(false)">First-Degree Heart Block</button>
+            <button onclick="checkAnswer(false)">Hypokalemia</button>
+        </div>
+        <div id="feedback"></div>
+    </div>
+</div>
+
+<script>
+    const data = {
+        'P': {
+            title: "P Wave: Atrial Depolarization",
+            text: "This represents the electrical impulse spreading from the SA node through the atria. <b>Cardiac Activity:</b> Atrial contraction (systole). <b>Clinical Note:</b> Absence of P waves often indicates Atrial Fibrillation."
+        },
+        'QRS': {
+            title: "QRS Complex: Ventricular Depolarization",
+            text: "The impulse travels through the AV node, Bundle of His, and Purkinje fibers. <b>Cardiac Activity:</b> Ventricles contract, pumping blood to lungs and body. <b>Clinical Note:</b> A wide QRS (>0.12s) may indicate a Bundle Branch Block."
+        },
+        'T': {
+            title: "T Wave: Ventricular Repolarization",
+            text: "The ventricles reset electrically to prepare for the next beat. <b>Cardiac Activity:</b> Ventricles relax (diastole). <b>Clinical Note:</b> Peaked T waves can be a warning sign of Hyperkalemia (high potassium)."
+        }
+    };
+
+    function updateInfo(type) {
+        const panelTitle = document.getElementById('info-title');
+        const panelText = document.getElementById('info-text');
+        
+        panelTitle.innerHTML = data[type].title;
+        panelText.innerHTML = data[type].text;
+    }
+
+    function checkAnswer(isCorrect) {
+        const feedback = document.getElementById('feedback');
+        if (isCorrect) {
+            feedback.innerHTML = "Correct! ST-elevation indicates transmural myocardial ischemia (heart attack).";
+            feedback.className = "correct";
+        } else {
+            feedback.innerHTML = "Not quite. Try again! Think about what happens when heart muscle is acutely deprived of oxygen.";
+            feedback.className = "incorrect";
+        }
+    }
+</script>
+
+</body>
+</html>
