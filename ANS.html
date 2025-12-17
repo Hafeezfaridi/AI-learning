@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANS Physiology Lab & Quiz</title>
+    <style>
+        :root {
+            --sympathetic-color: #e74c3c;
+            --parasympathetic-color: #2ecc71;
+            --neutral-color: #34495e;
+            --bg-color: #ecf0f1;
+            --card-bg: #ffffff;
+            --accent: #3498db;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        /* Navigation */
+        .nav-bar {
+            text-align: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 2px solid var(--neutral-color);
+            color: var(--neutral-color);
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 0 10px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .nav-btn.active-tab {
+            background: var(--neutral-color);
+            color: white;
+        }
+
+        /* View Containers */
+        .view-section {
+            display: none; /* Hidden by default */
+        }
+        .view-section.active-view {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- DASHBOARD STYLES --- */
+        .header-section {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .header-section h2 {
+            margin-bottom: 5px;
+            color: var(--neutral-color);
+            font-size: 2em;
+        }
+
+        .author-line {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #555;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .instruction-line {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-weight: bold;
+            color: white;
+        }
+        .btn-symp { background-color: var(--sympathetic-color); }
+        .btn-para { background-color: var(--parasympathetic-color); }
+        .btn:hover { transform: translateY(-2px); }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .organ-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-top: 5px solid var(--neutral-color);
+        }
+
+        /* --- QUIZ STYLES --- */
+        .quiz-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .scenario-box {
+            background: #f8f9fa;
+            border-left: 5px solid var(--accent);
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        select {
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+
+        .feedback-area {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .correct { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .incorrect { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        .quiz-controls {
+            margin-top: 20px;
+        }
+
+        /* Helper Styles */
+        .detail-row { margin-bottom: 10px; }
+        .label { font-weight: bold; display: block; color: #555; }
+        .value { display: block; padding: 8px; background-color: #f8f9fa; border-left: 3px solid #ccc; margin-top: 2px;}
+        
+        /* State Specific Colors */
+        .border-symp { border-top-color: var(--sympathetic-color) !important; }
+        .border-para { border-top-color: var(--parasympathetic-color) !important; }
+
+    </style>
+</head>
+<body>
+
+    <div class="nav-bar">
+        <button class="nav-btn active-tab" onclick="switchTab('dashboard')">Dashboard (Study)</button>
+        <button class="nav-btn" onclick="switchTab('quiz')">Quiz (Test Yourself)</button>
+    </div>
+
+    <div id="view-dashboard" class="view-section active-view">
+        <div class="header-section">
+            <h2>Autonomic Physiology Explorer</h2>
+            <p class="author-line">Hafeez Faridi Ph.D.</p>
+            <p class="instruction-line">Select a state below to analyze organ response and neurochemistry.</p>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-para" onclick="setDashboardMode('parasympathetic')">Rest & Digest</button>
+            <button class="btn btn-symp" onclick="setDashboardMode('sympathetic')">Fight or Flight</button>
+        </div>
+
+        <div id="dashboard-content" class="dashboard-grid">
+            </div>
+    </div>
+
+    <div id="view-quiz" class="view-section">
+        <div class="quiz-container">
+            <h2>Clinical Challenge</h2>
+            <p style="color: #7f8c8d;">Hafeez Faridi Ph.D.</p>
+            <p>Predict the neurotransmitter and receptor for the specific organ scenario.</p>
+            <hr>
+            
+            <div id="quiz-interface">
+                <div class="scenario-box">
+                    <strong>Organ:</strong> <span id="q-organ">...</span><br>
+                    <strong>State:</strong> <span id="q-state">...</span><br>
+                    <strong>Physiological Goal:</strong> <span id="q-action" style="font-style: italic;">...</span>
+                </div>
+
+                <div class="input-group">
+                    <label>Primary Neurotransmitter:</label>
+                    <select id="ans-nt">
+                        <option value="">Select...</option>
+                        <option value="ACh">Acetylcholine (ACh)</option>
+                        <option value="NE">Norepinephrine (NE)</option>
+                        <option value="Epi">Epinephrine (Epi)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Receptor Type:</label>
+                    <select id="ans-receptor">
+                        <option value="">Select...</option>
+                        <option value="Alpha-1">Alpha-1 Adrenergic</option>
+                        <option value="Beta-1">Beta-1 Adrenergic</option>
+                        <option value="Beta-2">Beta-2 Adrenergic</option>
+                        <option value="Muscarinic">Muscarinic (M)</option>
+                        <option value="Nicotinic">Nicotinic (N)</option>
+                    </select>
+                </div>
+
+                <div class="quiz-controls">
+                    <button class="btn" style="background-color: var(--accent);" onclick="checkAnswer()">Check Answer</button>
+                    <button class="btn" style="background-color: #95a5a6; display:none;" id="nextBtn" onclick="generateQuestion()">Next Question</button>
+                </div>
+
+                <div id="feedback" class="feedback-area"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const organData = {
+            heart: {
+                title: "Heart",
+                sympathetic: { action: "Increased Rate & Force", nt: "NE", rec: "Beta-1", recDisplay: "β₁-Adrenergic" },
+                parasympathetic: { action: "Decreased Rate", nt: "ACh", rec: "Muscarinic", recDisplay: "M₂-Muscarinic" }
+            },
+            lungs: {
+                title: "Lungs",
+                sympathetic: { action: "Bronchodilation (Open Airways)", nt: "Epi", rec: "Beta-2", recDisplay: "β₂-Adrenergic" },
+                parasympathetic: { action: "Bronchoconstriction", nt: "ACh", rec: "Muscarinic", recDisplay: "M₃-Muscarinic" }
+            },
+            eyes: {
+                title: "Eyes (Iris)",
+                sympathetic: { action: "Pupil Dilation (Mydriasis)", nt: "NE", rec: "Alpha-1", recDisplay: "α₁-Adrenergic" },
+                parasympathetic: { action: "Pupil Constriction (Miosis)", nt: "ACh", rec: "Muscarinic", recDisplay: "M₃-Muscarinic" }
+            },
+            gut: {
+                title: "GI Tract",
+                sympathetic: { action: "Decreased Motility", nt: "NE", rec: "Alpha-1", recDisplay: "α/β-Adrenergic" },
+                parasympathetic: { action: "Increased Motility", nt: "ACh", rec: "Muscarinic", recDisplay: "M₃-Muscarinic" }
+            },
+            vessels: {
+                title: "Blood Vessels (Skin)",
+                sympathetic: { action: "Vasoconstriction", nt: "NE", rec: "Alpha-1", recDisplay: "α₁-Adrenergic" },
+                parasympathetic: { action: "No Effect (Minimal Innervation)", nt: "N/A", rec: "N/A", recDisplay: "None" }
+            }
+        };
+
+        // --- DASHBOARD LOGIC ---
+        function setDashboardMode(mode) {
+            const container = document.getElementById('dashboard-content');
+            container.innerHTML = '';
+            
+            Object.keys(organData).forEach(key => {
+                const data = organData[key][mode];
+                const card = document.createElement('div');
+                card.className = `organ-card ${mode === 'sympathetic' ? 'border-symp' : 'border-para'}`;
+                
+                card.innerHTML = `
+                    <h3>${organData[key].title}</h3>
+                    <div class="detail-row"><span class="label">Action:</span> <span class="value">${data.action}</span></div>
+                    <div class="detail-row"><span class="label">Neurotransmitter:</span> <span class="value">${data.nt}</span></div>
+                    <div class="detail-row"><span class="label">Receptor:</span> <span class="value">${data.recDisplay}</span></div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- QUIZ LOGIC ---
+        let currentQuestion = null;
+
+        function generateQuestion() {
+            // Reset UI
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('ans-nt').value = "";
+            document.getElementById('ans-receptor').value = "";
+
+            // Randomly select Organ and Mode
+            const organs = Object.keys(organData);
+            const randomOrganKey = organs[Math.floor(Math.random() * organs.length)];
+            
+            // Filter out parasympathetic vessels as it is a trick question (N/A)
+            let modes = ['sympathetic', 'parasympathetic'];
+            if(randomOrganKey === 'vessels') modes = ['sympathetic'];
+            
+            const randomMode = modes[Math.floor(Math.random() * modes.length)];
+            
+            currentQuestion = {
+                organKey: randomOrganKey,
+                mode: randomMode,
+                data: organData[randomOrganKey][randomMode]
+            };
+
+            // Display Question
+            document.getElementById('q-organ').innerText = organData[randomOrganKey].title;
+            document.getElementById('q-state').innerText = randomMode === 'sympathetic' ? "Sympathetic (Stress)" : "Parasympathetic (Rest)";
+            document.getElementById('q-state').style.color = randomMode === 'sympathetic' ? "#e74c3c" : "#2ecc71";
+            document.getElementById('q-action').innerText = currentQuestion.data.action;
+        }
+
+        function checkAnswer() {
+            if(!currentQuestion) return;
+
+            const userNT = document.getElementById('ans-nt').value;
+            const userRec = document.getElementById('ans-receptor').value;
+            
+            const isNtCorrect = userNT === currentQuestion.data.nt;
+            
+            // Loose matching for receptors
+            let isRecCorrect = false;
+            const correctRec = currentQuestion.data.rec; 
+            if (userRec === correctRec) isRecCorrect = true;
+
+            const feedback = document.getElementById('feedback');
+            feedback.style.display = 'block';
+
+            if (isNtCorrect && isRecCorrect) {
+                feedback.className = "feedback-area correct";
+                feedback.innerHTML = `<strong>Correct!</strong><br>The ${currentQuestion.mode} system uses ${currentQuestion.data.nt} on ${currentQuestion.data.recDisplay} receptors to achieve this result.`;
+            } else {
+                feedback.className = "feedback-area incorrect";
+                feedback.innerHTML = `<strong>Not quite.</strong><br>
+                Correct Neurotransmitter: <strong>${currentQuestion.data.nt}</strong><br>
+                Correct Receptor: <strong>${currentQuestion.data.recDisplay}</strong>`;
+            }
+
+            document.getElementById('nextBtn').style.display = 'inline-block';
+        }
+
+        // --- NAVIGATION LOGIC ---
+        function switchTab(tab) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active-view'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active-tab'));
+            
+            document.getElementById(`view-${tab}`).classList.add('active-view');
+            event.target.classList.add('active-tab');
+
+            if(tab === 'quiz' && !currentQuestion) {
+                generateQuestion();
+            }
+        }
+
+        // Initialize
+        setDashboardMode('parasympathetic');
+    </script>
+</body>
+</html>
