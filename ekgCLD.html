@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive ECG Learning Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .header .author {
+            font-size: 1em;
+            opacity: 0.85;
+            font-style: italic;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .ecg-canvas-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            border: 3px solid #e0e0e0;
+        }
+
+        canvas {
+            width: 100%;
+            height: 400px;
+            background: white;
+            border-radius: 10px;
+            cursor: crosshair;
+        }
+
+        .info-panel {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            border: 3px solid #e0e0e0;
+        }
+
+        .scenario-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .scenario-box h3 {
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .wave-info {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+            display: none;
+        }
+
+        .wave-info.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .wave-info h4 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .wave-info p {
+            margin-bottom: 8px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .disease-section {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .disease-section h5 {
+            color: #856404;
+            margin-bottom: 8px;
+        }
+
+        .disease-section ul {
+            margin-left: 20px;
+        }
+
+        .disease-section li {
+            margin-bottom: 5px;
+            color: #856404;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: white;
+            border-radius: 5px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+
+        .instructions {
+            background: #d4edda;
+            border: 2px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .instructions h4 {
+            color: #155724;
+            margin-bottom: 10px;
+        }
+
+        .instructions p {
+            color: #155724;
+            line-height: 1.6;
+        }
+
+        .quiz-section {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 2px solid #2196F3;
+        }
+
+        .quiz-section h4 {
+            color: #1976D2;
+            margin-bottom: 15px;
+        }
+
+        .quiz-option {
+            padding: 12px;
+            margin: 8px 0;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quiz-option:hover {
+            background: #f0f0f0;
+            border-color: #2196F3;
+        }
+
+        .quiz-option.correct {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .quiz-option.incorrect {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🫀 Interactive ECG Learning Tool</h1>
+            <p>Master ECG interpretation through interactive scenarios and clinical correlation</p>
+            <p class="author">Hafeez Faridi Ph.D.</p>
+        </div>
+
+        <div class="content">
+            <div>
+                <div class="ecg-canvas-container">
+                    <canvas id="ecgCanvas"></canvas>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #e74c3c;"></div>
+                            <span>P Wave</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #3498db;"></div>
+                            <span>QRS Complex</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #2ecc71;"></div>
+                            <span>T Wave</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #f39c12;"></div>
+                            <span>PR Interval</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #9b59b6;"></div>
+                            <span>ST Segment</span>
+                        </div>
+                    </div>
+                    <div class="controls">
+                        <button class="btn-primary" onclick="changeScenario()">Next Scenario</button>
+                        <button class="btn-secondary" onclick="resetView()">Reset View</button>
+                        <button class="btn-primary" onclick="toggleQuiz()">Test Knowledge</button>
+                    </div>
+                </div>
+
+                <div class="instructions">
+                    <h4>📋 How to Use This Tool:</h4>
+                    <p><strong>Click on any wave or segment</strong> on the ECG to learn about its cardiac activity, normal values, and clinical significance. Each scenario presents a different patient case to help you understand ECG interpretation in context.</p>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="scenario-box" id="scenarioBox">
+                    <h3>Clinical Scenario</h3>
+                    <p id="scenarioText">Loading scenario...</p>
+                </div>
+
+                <div id="waveInfo"></div>
+
+                <div class="quiz-section" id="quizSection" style="display: none;">
+                    <h4>🎯 Knowledge Check</h4>
+                    <p id="quizQuestion"></p>
+                    <div id="quizOptions"></div>
+                    <p id="quizFeedback" style="margin-top: 15px; font-weight: bold;"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('ecgCanvas');
+        const ctx = canvas.getContext('2d');
+        let currentScenario = 0;
+        let selectedWave = null;
+
+        const scenarios = [
+            {
+                name: "Normal Sinus Rhythm",
+                description: "55-year-old patient presenting for routine physical examination. No cardiac symptoms. Vital signs: BP 120/80, HR 72 bpm, regular rhythm.",
+                ecgType: "normal",
+                quiz: {
+                    question: "What is the normal duration of the PR interval?",
+                    options: ["0.08-0.10 seconds", "0.12-0.20 seconds", "0.20-0.30 seconds", "0.30-0.40 seconds"],
+                    correct: 1
+                }
+            },
+            {
+                name: "Acute Myocardial Infarction",
+                description: "68-year-old male with sudden onset crushing chest pain radiating to left arm. Diaphoretic, anxious. Pain started 2 hours ago. BP 100/65, HR 95 bpm.",
+                ecgType: "stemi",
+                quiz: {
+                    question: "In acute STEMI, ST elevation in leads II, III, and aVF indicates infarction in which area?",
+                    options: ["Anterior wall", "Lateral wall", "Inferior wall", "Septal wall"],
+                    correct: 2
+                }
+            },
+            {
+                name: "First-Degree AV Block",
+                description: "72-year-old female on multiple cardiac medications. No symptoms. Regular checkup shows prolonged PR interval. BP 135/85, HR 65 bpm, regular.",
+                ecgType: "av_block",
+                quiz: {
+                    question: "First-degree AV block is defined by a PR interval greater than:",
+                    options: ["0.16 seconds", "0.20 seconds", "0.24 seconds", "0.28 seconds"],
+                    correct: 1
+                }
+            },
+            {
+                name: "Atrial Fibrillation",
+                description: "80-year-old male complaining of palpitations and irregular heartbeat. History of hypertension. BP 145/90, HR 110-140 bpm, irregularly irregular.",
+                ecgType: "afib",
+                quiz: {
+                    question: "Which ECG finding is characteristic of atrial fibrillation?",
+                    options: ["Regular P waves", "Absence of P waves with irregular rhythm", "Prolonged QRS", "Elevated ST segments"],
+                    correct: 1
+                }
+            },
+            {
+                name: "Hyperkalemia",
+                description: "62-year-old male with chronic kidney disease, missed dialysis appointment. Complains of weakness and muscle cramps. Labs show K+ 7.2 mEq/L. BP 160/95, HR 58 bpm.",
+                ecgType: "hyperkalemia",
+                quiz: {
+                    question: "What is the earliest ECG change typically seen in hyperkalemia?",
+                    options: ["Widened QRS complex", "Peaked, tall T waves", "Loss of P waves", "Sine wave pattern"],
+                    correct: 1
+                }
+            },
+            {
+                name: "Left Bundle Branch Block",
+                description: "70-year-old female with history of heart failure presents for evaluation. Complains of progressive dyspnea on exertion. BP 110/70, HR 76 bpm, regular rhythm.",
+                ecgType: "lbbb",
+                quiz: {
+                    question: "Which finding confirms Left Bundle Branch Block?",
+                    options: ["QRS duration < 0.10 seconds", "QRS duration ≥ 0.12 seconds with broad R waves in V5-V6", "ST elevation in V1-V3", "Deep Q waves in II, III, aVF"],
+                    correct: 1
+                }
+            }
+        ];
+
+        const ecgWaves = {
+            pWave: {
+                name: "P Wave",
+                cardiac: "Represents atrial depolarization - the electrical activation of both the right and left atria. This wave occurs as the sinoatrial (SA) node fires and the electrical impulse spreads through both atria, causing them to contract.",
+                normal: "Duration: 0.08-0.10 seconds (2-2.5 small squares). Amplitude: < 2.5mm in limb leads, < 1.5mm in precordial leads. Should be upright in leads I, II, aVF, and V2-V6.",
+                diseases: [
+                    "<strong>Peaked P waves (P pulmonale):</strong> Right atrial enlargement seen in chronic lung disease, pulmonary hypertension",
+                    "<strong>Notched/Wide P waves (P mitrale):</strong> Left atrial enlargement seen in mitral stenosis, left ventricular failure",
+                    "<strong>Absent P waves:</strong> Atrial fibrillation, junctional rhythm, ventricular pacemaker",
+                    "<strong>Variable P wave morphology:</strong> Wandering atrial pacemaker, multifocal atrial tachycardia"
+                ]
+            },
+            prInterval: {
+                name: "PR Interval",
+                cardiac: "Represents the time from the onset of atrial depolarization to the onset of ventricular depolarization. This includes the time for the impulse to travel from the SA node through the atria, AV node, bundle of His, and Purkinje fibers to the ventricles.",
+                normal: "Duration: 0.12-0.20 seconds (3-5 small squares). Measured from the beginning of the P wave to the beginning of the QRS complex.",
+                diseases: [
+                    "<strong>Prolonged PR (>0.20 sec):</strong> First-degree AV block due to AV node disease, medications (beta-blockers, calcium channel blockers, digoxin)",
+                    "<strong>Short PR (<0.12 sec):</strong> Wolff-Parkinson-White syndrome (pre-excitation via accessory pathway), AV nodal rhythm",
+                    "<strong>Variable PR:</strong> Second-degree AV block (Mobitz I - progressive lengthening; Mobitz II - constant with dropped beats)",
+                    "<strong>No relationship between P and QRS:</strong> Third-degree (complete) AV block"
+                ]
+            },
+            qrsComplex: {
+                name: "QRS Complex",
+                cardiac: "Represents ventricular depolarization - the electrical activation of the right and left ventricles. This is when the ventricles receive the signal to contract and pump blood. The Q wave is the first downward deflection, R wave is the first upward deflection, and S wave is the downward deflection following the R wave.",
+                normal: "Duration: 0.06-0.10 seconds (1.5-2.5 small squares). Amplitude varies by lead; typically tallest in precordial leads. R wave should progressively increase from V1 to V4-V5.",
+                diseases: [
+                    "<strong>Wide QRS (>0.12 sec):</strong> Bundle branch block (LBBB or RBBB), ventricular tachycardia, ventricular pacing, hyperkalemia, drug toxicity",
+                    "<strong>Deep Q waves:</strong> Myocardial infarction (pathologic Q waves indicate old MI), hypertrophic cardiomyopathy",
+                    "<strong>Low voltage QRS:</strong> Obesity, COPD, pericardial effusion, hypothyroidism, infiltrative diseases",
+                    "<strong>Left axis deviation:</strong> Left ventricular hypertrophy, left anterior fascicular block, inferior MI",
+                    "<strong>Right axis deviation:</strong> Right ventricular hypertrophy, left posterior fascicular block, lateral MI, chronic lung disease"
+                ]
+            },
+            stSegment: {
+                name: "ST Segment",
+                cardiac: "Represents the interval between ventricular depolarization and repolarization. During this time, the ventricles are completely depolarized and beginning the process of repolarization. It's the period between ventricular contraction and relaxation.",
+                normal: "Duration: 0.08-0.12 seconds. Should be isoelectric (at baseline level). May have slight elevation (<1mm in limb leads, <2mm in precordial leads) or depression (<0.5mm).",
+                diseases: [
+                    "<strong>ST Elevation:</strong> Acute myocardial infarction (STEMI), pericarditis, early repolarization (benign), ventricular aneurysm, Prinzmetal's angina",
+                    "<strong>ST Depression:</strong> Myocardial ischemia, subendocardial infarction (NSTEMI), digitalis effect, left ventricular hypertrophy, bundle branch block",
+                    "<strong>Horizontal ST depression:</strong> Highly specific for cardiac ischemia during exercise stress testing",
+                    "<strong>Concave ST elevation:</strong> Pericarditis (diffuse, widespread), benign early repolarization"
+                ]
+            },
+            tWave: {
+                name: "T Wave",
+                cardiac: "Represents ventricular repolarization - the recovery phase when the ventricles return to their resting electrical state after contraction. This is when the heart muscle relaxes and refills with blood in preparation for the next contraction.",
+                normal: "Duration: 0.10-0.25 seconds. Should be upright in all leads except aVR and V1. Amplitude: < 5mm in limb leads, < 10mm in precordial leads. Asymmetric shape with gradual upslope and steeper downslope.",
+                diseases: [
+                    "<strong>Inverted T waves:</strong> Myocardial ischemia or infarction, ventricular strain (from hypertrophy), bundle branch block, pulmonary embolism",
+                    "<strong>Tall peaked T waves:</strong> Hyperkalemia (>6.5 mEq/L), hyperacute phase of MI (very early), left ventricular hypertrophy",
+                    "<strong>Flattened T waves:</strong> Hypokalemia, myocardial ischemia, hypothyroidism, digitalis effect",
+                    "<strong>Biphasic T waves:</strong> Hypokalemia, myocardial ischemia, Wellens' syndrome (critical LAD stenosis)",
+                    "<strong>Deep symmetric T wave inversion:</strong> Wellens' syndrome indicating critical proximal LAD stenosis"
+                ]
+            }
+        };
+
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            drawECG();
+        }
+
+        function drawECG() {
+            const width = canvas.width / window.devicePixelRatio;
+            const height = canvas.height / window.devicePixelRatio;
+            const scenario = scenarios[currentScenario];
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw grid
+            ctx.strokeStyle = '#ffcccc';
+            ctx.lineWidth = 0.5;
+            for (let x = 0; x < width; x += 5) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < height; y += 5) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+            
+            ctx.strokeStyle = '#ffaaaa';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < width; x += 25) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < height; y += 25) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+
+            // Draw ECG waveform based on scenario
+            const baseline = height / 2;
+            const beatWidth = 200;
+            const numBeats = Math.ceil(width / beatWidth) + 1;
+
+            for (let beat = 0; beat < numBeats; beat++) {
+                const startX = beat * beatWidth;
+                
+                if (scenario.ecgType === 'normal' || scenario.ecgType === 'av_block') {
+                    drawNormalBeat(startX, baseline, scenario.ecgType === 'av_block');
+                } else if (scenario.ecgType === 'stemi') {
+                    drawSTEMIBeat(startX, baseline);
+                } else if (scenario.ecgType === 'afib') {
+                    drawAFibBeat(startX, baseline, beat);
+                } else if (scenario.ecgType === 'hyperkalemia') {
+                    drawHyperkalemiaBeat(startX, baseline);
+                } else if (scenario.ecgType === 'lbbb') {
+                    drawLBBBBeat(startX, baseline);
+                }
+            }
+        }
+
+        function drawNormalBeat(startX, baseline, avBlock = false) {
+            const prInterval = avBlock ? 60 : 40;
+            
+            // P Wave
+            ctx.strokeStyle = selectedWave === 'pWave' ? '#c0392b' : '#e74c3c';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(startX + 20, baseline);
+            ctx.quadraticCurveTo(startX + 30, baseline - 15, startX + 40, baseline);
+            ctx.stroke();
+
+            // PR Segment
+            ctx.strokeStyle = selectedWave === 'prInterval' ? '#d68910' : '#f39c12';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(startX + 40, baseline);
+            ctx.lineTo(startX + 40 + prInterval, baseline);
+            ctx.stroke();
+
+            // QRS Complex
+            ctx.strokeStyle = selectedWave === 'qrsComplex' ? '#2874a6' : '#3498db';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(startX + 40 + prInterval, baseline);
+            ctx.lineTo(startX + 50 + prInterval, baseline + 10);
+            ctx.lineTo(startX + 60 + prInterval, baseline - 60);
+            ctx.lineTo(startX + 70 + prInterval, baseline + 15);
+            ctx.lineTo(startX + 75 + prInterval, baseline);
+            ctx.stroke();
+
+            // ST Segment
+            ctx.strokeStyle = selectedWave === 'stSegment' ? '#7d3c98' : '#9b59b6';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(startX + 75 + prInterval, baseline);
+            ctx.lineTo(startX + 100 + prInterval, baseline);
+            ctx.stroke();
+
+            // T Wave
+            ctx.strokeStyle = selectedWave === 'tWave' ? '#229954' : '#2ecc71';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(startX + 100 + prInterval, baseline);
+            ctx.quadraticCurveTo(startX + 125 + prInterval, baseline - 25, startX + 150 + prInterval, baseline);
+            ctx.stroke();
+        }
+
+        function drawSTEMIBeat(startX, baseline) {
+            // P Wave
+            ctx.strokeStyle = selectedWave === 'pWave' ? '#c0392b' : '#e74c3c';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(startX + 20, baseline);
+            ctx.quadraticCurveTo(startX + 30, baseline - 15, startX + 40, baseline);
+            ctx.stroke();
+
+            // PR Segment
+            ctx.strokeStyle = selectedWave === 'prInterval' ? '#d68910' : '#f39c12';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(startX + 40, baseline);
+            ctx.lineTo(startX + 80, baseline);
+            ctx.stroke();
+
+            // QRS Complex
+            ctx.strokeStyle = selectedWave === 'qrsComplex' ? '#2874a6' : '#3498db';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(startX + 80, baseline);
+            ctx.lineTo(startX + 90, baseline + 10);
+            ctx.lineTo(startX + 100, baseline - 60);
+            ctx.lineTo(startX + 110, baseline + 15);
+            ctx.lineTo(startX + 115, baseline);
+            ctx.stroke();
+
+            // ST Segment - ELEVATED
+            ctx.strokeStyle = selectedWave === 'stSegment' ? '#7d3c98' : '#9b59b6';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(startX + 115, baseline);
+            ctx.lineTo(startX + 140, baseline - 20);
+            ctx.stroke();
+
+            // T Wave - Hyperacute
+            ctx.strokeStyle = selectedWave === 'tWave' ? '#229954' : '#2ecc71';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(startX + 140, baseline - 20);
+            ctx.quadraticCurveTo(startX + 165, baseline - 45, startX + 190, baseline);
+            ctx.stroke();
+        }
+
+        function drawAFibBeat(startX, baseline, beat) {
+            // Irregular fibrillation waves instead of P waves
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i < 40; i += 4) {
+                ctx.beginPath();
+                ctx.moveTo(startX + i, baseline + Math.random() * 6 - 3);
+                ctx.lineTo(startX + i + 2, baseline + Math.random() * 6 - 3);
+                ctx.stroke();
+            }
+
+            // Irregular QRS timing
+            const qrsStart = 40 + Math.random() * 40;
+            
+            // QRS Complex
+            ctx.strokeStyle = selectedWave === 'qrsComplex' ? '#2874a6' : '#3498db';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(startX + qrsStart, baseline);
+            ctx.lineTo(startX + qrsStart + 10, baseline + 10);
+            ctx.lineTo(startX + qrsStart + 20, baseline - 60);
+            ctx.lineTo(startX + qrsStart + 30, baseline + 15);
+            ctx.lineTo(startX + qrsStart + 35, baseline);
+            ctx.stroke();
+
+            // ST Segment
+            ctx.strokeStyle = selectedWave === 'stSegment' ? '#7d3c98' : '#9b59b6';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(startX + qrsStart + 35, baseline);
+            ctx.lineTo(startX + qrsStart + 60, baseline);
+            ctx.stroke();
+
+            // T Wave
+            ctx.strokeStyle = selectedWave === 'tWave' ? '#229954' : '#2ecc71';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(startX + qrsStart + 60, baseline);
+            ctx.quadraticCurveTo(startX + qrsStart + 85, baseline - 25, startX + qrsStart + 110, baseline);
+            ctx.stroke();
+        }
+
+        function drawHyperkalemiaBeat(startX, baseline) {
+            // P Wave - flattened/absent
+            ctx.strokeStyle = selectedWave === 'pWave' ? '#c0392b' : '#e74c3c';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(startX + 20, baseline);
+            ctx.quadraticCurveTo(startX + 30, baseline - 5, startX + 40, baseline);
+            ctx.stroke();
+
+            // PR Segment - shortened
+            ctx.strokeStyle = selectedWave === 'prInterval' ? '#d68910' : '#f39c12';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(startX + 40, baseline);
+            ctx.lineTo(startX + 70, baseline);
+            ctx.stroke();
+
+            // QRS Complex - widened
+            ctx.strokeStyle = selectedWave === 'qrsComplex' ? '#2874a6' : '#3498db';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(startX + 70, baseline);
+            ctx.lineTo(startX + 85, baseline + 10);
+            ctx.lineTo(startX + 100, baseline - 55);
+            ctx.lineTo(startX + 115, baseline + 15);
+            ctx.lineTo(startX + 125, baseline);
+            ctx.stroke();
+
+            // ST Segment
+            ctx.strokeStyle = selectedWave === 'stSegment' ? '#7d3c98' : '#9b59b6';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(startX + 125, baseline);
+            ctx.lineTo(startX + 140, baseline);
+            ctx.stroke();
+
+            // T Wave - PEAKED and TALL (characteristic of hyperkalemia)
+            ctx.strokeStyle = selectedWave === 'tWave' ? '#229954' : '#2ecc71';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(startX + 140, baseline);
+            ctx.lineTo(startX + 160, baseline - 50);
+            ctx.lineTo(startX + 180, baseline);
+            ctx.stroke();
+        }
+
+        function drawLBBBBeat(startX, baseline) {
+            // P Wave - normal
+            ctx.strokeStyle = selectedWave === 'pWave' ? '#c0392b' : '#e74c3c';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(startX + 20, baseline);
+            ctx.quadraticCurveTo(startX + 30, baseline - 15, startX + 40, baseline);
+            ctx.stroke();
+
+            // PR Segment
+            ctx.strokeStyle = selectedWave === 'prInterval' ? '#d68910' : '#f39c12';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(startX + 40, baseline);
+            ctx.lineTo(startX + 80, baseline);
+            ctx.stroke();
+
+            // QRS Complex - WIDE with notched/broad R wave (LBBB characteristic)
+            ctx.strokeStyle = selectedWave === 'qrsComplex' ? '#2874a6' : '#3498db';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(startX + 80, baseline);
+            // Small q wave
+            ctx.lineTo(startX + 85, baseline + 5);
+            // Notched, broad R wave
+            ctx.lineTo(startX + 100, baseline - 45);
+            ctx.lineTo(startX + 105, baseline - 40);
+            ctx.lineTo(startX + 120, baseline - 55);
+            ctx.lineTo(startX + 130, baseline + 10);
+            ctx.lineTo(startX + 140, baseline);
+            ctx.stroke();
+
+            // ST Segment - may be depressed
+            ctx.strokeStyle = selectedWave === 'stSegment' ? '#7d3c98' : '#9b59b6';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(startX + 140, baseline);
+            ctx.lineTo(startX + 160, baseline + 5);
+            ctx.stroke();
+
+            // T Wave - discordant (opposite direction to QRS)
+            ctx.strokeStyle = selectedWave === 'tWave' ? '#229954' : '#2ecc71';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(startX + 160, baseline + 5);
+            ctx.quadraticCurveTo(startX + 175, baseline + 25, startX + 190, baseline);
+            ctx.stroke();
+        }
+
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const height = rect.height;
+            const baseline = height / 2;
+
+            // Determine which wave was clicked
+            const relativeY = Math.abs(y - baseline);
+            const beatPhase = (x % 200);
+
+            if (beatPhase < 40 && relativeY < 30) {
+                showWaveInfo('pWave');
+            } else if (beatPhase >= 40 && beatPhase < 80 && relativeY < 10) {
+                showWaveInfo('prInterval');
+            } else if (beatPhase >= 80 && beatPhase < 115) {
+                showWaveInfo('qrsComplex');
+            } else if (beatPhase >= 115 && beatPhase < 140) {
+                showWaveInfo('stSegment');
+            } else if (beatPhase >= 140 && beatPhase < 190) {
+                showWaveInfo('tWave');
+            }
+        });
+
+        function showWaveInfo(waveType) {
+            selectedWave = waveType;
+            const wave = ecgWaves[waveType];
+            const infoDiv = document.getElementById('waveInfo');
+            
+            infoDiv.innerHTML = `
+                <div class="wave-info active">
+                    <h4>${wave.name}</h4>
+                    <p><strong>Cardiac Activity:</strong> ${wave.cardiac}</p>
+                    <p><strong>Normal Values:</strong> ${wave.normal}</p>
+                    <div class="disease-section">
+                        <h5>Clinical Significance & Disease States:</h5>
+                        <ul>
+                            ${wave.diseases.map(d => `<li>${d}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            drawECG();
+        }
+
+        function changeScenario() {
+            currentScenario = (currentScenario + 1) % scenarios.length;
+            loadScenario();
+            document.getElementById('quizSection').style.display = 'none';
+            document.getElementById('waveInfo').innerHTML = '';
+            selectedWave = null;
+        }
+
+        function loadScenario() {
+            const scenario = scenarios[currentScenario];
+            document.getElementById('scenarioText').innerHTML = `
+                <strong>${scenario.name}</strong><br><br>
+                ${scenario.description}
+            `;
+            drawECG();
+        }
+
+        function resetView() {
+            selectedWave = null;
+            document.getElementById('waveInfo').innerHTML = '';
+            document.getElementById('quizSection').style.display = 'none';
+            drawECG();
+        }
+
+        function toggleQuiz() {
+            const quizSection = document.getElementById('quizSection');
+            const scenario = scenarios[currentScenario];
+            
+            if (quizSection.style.display === 'none') {
+                quizSection.style.display = 'block';
+                document.getElementById('quizQuestion').textContent = scenario.quiz.question;
+                
+                const optionsDiv = document.getElementById('quizOptions');
+                optionsDiv.innerHTML = '';
+                
+                scenario.quiz.options.forEach((option, index) => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'quiz-option';
+                    optionDiv.textContent = option;
+                    optionDiv.onclick = () => checkAnswer(index);
+                    optionsDiv.appendChild(optionDiv);
+                });
+                
+                document.getElementById('quizFeedback').textContent = '';
+            } else {
+                quizSection.style.display = 'none';
+            }
+        }
+
+        function checkAnswer(selectedIndex) {
+            const scenario = scenarios[currentScenario];
+            const options = document.querySelectorAll('.quiz-option');
+            const feedback = document.getElementById('quizFeedback');
+            
+            options.forEach((option, index) => {
+                option.style.pointerEvents = 'none';
+                if (index === scenario.quiz.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedIndex) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            if (selectedIndex === scenario.quiz.correct) {
+                feedback.textContent = '✅ Correct! Well done!';
+                feedback.style.color = '#28a745';
+            } else {
+                feedback.textContent = `❌ Incorrect. The correct answer is: ${scenario.quiz.options[scenario.quiz.correct]}`;
+                feedback.style.color = '#dc3545';
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        loadScenario();
+    </script>
+</body>
+</html>
