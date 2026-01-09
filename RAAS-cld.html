@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAAS Pathway Interactive Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .visualization-area {
+            position: relative;
+            background: #e0e0e0;
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 700px;
+        }
+
+        .svg-container {
+            width: 100%;
+            height: 700px;
+            position: relative;
+        }
+
+        .info-panel {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 700px;
+        }
+
+        .step-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            color: #2c3e50;
+            transition: all 0.3s;
+        }
+
+        .step-button:hover {
+            background: #667eea;
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .step-button.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .info-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-content h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .info-content p {
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .legend {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        .organ {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .organ:hover {
+            filter: brightness(1.2);
+        }
+
+        .molecule {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .arrow {
+            animation: flow 2s infinite;
+        }
+
+        @keyframes flow {
+            0%, 100% { stroke-dashoffset: 0; }
+            50% { stroke-dashoffset: 20; }
+        }
+
+        .highlight {
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+            animation: glow 1s infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8)); }
+            50% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 1)); }
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .reset-btn:hover {
+            background: #c0392b;
+            transform: scale(1.02);
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🫀 RAAS Pathway Interactive Learning Tool</h1>
+            <p>Explore the Renin-Angiotensin-Aldosterone System and Blood Pressure Regulation</p>
+            <p style="margin-top: 10px; font-size: 1em; font-style: italic;">Hafeez Faridi Ph.D.</p>
+        </div>
+
+        <div class="main-content">
+            <div class="visualization-area">
+                <svg id="raasSvg" class="svg-container" viewBox="0 0 800 700">
+                    <!-- Blood Vessels -->
+                    <path d="M 400 50 Q 450 100 450 150 L 450 600" stroke="#e74c3c" stroke-width="12" fill="none" id="artery" opacity="0.3"/>
+                    
+                    <!-- Brain -->
+                    <ellipse cx="400" cy="80" rx="60" ry="50" fill="#ffc8dd" stroke="#c77dff" stroke-width="3" class="organ" id="brain"/>
+                    <text x="400" y="85" text-anchor="middle" font-size="16" font-weight="bold" fill="#2c3e50">Brain</text>
+                    
+                    <!-- Heart -->
+                    <g id="heart" class="organ">
+                        <path d="M 400 200 C 380 180 360 180 350 200 C 340 220 350 240 400 270 C 450 240 460 220 450 200 C 440 180 420 180 400 200" fill="#ff6b9d" stroke="#c9184a" stroke-width="3"/>
+                        <text x="400" y="235" text-anchor="middle" font-size="14" font-weight="bold" fill="white">Heart</text>
+                    </g>
+                    
+                    <!-- Kidneys -->
+                    <g id="leftKidney" class="organ">
+                        <ellipse cx="250" cy="400" rx="50" ry="70" fill="#d4a574" stroke="#8b4513" stroke-width="3"/>
+                        <ellipse cx="260" cy="400" rx="25" ry="50" fill="#c19a6b" stroke="#8b4513" stroke-width="2"/>
+                        <text x="250" y="410" text-anchor="middle" font-size="14" font-weight="bold" fill="#2c3e50">Kidney</text>
+                    </g>
+                    
+                    <g id="rightKidney" class="organ">
+                        <ellipse cx="550" cy="400" rx="50" ry="70" fill="#d4a574" stroke="#8b4513" stroke-width="3"/>
+                        <ellipse cx="540" cy="400" rx="25" ry="50" fill="#c19a6b" stroke="#8b4513" stroke-width="2"/>
+                        <text x="550" y="410" text-anchor="middle" font-size="14" font-weight="bold" fill="#2c3e50">Kidney</text>
+                    </g>
+                    
+                    <!-- Adrenal Glands -->
+                    <g id="leftAdrenal" class="organ">
+                        <rect x="230" y="320" width="40" height="25" rx="5" fill="#ffd60a" stroke="#ff9500" stroke-width="2"/>
+                        <text x="250" y="337" text-anchor="middle" font-size="10" font-weight="bold" fill="#2c3e50">Adrenal</text>
+                    </g>
+                    
+                    <g id="rightAdrenal" class="organ">
+                        <rect x="530" y="320" width="40" height="25" rx="5" fill="#ffd60a" stroke="#ff9500" stroke-width="2"/>
+                        <text x="550" y="337" text-anchor="middle" font-size="10" font-weight="bold" fill="#2c3e50">Adrenal</text>
+                    </g>
+                    
+                    <!-- Liver -->
+                    <g id="liver" class="organ">
+                        <ellipse cx="400" cy="330" rx="80" ry="40" fill="#8b4513" stroke="#654321" stroke-width="3"/>
+                        <text x="400" y="338" text-anchor="middle" font-size="16" font-weight="bold" fill="white">Liver</text>
+                    </g>
+                    
+                    <!-- Lungs -->
+                    <g id="lungs" class="organ">
+                        <ellipse cx="320" cy="200" rx="40" ry="50" fill="#ffc2d1" stroke="#e63946" stroke-width="2"/>
+                        <ellipse cx="480" cy="200" rx="40" ry="50" fill="#ffc2d1" stroke="#e63946" stroke-width="2"/>
+                        <text x="400" y="210" text-anchor="middle" font-size="14" font-weight="bold" fill="#2c3e50">Lungs</text>
+                    </g>
+                    
+                    <!-- Blood Vessels -->
+                    <g id="bloodVessels" class="organ">
+                        <rect x="100" cy="550" width="600" height="40" rx="20" fill="#e74c3c" stroke="#c0392b" stroke-width="3" opacity="0.7"/>
+                        <text x="400" y="575" text-anchor="middle" font-size="16" font-weight="bold" fill="#000000">Blood Vessels</text>
+                    </g>
+                    
+                    <!-- Arrows and Molecules (Hidden initially) -->
+                    <g id="step1Elements" style="display:none;">
+                        <path d="M 250 470 L 250 520" stroke="#667eea" stroke-width="4" marker-end="url(#arrowhead)" class="arrow" stroke-dasharray="5,5"/>
+                        <circle cx="250" cy="495" r="15" fill="#3b82f6" class="molecule"/>
+                        <text x="250" y="500" text-anchor="middle" font-size="10" fill="white" font-weight="bold">Renin</text>
+                        <text x="180" y="495" font-size="12" fill="#2c3e50" font-weight="bold">↓ Blood Pressure</text>
+                    </g>
+                    
+                    <g id="step2Elements" style="display:none;">
+                        <path d="M 330 330 L 280 380" stroke="#667eea" stroke-width="4" marker-end="url(#arrowhead)" class="arrow" stroke-dasharray="5,5"/>
+                        <circle cx="305" cy="355" r="18" fill="#f59e0b" class="molecule"/>
+                        <text x="305" y="362" text-anchor="middle" font-size="9" fill="white" font-weight="bold">Angio-</text>
+                        <text x="305" y="371" text-anchor="middle" font-size="9" fill="white" font-weight="bold">tensinogen</text>
+                    </g>
+                    
+                    <g id="step3Elements" style="display:none;">
+                        <path d="M 400 250 L 350 320" stroke="#667eea" stroke-width="4" marker-end="url(#arrowhead)" class="arrow" stroke-dasharray="5,5"/>
+                        <circle cx="375" cy="285" r="15" fill="#10b981" class="molecule"/>
+                        <text x="375" y="292" text-anchor="middle" font-size="8" fill="white" font-weight="bold">ACE</text>
+                        <text x="450" y="270" font-size="11" fill="#2c3e50" font-weight="bold">Angiotensin I → II</text>
+                    </g>
+                    
+                    <g id="step4Elements" style="display:none;">
+                        <path d="M 470 330 L 520 360" stroke="#667eea" stroke-width="4" marker-end="url(#arrowhead)" class="arrow" stroke-dasharray="5,5"/>
+                        <circle cx="495" cy="345" r="18" fill="#ef4444" class="molecule"/>
+                        <text x="495" y="352" text-anchor="middle" font-size="8" fill="white" font-weight="bold">Angio-</text>
+                        <text x="495" y="361" text-anchor="middle" font-size="8" fill="white" font-weight="bold">tensin II</text>
+                    </g>
+                    
+                    <g id="step5Elements" style="display:none;">
+                        <path d="M 520 345 L 500 520" stroke="#667eea" stroke-width="4" marker-end="url(#arrowhead)" class="arrow" stroke-dasharray="5,5"/>
+                        <text x="530" y="450" font-size="11" fill="#2c3e50" font-weight="bold">Vasoconstriction</text>
+                        <circle cx="510" cy="460" r="12" fill="#dc2626" class="molecule"/>
+                    </g>
+                    
+                    <g id="step6Elements" style="display:none;">
+                        <path d="M 270 345 L 290 380" stroke="#667eea" stroke-width="4" marker-end="url(#arrowhead)" class="arrow" stroke-dasharray="5,5"/>
+                        <circle cx="280" cy="365" r="15" fill="#8b5cf6" class="molecule"/>
+                        <text x="280" y="372" text-anchor="middle" font-size="9" fill="white" font-weight="bold">Aldo-</text>
+                        <text x="280" y="381" text-anchor="middle" font-size="9" fill="white" font-weight="bold">sterone</text>
+                    </g>
+                    
+                    <g id="step7Elements" style="display:none;">
+                        <circle cx="250" cy="430" r="20" fill="#22c55e" class="molecule" opacity="0.8"/>
+                        <text x="250" y="437" text-anchor="middle" font-size="10" fill="white" font-weight="bold">Na+ & H2O</text>
+                        <text x="180" y="430" font-size="11" fill="#2c3e50" font-weight="bold">Reabsorption</text>
+                    </g>
+                    
+                    <!-- Arrow marker definition -->
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" fill="#667eea" />
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+
+            <div class="info-panel">
+                <h2 style="color: #2c3e50; margin-bottom: 20px;">RAAS Pathway Steps</h2>
+                
+                <button class="step-button" data-step="0">Introduction</button>
+                <button class="step-button" data-step="1">Step 1: Renin Release</button>
+                <button class="step-button" data-step="2">Step 2: Angiotensinogen</button>
+                <button class="step-button" data-step="3">Step 3: ACE Conversion</button>
+                <button class="step-button" data-step="4">Step 4: Angiotensin II</button>
+                <button class="step-button" data-step="5">Step 5: Vasoconstriction</button>
+                <button class="step-button" data-step="6">Step 6: Aldosterone Release</button>
+                <button class="step-button" data-step="7">Step 7: Blood Pressure ↑</button>
+                
+                <button class="reset-btn" onclick="resetVisualization()">Reset Visualization</button>
+
+                <div class="info-content" id="infoDisplay">
+                    <h3>Welcome to RAAS Pathway</h3>
+                    <p>The Renin-Angiotensin-Aldosterone System (RAAS) is a critical hormonal system that regulates blood pressure and fluid balance in the body.</p>
+                    <p>Click on the steps above to explore each stage of this important physiological pathway.</p>
+                </div>
+
+                <div class="legend">
+                    <h4 style="margin-bottom: 10px; color: #2c3e50;">Legend</h4>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #d4a574;"></div>
+                        <span>Kidneys</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #8b4513;"></div>
+                        <span>Liver</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffd60a;"></div>
+                        <span>Adrenal Glands</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffc2d1;"></div>
+                        <span>Lungs</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #e74c3c;"></div>
+                        <span>Blood Vessels</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const stepInfo = {
+            0: {
+                title: "Introduction to RAAS",
+                content: "The Renin-Angiotensin-Aldosterone System (RAAS) is a hormone system that regulates blood pressure and fluid balance. When blood pressure drops, the kidneys release renin, triggering a cascade of events that ultimately increase blood pressure through vasoconstriction and sodium retention.",
+                highlight: []
+            },
+            1: {
+                title: "Step 1: Renin Release from Kidneys",
+                content: "When blood pressure decreases or sodium levels are low, specialized cells in the kidneys (juxtaglomerular cells) detect this change and release the enzyme renin into the bloodstream. This is the critical first step that initiates the entire RAAS cascade.",
+                highlight: ['leftKidney', 'rightKidney'],
+                elements: ['step1Elements']
+            },
+            2: {
+                title: "Step 2: Angiotensinogen from Liver",
+                content: "The liver continuously produces and releases angiotensinogen, an inactive precursor protein, into the blood. When renin encounters angiotensinogen in the bloodstream, it cleaves it to form Angiotensin I, a slightly active peptide hormone.",
+                highlight: ['liver'],
+                elements: ['step1Elements', 'step2Elements']
+            },
+            3: {
+                title: "Step 3: ACE Conversion in Lungs",
+                content: "Angiotensin I travels through the bloodstream to the lungs, where Angiotensin-Converting Enzyme (ACE) is abundant on the surface of pulmonary capillaries. ACE converts Angiotensin I into Angiotensin II, the most potent component of the RAAS system.",
+                highlight: ['lungs'],
+                elements: ['step1Elements', 'step2Elements', 'step3Elements']
+            },
+            4: {
+                title: "Step 4: Angiotensin II Formation",
+                content: "Angiotensin II is a powerful vasoactive hormone with multiple effects. It circulates throughout the body and acts on various target organs including blood vessels, adrenal glands, kidneys, and brain to increase blood pressure through several mechanisms.",
+                highlight: ['lungs', 'liver'],
+                elements: ['step1Elements', 'step2Elements', 'step3Elements', 'step4Elements']
+            },
+            5: {
+                title: "Step 5: Vasoconstriction",
+                content: "Angiotensin II binds to receptors on blood vessel walls, causing smooth muscle contraction and vasoconstriction. This narrowing of blood vessels increases peripheral resistance, which directly raises blood pressure. This effect is rapid and powerful.",
+                highlight: ['bloodVessels'],
+                elements: ['step1Elements', 'step2Elements', 'step3Elements', 'step4Elements', 'step5Elements']
+            },
+            6: {
+                title: "Step 6: Aldosterone Release",
+                content: "Angiotensin II stimulates the adrenal cortex (outer layer of adrenal glands) to secrete aldosterone, a mineralocorticoid hormone. Aldosterone acts primarily on the kidneys to promote sodium and water reabsorption, increasing blood volume and pressure.",
+                highlight: ['leftAdrenal', 'rightAdrenal'],
+                elements: ['step1Elements', 'step2Elements', 'step3Elements', 'step4Elements', 'step5Elements', 'step6Elements']
+            },
+            7: {
+                title: "Step 7: Increased Blood Pressure",
+                content: "Aldosterone causes the kidneys to retain sodium and water while excreting potassium. The retained fluid increases blood volume, which combined with vasoconstriction, significantly raises blood pressure. Angiotensin II also stimulates thirst and ADH release, further increasing fluid retention. The cycle continues until blood pressure is restored to normal levels.",
+                highlight: ['leftKidney', 'rightKidney', 'bloodVessels'],
+                elements: ['step1Elements', 'step2Elements', 'step3Elements', 'step4Elements', 'step5Elements', 'step6Elements', 'step7Elements']
+            }
+        };
+
+        let currentStep = 0;
+
+        function showStep(step) {
+            currentStep = step;
+            
+            // Remove all highlights
+            document.querySelectorAll('.organ').forEach(el => {
+                el.classList.remove('highlight');
+            });
+            
+            // Hide all step elements
+            for (let i = 1; i <= 7; i++) {
+                const element = document.getElementById(`step${i}Elements`);
+                if (element) element.style.display = 'none';
+            }
+            
+            // Update active button
+            document.querySelectorAll('.step-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Show current step info
+            const info = stepInfo[step];
+            const infoDisplay = document.getElementById('infoDisplay');
+            infoDisplay.innerHTML = `
+                <h3>${info.title}</h3>
+                <p>${info.content}</p>
+            `;
+            
+            // Highlight organs
+            if (info.highlight) {
+                info.highlight.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) element.classList.add('highlight');
+                });
+            }
+            
+            // Show elements
+            if (info.elements) {
+                info.elements.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) element.style.display = 'block';
+                });
+            }
+        }
+
+        function resetVisualization() {
+            showStep(0);
+            document.querySelectorAll('.step-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector('[data-step="0"]').classList.add('active');
+        }
+
+        // Add event listeners to buttons
+        document.querySelectorAll('.step-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const step = parseInt(this.getAttribute('data-step'));
+                showStep(step);
+            });
+        });
+
+        // Initialize with introduction
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('[data-step="0"]').classList.add('active');
+        });
+
+        // Add hover effects to organs
+        document.querySelectorAll('.organ').forEach(organ => {
+            organ.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.1)';
+            });
+            organ.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>
