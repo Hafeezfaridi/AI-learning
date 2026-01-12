@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAAS Side-by-Side Comparison - Hafeez Faridi Ph.D.</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --panel: #111;
+            --accent: #00e5ff;
+            --danger: #ff1744;
+            --success: #00e676;
+            --text: #eee;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            padding: 10px 25px;
+            background: #000;
+            border-bottom: 2px solid var(--accent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Stages Layout */
+        .stage-wrapper {
+            flex: 2;
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .view-pane {
+            flex: 1;
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 8px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            padding: 10px;
+            background: #1a1a1a;
+            text-align: center;
+            font-weight: bold;
+            border-bottom: 1px solid #333;
+        }
+
+        .canvas {
+            flex: 1;
+            position: relative;
+        }
+
+        /* Organ styling - Scaled for side-by-side */
+        .organ {
+            position: absolute;
+            width: 90px;
+            padding: 8px;
+            background: #111;
+            border: 1px solid #444;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            text-align: center;
+            transition: 0.3s;
+        }
+        .organ.active { border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+        #liver { top: 10%; left: 10%; }
+        #kidney { top: 40%; left: 10%; }
+        #lungs { top: 10%; right: 10%; }
+        #adrenal { top: 40%; right: 10%; }
+        #vessels { bottom: 10%; left: 25%; width: 50%; }
+
+        .mol {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: yellow;
+            border-radius: 50%;
+            display: none;
+            z-index: 10;
+        }
+
+        /* Transcript & Controls */
+        .sidebar {
+            width: 320px;
+            background: var(--panel);
+            border-left: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+        }
+
+        #transcript-box {
+            flex: 1;
+            background: #000;
+            border: 1px solid #222;
+            padding: 10px;
+            font-size: 0.85rem;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            color: #aaa;
+        }
+
+        .highlight-txt { color: var(--accent); font-weight: bold; display: block; margin-bottom: 8px; border-left: 2px solid var(--accent); padding-left: 5px; }
+
+        .control-group { margin-bottom: 15px; }
+        select { width: 100%; padding: 8px; background: #222; color: #fff; border: 1px solid #444; }
+
+        .bp-display {
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .stop-indicator {
+            position: absolute;
+            background: var(--danger);
+            color: white;
+            padding: 2px 5px;
+            font-size: 0.7rem;
+            border-radius: 3px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div>
+        <h2 style="margin:0; color:var(--accent);">RAAS Comparative Analysis</h2>
+        <small>Hafeez Faridi Ph.D.</small>
+    </div>
+    <button id="start-btn" onclick="startComparison()" style="background:var(--success); border:none; padding:10px 25px; cursor:pointer; font-weight:bold; border-radius:5px;">RUN COMPARISON</button>
+</header>
+
+<div class="main-container">
+    <div class="stage-wrapper">
+        <div class="view-pane" id="pane-a">
+            <div class="pane-header">PHYSIOLOGICAL CONTROL (NO DRUG)</div>
+            <div class="canvas">
+                <div class="organ" id="a-liver">LIVER</div>
+                <div class="organ" id="a-kidney">KIDNEY</div>
+                <div class="organ" id="a-lungs">LUNGS</div>
+                <div class="organ" id="a-adrenal">ADRENAL</div>
+                <div class="organ" id="a-vessels">BLOOD VESSELS</div>
+                <div id="a-mol" class="mol"></div>
+                <div class="bp-display" id="a-bp" style="position:absolute; bottom:20px; right:20px; color:var(--danger)">--</div>
+            </div>
+        </div>
+
+        <div class="view-pane" id="pane-b">
+            <div class="pane-header">INTERVENTION: <span id="drug-title">SELECTED DRUG</span></div>
+            <div class="canvas">
+                <div class="organ" id="b-liver">LIVER</div>
+                <div class="organ" id="b-kidney">KIDNEY</div>
+                <div class="organ" id="b-lungs">LUNGS</div>
+                <div class="organ" id="b-adrenal">ADRENAL</div>
+                <div class="organ" id="b-vessels">BLOOD VESSELS</div>
+                <div id="b-mol" class="mol"></div>
+                <div id="b-stop" class="stop-indicator">BLOCKED</div>
+                <div class="bp-display" id="b-bp" style="position:absolute; bottom:20px; right:20px; color:var(--success)">--</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="control-group">
+            <label>Select Intervention:</label>
+            <select id="drug-select" onchange="updateDrugTitle()">
+                <option value="beta">Beta Blocker (Metoprolol)</option>
+                <option value="ace">ACE Inhibitor (Lisinopril)</option>
+                <option value="arb">ARB (Losartan)</option>
+                <option value="ccb">Calcium Channel Blocker</option>
+            </select>
+        </div>
+        
+        <label>Narration & Steps:</label>
+        <div id="transcript-box"></div>
+    </div>
+</div>
+
+<script>
+    const synth = window.speechSynthesis;
+    let isRunning = false;
+
+    function updateDrugTitle() {
+        const sel = document.getElementById('drug-select');
+        document.getElementById('drug-title').innerText = sel.options[sel.selectedIndex].text;
+    }
+
+    function speak(text) {
+        return new Promise(resolve => {
+            const utter = new SpeechSynthesisUtterance(text);
+            const box = document.getElementById('transcript-box');
+            box.innerHTML = `<span class="highlight-txt">${text}</span>` + box.innerHTML;
+            
+            utter.onend = resolve;
+            // Force female voice if available
+            const voices = synth.getVoices();
+            utter.voice = voices.find(v => v.name.includes('Female')) || voices[0];
+            synth.speak(utter);
+        });
+    }
+
+    async function moveMol(molId, organId) {
+        const mol = document.getElementById(molId);
+        const organ = document.getElementById(organId);
+        mol.style.display = 'block';
+        mol.style.transition = "all 1s ease-in-out";
+        mol.style.left = (organ.offsetLeft + 40) + "px";
+        mol.style.top = (organ.offsetTop + 10) + "px";
+        organ.classList.add('active');
+        await new Promise(r => setTimeout(r, 1000));
+    }
+
+    async function startComparison() {
+        if(isRunning) return;
+        isRunning = true;
+        document.getElementById('start-btn').disabled = true;
+        
+        // Reset
+        const drug = document.getElementById('drug-select').value;
+        document.querySelectorAll('.organ').forEach(o => o.classList.remove('active'));
+        document.getElementById('b-stop').style.display = 'none';
+        document.getElementById('a-bp').innerText = "90/60";
+        document.getElementById('b-bp').innerText = "90/60";
+
+        // Initial positions
+        document.getElementById('a-mol').style.left = "10px"; document.getElementById('a-mol').style.top = "40%";
+        document.getElementById('b-mol').style.left = "10px"; document.getElementById('b-mol').style.top = "40%";
+
+        await speak("Beginning side-by-side comparison. Both scenarios start with low blood pressure detected by the kidneys.");
+        
+        // STEP 1: RENIN
+        await moveMol('a-mol', 'a-kidney');
+        await moveMol('b-mol', 'b-kidney');
+        
+        if(drug === 'beta') {
+            document.getElementById('b-stop').style.top = "45%"; document.getElementById('b-stop').style.left = "15%";
+            document.getElementById('b-stop').style.display = 'block';
+            await speak("In the control group, renin is released. In the test group, Beta Blockers prevent the kidney from releasing renin entirely.");
+            finishSim("165/105", "115/75"); return;
+        }
+        await speak("Renin is released into the bloodstream in both scenarios.");
+
+        // STEP 2: LIVER
+        await moveMol('a-mol', 'a-liver');
+        await moveMol('b-mol', 'b-liver');
+        await speak("Renin converts Angiotensinogen from the liver into Angiotensin One.");
+
+        // STEP 3: LUNGS
+        await moveMol('a-mol', 'a-lungs');
+        await moveMol('b-mol', 'b-lungs');
+        
+        if(drug === 'ace') {
+            document.getElementById('b-stop').style.top = "15%"; document.getElementById('b-stop').style.right = "15%";
+            document.getElementById('b-stop').style.display = 'block';
+            await speak("In the control, ACE converts the peptide to its active form. In the test group, the ACE inhibitor halts this conversion in the lungs.");
+            finishSim("165/105", "110/70"); return;
+        }
+        await speak("The molecules reach the lungs to interact with the A.C.E. enzyme.");
+
+        // STEP 4: ADRENAL & VESSELS
+        await moveMol('a-mol', 'a-adrenal');
+        await moveMol('b-mol', 'b-adrenal');
+        await speak("Angiotensin Two is formed, signaling the Adrenal glands to release Aldosterone for salt retention.");
+
+        await moveMol('a-mol', 'a-vessels');
+        await moveMol('b-mol', 'b-vessels');
+
+        if(drug === 'arb') {
+            document.getElementById('b-stop').style.bottom = "15%"; document.getElementById('b-stop').style.left = "45%";
+            document.getElementById('b-stop').style.display = 'block';
+            await speak("Finally, while the control vessels constrict, the ARB blocks the receptors on the test vessels, preventing the hypertensive response.");
+            finishSim("165/105", "118/78");
+        } else if(drug === 'ccb') {
+            await speak("In the test group, the Calcium Channel Blocker keeps the vessels dilated despite the presence of Angiotensin Two.");
+            finishSim("165/105", "120/80");
+        } else {
+            await speak("Without intervention, the RAAS pathway concludes with significant vasoconstriction and fluid volume expansion.");
+            finishSim("165/105", "165/105");
+        }
+    }
+
+    function finishSim(bpA, bpB) {
+        document.getElementById('a-bp').innerText = bpA;
+        document.getElementById('b-bp').innerText = bpB;
+        isRunning = false;
+        document.getElementById('start-btn').disabled = false;
+    }
+
+    // Load voices
+    window.speechSynthesis.onvoiceschanged = () => { synth.getVoices(); };
+</script>
+</body>
+</html>
