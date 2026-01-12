@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAAS Pathway Explorer - Hafeez Faridi Ph.D.</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --card-bg: #161616;
+            --text-main: #e0e0e0;
+            --accent: #00e5ff;
+            --danger: #ff1744;
+            --success: #00e676;
+            --warning: #ffea00;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: #000;
+            padding: 15px 25px;
+            border-bottom: 2px solid var(--accent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 229, 255, 0.2);
+        }
+
+        .title-block h1 { margin: 0; font-size: 1.4rem; letter-spacing: 1px; color: var(--accent); }
+        .title-block p { margin: 0; font-size: 0.85rem; color: #aaa; }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border: 1px solid #333;
+        }
+
+        .drug-btn {
+            background-color: #222;
+            color: #999;
+            text-align: left;
+            padding: 14px;
+            border: 1px solid #333;
+            border-left: 4px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .drug-btn.selected {
+            background-color: #2a2a2a;
+            color: #fff;
+            border-left-color: var(--accent);
+            border-color: #444;
+        }
+
+        /* Diagram Area */
+        .diagram-area {
+            flex: 1;
+            background-image: radial-gradient(#1a1a1a 1px, transparent 1px);
+            background-size: 30px 30px;
+            background-color: #0d0d0d;
+            border-radius: 12px;
+            position: relative;
+            border: 1px solid #222;
+        }
+
+        .organ {
+            position: absolute;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            width: 140px;
+            text-align: center;
+            z-index: 5;
+            transition: 0.4s;
+        }
+
+        .organ.active { border-color: var(--accent); box-shadow: 0 0 20px rgba(0,229,255,0.4); }
+
+        #liver { top: 40px; left: 50px; }
+        #kidney { top: 220px; left: 50px; }
+        #lungs { top: 40px; right: 50px; }
+        #adrenal { top: 220px; right: 50px; }
+        #vessels { bottom: 40px; left: 50%; transform: translateX(-50%); width: 300px; }
+
+        .molecule {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: var(--warning);
+            border-radius: 50%;
+            filter: blur(1px);
+            box-shadow: 0 0 10px var(--warning);
+            z-index: 10;
+            display: none;
+        }
+
+        .blockade {
+            position: absolute;
+            background: var(--danger);
+            color: white;
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 4px;
+            display: none;
+            z-index: 15;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* BP Gauge */
+        .stats-panel { width: 220px; background: var(--card-bg); border-radius: 12px; padding: 20px; border: 1px solid #333; }
+        .gauge-bg { height: 200px; width: 30px; background: #222; margin: 0 auto; border-radius: 15px; position: relative; overflow: hidden; }
+        .gauge-fill { position: absolute; bottom: 0; width: 100%; background: linear-gradient(to top, #00e676, #ffea00, #ff1744); transition: height 1s; }
+        .bp-val { text-align: center; font-size: 1.5rem; margin-top: 15px; font-weight: bold; }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="title-block">
+        <h1>RAAS Clinical Simulator</h1>
+        <p>Hafeez Faridi Ph.D.</p>
+    </div>
+    <div>
+        <button onclick="toggleVoice()" id="v-btn" style="background:#333; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">Narration: OFF</button>
+        <button onclick="runSimulation()" style="background:var(--accent); color:#000; border:none; padding:8px 15px; border-radius:4px; font-weight:bold; cursor:pointer; margin-left:10px;">STIMULATE HYPOTENSION</button>
+    </div>
+</header>
+
+<div class="main-container">
+    <div class="sidebar">
+        <button class="drug-btn selected" onclick="setDrug('none')">Placebo (No Drug)</button>
+        <button class="drug-btn" onclick="setDrug('beta')">Beta Blocker<br><small>Blocks Renin Release</small></button>
+        <button class="drug-btn" onclick="setDrug('ace')">ACE Inhibitor<br><small>Blocks Ang I → II</small></button>
+        <button class="drug-btn" onclick="setDrug('arb')">ARB<br><small>Blocks AT1 Receptor</small></button>
+        <button class="drug-btn" onclick="setDrug('ccb')">CCB<br><small>Prevents Vasoconstriction</small></button>
+        <button class="drug-btn" onclick="setDrug('diuretic')">Diuretic<br><small>Blocks Fluid Retention</small></button>
+    </div>
+
+    <div class="diagram-area" id="stage">
+        <div id="liver" class="organ">LIVER<br><small>Angiotensinogen</small></div>
+        <div id="kidney" class="organ">KIDNEY<br><small>Renin Source</small></div>
+        <div id="lungs" class="organ">LUNGS<br><small>ACE Enzyme</small></div>
+        <div id="adrenal" class="organ">ADRENAL<br><small>Aldosterone</small></div>
+        <div id="vessels" class="organ">PERIPHERAL VESSELS</div>
+
+        <div id="stop-beta" class="blockade" style="top: 200px; left: 100px;">BLOCKED</div>
+        <div id="stop-ace" class="blockade" style="top: 50px; right: 180px;">BLOCKED</div>
+        <div id="stop-arb" class="blockade" style="bottom: 100px; right: 200px;">BLOCKED</div>
+
+        <div id="mol" class="molecule"></div>
+    </div>
+
+    <div class="stats-panel">
+        <div class="gauge-bg"><div id="gauge" class="gauge-fill" style="height: 30%;"></div></div>
+        <div class="bp-val" id="bp-display">90/60</div>
+        <p id="status-text" style="font-size: 0.85rem; color: #888; margin-top: 20px; line-height: 1.4;"></p>
+    </div>
+</div>
+
+<script>
+    let activeDrug = 'none';
+    let voiceOn = false;
+    const synth = window.speechSynthesis;
+
+    function toggleVoice() {
+        voiceOn = !voiceOn;
+        document.getElementById('v-btn').innerText = voiceOn ? "Narration: ON" : "Narration: OFF";
+        document.getElementById('v-btn').style.background = voiceOn ? "#00e676" : "#333";
+    }
+
+    function speak(txt) {
+        if (!voiceOn) return;
+        synth.cancel();
+        let u = new SpeechSynthesisUtterance(txt);
+        let voices = synth.getVoices();
+        u.voice = voices.find(v => v.name.includes("Female") || v.name.includes("Google US English")) || voices[0];
+        synth.speak(u);
+    }
+
+    function setDrug(type) {
+        activeDrug = type;
+        document.querySelectorAll('.drug-btn').forEach(b => b.classList.remove('selected'));
+        event.currentTarget.classList.add('selected');
+        resetVisuals();
+    }
+
+    function resetVisuals() {
+        document.querySelectorAll('.organ').forEach(o => o.classList.remove('active'));
+        document.querySelectorAll('.blockade').forEach(b => b.style.display = 'none');
+        document.getElementById('mol').style.display = 'none';
+        document.getElementById('gauge').style.height = '30%';
+        document.getElementById('bp-display').innerText = "90/60";
+        document.getElementById('vessels').style.width = "300px";
+    }
+
+    async function runSimulation() {
+        resetVisuals();
+        const mol = document.getElementById('mol');
+        const status = document.getElementById('status-text');
+
+        // Step 1: Kidney Detection
+        status.innerText = "Step 1: Low BP detected by Juxtaglomerular cells.";
+        document.getElementById('kidney').classList.add('active');
+        speak("Step one. The kidneys detect low blood pressure and prepare to release renin.");
+        await new Promise(r => setTimeout(r, 2000));
+
+        if (activeDrug === 'beta') {
+            document.getElementById('stop-beta').style.display = 'block';
+            status.innerText = "BLOCKED: Beta Blocker prevents Renin release.";
+            speak("Simulation halted. Beta blockers inhibit the sympathetic drive to the kidneys, preventing renin release.");
+            return;
+        }
+
+        // Step 2: Renin meets Angiotensinogen
+        mol.style.display = 'block';
+        moveMol('kidney', 'liver');
+        status.innerText = "Step 2: Renin released. Converting Angiotensinogen to Angiotensin I.";
+        speak("Step two. Renin enters the circulation and converts hepatic angiotensinogen into angiotensin one.");
+        await new Promise(r => setTimeout(r, 2000));
+
+        // Step 3: Lungs & ACE
+        document.getElementById('liver').classList.add('active');
+        moveMol('liver', 'lungs');
+        status.innerText = "Step 3: Angiotensin I travels to Lungs to meet ACE.";
+        speak("Step three. Angiotensin one travels to the pulmonary capillaries.");
+        await new Promise(r => setTimeout(r, 2000));
+
+        if (activeDrug === 'ace') {
+            document.getElementById('stop-ace').style.display = 'block';
+            status.innerText = "BLOCKED: ACE Inhibitor stops conversion to Ang II.";
+            speak("Simulation halted. The A.C.E. inhibitor prevents the formation of angiotensin two.");
+            return;
+        }
+
+        // Step 4: Ang II Activation
+        document.getElementById('lungs').classList.add('active');
+        status.innerText = "Step 4: Angiotensin II formed. Potent vasoconstriction beginning.";
+        speak("Step four. A.C.E. converts the peptide into angiotensin two, a powerful vasoconstrictor.");
+        await new Promise(r => setTimeout(r, 2000));
+
+        // Step 5: Dual Pathway (Vessels & Adrenal)
+        if (activeDrug === 'arb') {
+            document.getElementById('stop-arb').style.display = 'block';
+            status.innerText = "BLOCKED: ARB prevents Ang II from binding to receptors.";
+            speak("Simulation halted. Angiotensin receptor blockers prevent the hormone from binding to its target sites.");
+            return;
+        }
+
+        // Final Effects
+        document.getElementById('adrenal').classList.add('active');
+        document.getElementById('vessels').classList.add('active');
+        
+        if (activeDrug === 'ccb') {
+            status.innerText = "Step 5: Ang II signals constriction, but CCB keeps vessels dilated.";
+            speak("The pathway completes, but calcium channel blockers prevent the vascular smooth muscle from contracting.");
+            updateBP(120, "120/80");
+        } else if (activeDrug === 'diuretic') {
+            status.innerText = "Step 5: Vessels constrict, but Diuretic prevents fluid volume increase.";
+            speak("Vasoconstriction occurs, but the diuretic ensures the kidneys excrete excess water, keeping pressure stable.");
+            updateBP(125, "125/85");
+        } else {
+            status.innerText = "Step 5: Full RAAS activation. Vasoconstriction + Fluid Retention.";
+            speak("Full activation. Systemic resistance increases and aldosterone promotes salt and water retention. Blood pressure rises significantly.");
+            document.getElementById('vessels').style.width = "150px";
+            updateBP(160, "160/100");
+        }
+    }
+
+    function moveMol(fromId, toId) {
+        const mol = document.getElementById('mol');
+        const f = document.getElementById(fromId);
+        const t = document.getElementById(toId);
+        mol.style.left = (f.offsetLeft + 70) + "px";
+        mol.style.top = (f.offsetTop + 20) + "px";
+        setTimeout(() => {
+            mol.style.transition = "all 1.5s ease-in-out";
+            mol.style.left = (t.offsetLeft + 70) + "px";
+            mol.style.top = (t.offsetTop + 20) + "px";
+        }, 50);
+    }
+
+    function updateBP(val, text) {
+        let percent = (val / 200) * 100;
+        document.getElementById('gauge').style.height = percent + "%";
+        document.getElementById('bp-display').innerText = text;
+    }
+</script>
+</body>
+</html>
