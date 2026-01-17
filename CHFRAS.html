@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAAS Physiology Interactive Lab</title>
+    <style>
+        :root {
+            --primary: #2c3e50; --blood: #c0392b; --vessel: #ecf0f1;
+            --kidney: #8e44ad; --liver: #d35400; --water: #3498db;
+            --heart: #e74c3c; --lung: #1abc9c; --bg: #f8f9fa;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        
+        .lab-frame { 
+            max-width: 900px; width: 100%; background: white; padding: 40px; 
+            border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            border-top: 8px solid var(--primary);
+        }
+
+        header { text-align: center; margin-bottom: 30px; }
+        header h1 { color: var(--primary); margin: 0; text-transform: uppercase; letter-spacing: 2px; font-size: 28px; }
+        header p { color: #666; margin: 5px 0; font-weight: 500; }
+        .author { color: var(--primary); font-weight: bold; font-size: 1.1em; margin-top: 5px; border-top: 1px solid #eee; display: inline-block; padding-top: 5px; }
+
+        .organ-network { 
+            display: flex; justify-content: space-around; align-items: center; 
+            background: #fdfdfd; border: 2px solid #eee; padding: 25px; border-radius: 15px; margin-bottom: 25px;
+        }
+        .organ-label { font-size: 10px; font-weight: 800; color: #7f8c8d; margin-top: 8px; }
+        
+        .gfx { transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .liver-gfx { width: 60px; height: 35px; background: var(--liver); border-radius: 50% 10% 50% 10%; }
+        .lung-gfx { width: 50px; height: 60px; background: var(--lung); border-radius: 20px 20px 50% 50%; }
+        .kidney-gfx { width: 35px; height: 55px; background: var(--kidney); border-radius: 40% 60% 60% 40% / 50%; }
+
+        .vessel { 
+            width: 100%; height: 70px; background: var(--vessel); 
+            border: 4px solid var(--primary); border-radius: 35px; 
+            margin: 25px 0; display: flex; align-items: center; transition: 0.5s; overflow: hidden;
+        }
+        #blood { height: 60%; background: var(--blood); width: 100%; transition: 0.8s ease; }
+
+        .explanation-box {
+            background: #1a252f; color: #fff; padding: 20px; border-radius: 10px;
+            font-family: 'Courier New', monospace; margin-bottom: 25px; border-left: 6px solid var(--water);
+            min-height: 85px; line-height: 1.5; font-size: 14px;
+        }
+        .step-highlight { color: #f1c40f; font-weight: bold; text-transform: uppercase; }
+
+        .controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        button { 
+            padding: 12px; border: none; border-radius: 8px; cursor: pointer; 
+            font-weight: bold; color: white; transition: 0.3s; font-size: 12px;
+        }
+        .btn-trigger { background: var(--heart); grid-column: span 4; font-size: 16px; margin-bottom: 10px; }
+        .btn-drug { background: var(--primary); opacity: 0.6; }
+        .btn-drug.active { opacity: 1; background: var(--water); box-shadow: 0 0 15px rgba(52, 152, 219, 0.4); transform: translateY(-2px); }
+        .btn-reset { background: #7f8c8d; grid-column: span 4; margin-top: 10px; }
+        button:hover { filter: brightness(1.1); }
+
+        @keyframes pulse { to { transform: scale(1.15); box-shadow: 0 0 20px rgba(142,68,173,0.3); } }
+        .active-organ { animation: pulse 0.6s infinite alternate; }
+    </style>
+</head>
+<body>
+
+<div class="lab-frame">
+    <header>
+        <h1>RAAS System Simulator</h1>
+        <p>Hormonal Regulation of Blood Pressure & Fluid Balance</p>
+        <div class="author">Hafeez Faridi Ph.D.</div>
+    </header>
+
+    <div class="organ-network">
+        <div style="text-align:center;">
+            <div id="liver" class="gfx liver-gfx"></div>
+            <div class="organ-label">LIVER<br>(Angiotensinogen)</div>
+        </div>
+        <div style="text-align:center;">
+            <div id="lung" class="gfx lung-gfx"></div>
+            <div class="organ-label">LUNGS<br>(ACE Enzyme)</div>
+        </div>
+        <div style="text-align:center;">
+            <div id="kidney" class="gfx kidney-gfx"></div>
+            <div class="organ-label">KIDNEYS<br>(Renin)</div>
+        </div>
+    </div>
+
+    <div class="vessel" id="vessel-frame">
+        <div id="blood"></div>
+    </div>
+
+    <div id="explanation" class="explanation-box">
+        System at Homeostasis. MAP: 93mmHg (120/80). Awaiting hemodynamic challenge...
+    </div>
+
+    <div class="controls">
+        <button class="btn-trigger" onclick="runSequence()">TRIGGER BLOOD PRESSURE DROP</button>
+        <button id="BETA" class="btn-drug" onclick="toggleDrug('BETA')">BETA-BLOCKER</button>
+        <button id="ACEI" class="btn-drug" onclick="toggleDrug('ACEI')">ACE INHIBITOR</button>
+        <button id="ARB" class="btn-drug" onclick="toggleDrug('ARB')">ARB BLOCKER</button>
+        <button id="DIU" class="btn-drug" onclick="toggleDrug('DIU')">DIURETIC</button>
+        <button class="btn-reset" onclick="resetSim()">RESET SYSTEM</button>
+    </div>
+</div>
+
+<script>
+    let activeDrug = null;
+    let isRunning = false;
+
+    function toggleDrug(id) {
+        if (isRunning) return; 
+        document.querySelectorAll('.btn-drug').forEach(b => b.classList.remove('active'));
+        if (activeDrug === id) {
+            activeDrug = null;
+        } else {
+            activeDrug = id;
+            document.getElementById(id).classList.add('active');
+        }
+    }
+
+    function updateExpl(text) {
+        document.getElementById('explanation').innerHTML = text;
+    }
+
+    async function runSequence() {
+        if (isRunning) return;
+        isRunning = true;
+
+        // Step 1: Trigger
+        updateExpl("<span class='step-highlight'>1. Stimulus:</span> Hypotension detected. Renal perfusion pressure has dropped. Juxtaglomerular cells are activated.");
+        document.getElementById('blood').style.height = "25%";
+        await new Promise(r => setTimeout(r, 2000));
+
+        // Step 2: Kidney
+        if(activeDrug === 'BETA') {
+            updateExpl("<span class='step-highlight'>Blocked!</span> Beta-Blocker inhibits the sympathetic signal to the kidney. Renin release is prevented. BP remains low.");
+            isRunning = false;
+            return;
+        }
+        document.getElementById('kidney').classList.add('active-organ');
+        updateExpl("<span class='step-highlight'>2. Renin:</span> The kidney secretes Renin into the plasma to act on its substrate.");
+        await new Promise(r => setTimeout(r, 2000));
+
+        // Step 3: Liver
+        document.getElementById('liver').style.boxShadow = "0 0 20px var(--liver)";
+        updateExpl("<span class='step-highlight'>3. Interaction:</span> Renin converts Angiotensinogen (from Liver) into the decapeptide Angiotensin I.");
+        await new Promise(r => setTimeout(r, 2000));
+
+        // Step 4: Lungs
+        if(activeDrug === 'ACEI') {
+            updateExpl("<span class='step-highlight'>Blocked!</span> ACE Inhibitor prevents the conversion in the lungs. Angiotensin II cannot be formed.");
+            document.getElementById('kidney').classList.remove('active-organ');
+            isRunning = false;
+            return;
+        }
+        document.getElementById('lung').classList.add('active-organ');
+        updateExpl("<span class='step-highlight'>4. Conversion:</span> Pulmonary ACE converts Ang I into Angiotensin II—the primary effector hormone.");
+        await new Promise(r => setTimeout(r, 2000));
+
+        // Step 5: Vessel Effect
+        if(activeDrug === 'ARB') {
+            updateExpl("<span class='step-highlight'>Blocked!</span> Angiotensin II is present, but ARBs block the AT1 receptors on the vessel walls. No constriction occurs.");
+            isRunning = false;
+            return;
+        }
+        document.getElementById('vessel-frame').style.padding = "0 25px";
+        updateExpl("<span class='step-highlight'>5. Vasoconstriction:</span> Ang II binds to AT1 receptors, causing systemic arterial narrowing and immediate pressure increase.");
+        await new Promise(r => setTimeout(r, 2000));
+
+        // Step 6: Aldosterone/Volume
+        let finalVol = activeDrug === 'DIU' ? "60%" : "90%";
+        document.getElementById('blood').style.height = finalVol;
+        updateExpl("<span class='step-highlight'>6. Volume:</span> Aldosterone saves Sodium/Water. " + (activeDrug === 'DIU' ? "Diuretic effect opposes fluid retention." : "Cardiac output and BP are restored."));
+        
+        await new Promise(r => setTimeout(r, 2000));
+        updateExpl("Simulation Complete. Homeostasis re-established.");
+        document.querySelectorAll('.gfx').forEach(g => {
+            g.classList.remove('active-organ');
+            g.style.boxShadow = "none";
+        });
+        isRunning = false;
+    }
+
+    function resetSim() {
+        activeDrug = null;
+        isRunning = false;
+        document.getElementById('blood').style.height = "60%";
+        document.getElementById('vessel-frame').style.padding = "0";
+        document.querySelectorAll('.btn-drug').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.gfx').forEach(g => {
+            g.classList.remove('active-organ');
+            g.style.boxShadow = "none";
+        });
+        updateExpl("System Reset. MAP: 93mmHg (120/80). Awaiting hemodynamic challenge...");
+    }
+</script>
+</body>
+</html>
