@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Coagulation Cascade</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .start-btn {
+            background: #27ae60;
+            color: white;
+        }
+
+        .start-btn:hover {
+            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .reset-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .drug-btn {
+            background: #3498db;
+            color: white;
+        }
+
+        .drug-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .drug-btn.active {
+            background: #f39c12;
+        }
+
+        .cascade-container {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .pathway {
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .pathway-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            color: white;
+        }
+
+        .intrinsic { background: #e74c3c; }
+        .extrinsic { background: #3498db; }
+        .common { background: #9b59b6; }
+
+        .factor {
+            background: #ecf0f1;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 10px;
+            text-align: center;
+            position: relative;
+            transition: all 0.5s;
+            border: 3px solid transparent;
+        }
+
+        .factor.active {
+            background: #2ecc71;
+            color: white;
+            border-color: #27ae60;
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(46, 204, 113, 0.4);
+        }
+
+        .factor.inhibited {
+            background: #95a5a6;
+            color: #7f8c8d;
+            opacity: 0.6;
+        }
+
+        .arrow {
+            text-align: center;
+            font-size: 24px;
+            color: #7f8c8d;
+            margin: 5px 0;
+        }
+
+        .arrow.active {
+            color: #27ae60;
+            animation: pulse 0.5s;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .info-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            min-height: 100px;
+        }
+
+        .info-panel h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .info-panel p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .drug-info {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid #3498db;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-box {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            border: 2px solid #555;
+        }
+
+        .common-pathway-container {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .cascade-container {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🩸 Blood Coagulation Cascade</h1>
+        <p class="subtitle">Interactive Learning Tool for Hemostasis & Coagulant Drugs</p>
+        <p class="subtitle" style="margin-top: -20px; font-weight: 600; color: #2c3e50;">Hafeez Faridi Ph.D.</p>
+
+        <div class="controls">
+            <button class="start-btn" onclick="startCascade()">▶ Start Cascade</button>
+            <button class="reset-btn" onclick="resetCascade()">↻ Reset</button>
+            <button class="drug-btn" onclick="toggleDrug('vitaminK')" id="vitaminK-btn">Vitamin K</button>
+            <button class="drug-btn" onclick="toggleDrug('protamine')" id="protamine-btn">Protamine</button>
+            <button class="drug-btn" onclick="toggleDrug('tranexamic')" id="tranexamic-btn">Tranexamic Acid</button>
+        </div>
+
+        <div class="cascade-container">
+            <!-- Intrinsic Pathway -->
+            <div class="pathway">
+                <div class="pathway-title intrinsic">Intrinsic Pathway</div>
+                <div class="factor" id="f12">Factor XII (Hageman)</div>
+                <div class="arrow">↓</div>
+                <div class="factor" id="f11">Factor XI</div>
+                <div class="arrow">↓</div>
+                <div class="factor" id="f9">Factor IX</div>
+                <div class="arrow">↓</div>
+                <div class="factor" id="f8">Factor VIII + IXa</div>
+            </div>
+
+            <!-- Extrinsic Pathway -->
+            <div class="pathway">
+                <div class="pathway-title extrinsic">Extrinsic Pathway</div>
+                <div class="factor" id="tissue">Tissue Factor (III)</div>
+                <div class="arrow">↓</div>
+                <div class="factor" id="f7">Factor VII</div>
+            </div>
+        </div>
+
+        <!-- Common Pathway -->
+        <div class="common-pathway-container">
+            <div class="pathway-title common">Common Pathway</div>
+            <div class="factor" id="f10">Factor X → Xa</div>
+            <div class="arrow">↓</div>
+            <div class="factor" id="f5">Factor V + Xa</div>
+            <div class="arrow">↓</div>
+            <div class="factor" id="prothrombin">Prothrombin → Thrombin</div>
+            <div class="arrow">↓</div>
+            <div class="factor" id="fibrinogen">Fibrinogen → Fibrin</div>
+            <div class="arrow">↓</div>
+            <div class="factor" id="clot">🩸 STABLE CLOT</div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box" style="background: #ecf0f1;"></div>
+                <span>Inactive</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #2ecc71;"></div>
+                <span>Active</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #95a5a6;"></div>
+                <span>Inhibited</span>
+            </div>
+        </div>
+
+        <div class="info-panel" id="info">
+            <h3>ℹ️ About the Coagulation Cascade</h3>
+            <p>The coagulation cascade is a series of reactions that result in blood clot formation. It has two pathways (intrinsic and extrinsic) that converge into a common pathway, ultimately producing fibrin - the protein mesh that forms a stable clot.</p>
+            <p><strong>Click "Start Cascade" to see the process in action!</strong></p>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        let isRunning = false;
+        let activeDrugs = new Set();
+        
+        const intrinsicSteps = ['f12', 'f11', 'f9', 'f8'];
+        const extrinsicSteps = ['tissue', 'f7'];
+        const commonSteps = ['f10', 'f5', 'prothrombin', 'fibrinogen', 'clot'];
+
+        const drugInfo = {
+            vitaminK: {
+                name: 'Vitamin K',
+                action: 'Promotes synthesis of Factors II, VII, IX, X',
+                use: 'Reverses warfarin; treats bleeding in vitamin K deficiency'
+            },
+            protamine: {
+                name: 'Protamine Sulfate',
+                action: 'Neutralizes heparin by binding to it',
+                use: 'Reverses heparin anticoagulation'
+            },
+            tranexamic: {
+                name: 'Tranexamic Acid',
+                action: 'Inhibits fibrinolysis by blocking plasminogen activation',
+                use: 'Prevents clot breakdown; used in trauma and surgery'
+            }
+        };
+
+        function updateInfo(message, isDrug = false) {
+            const infoPanel = document.getElementById('info');
+            if (isDrug) {
+                infoPanel.innerHTML = `<h3>💊 ${message.name}</h3>
+                    <div class="drug-info">
+                        <p><strong>Mechanism:</strong> ${message.action}</p>
+                        <p><strong>Clinical Use:</strong> ${message.use}</p>
+                    </div>`;
+            } else {
+                infoPanel.innerHTML = `<h3>ℹ️ Current Step</h3><p>${message}</p>`;
+            }
+        }
+
+        function toggleDrug(drug) {
+            const btn = document.getElementById(drug + '-btn');
+            
+            if (activeDrugs.has(drug)) {
+                activeDrugs.delete(drug);
+                btn.classList.remove('active');
+                updateInfo('Drug deactivated. The cascade will proceed normally.');
+            } else {
+                activeDrugs.clear();
+                document.querySelectorAll('.drug-btn').forEach(b => b.classList.remove('active'));
+                activeDrugs.add(drug);
+                btn.classList.add('active');
+                updateInfo(drugInfo[drug], true);
+                applyDrugEffects();
+            }
+        }
+
+        function applyDrugEffects() {
+            // Reset all factors first
+            document.querySelectorAll('.factor').forEach(f => f.classList.remove('inhibited'));
+
+            if (activeDrugs.has('vitaminK')) {
+                // Vitamin K enhances factors II, VII, IX, X
+                ['f7', 'f9', 'f10', 'prothrombin'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.borderColor = '#f39c12';
+                });
+            }
+        }
+
+        async function startCascade() {
+            if (isRunning) return;
+            isRunning = true;
+            resetCascade();
+
+            // Intrinsic pathway
+            for (let i = 0; i < intrinsicSteps.length; i++) {
+                await activateFactor(intrinsicSteps[i], `Intrinsic pathway: ${intrinsicSteps[i]} activated`);
+            }
+
+            // Extrinsic pathway (runs in parallel, but we'll show sequentially)
+            resetCascade();
+            for (let i = 0; i < extrinsicSteps.length; i++) {
+                await activateFactor(extrinsicSteps[i], `Extrinsic pathway: ${extrinsicSteps[i]} activated`);
+            }
+
+            // Common pathway
+            for (let i = 0; i < commonSteps.length; i++) {
+                await activateFactor(commonSteps[i], getStepDescription(commonSteps[i]));
+            }
+
+            updateInfo('✅ Coagulation cascade complete! A stable fibrin clot has formed.');
+            isRunning = false;
+        }
+
+        function getStepDescription(step) {
+            const descriptions = {
+                'f10': 'Factor X is activated by both pathways converging',
+                'f5': 'Factor V combines with Xa to form prothrombinase complex',
+                'prothrombin': 'Prothrombin is converted to thrombin - the key enzyme',
+                'fibrinogen': 'Thrombin converts fibrinogen to fibrin monomers',
+                'clot': 'Fibrin polymerizes and crosslinks to form a stable clot!'
+            };
+            return descriptions[step] || 'Processing...';
+        }
+
+        async function activateFactor(factorId, description) {
+            const factor = document.getElementById(factorId);
+            factor.classList.add('active');
+            updateInfo(description);
+            await sleep(1000);
+        }
+
+        function resetCascade() {
+            document.querySelectorAll('.factor').forEach(factor => {
+                factor.classList.remove('active');
+            });
+            updateInfo('Ready to start. Click "Start Cascade" to begin the coagulation process.');
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>
