@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Blood Coagulation Cascade</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+    <style>
+        /* Custom Animations */
+        @keyframes flow {
+            0% { stroke-dashoffset: 20; }
+            100% { stroke-dashoffset: 0; }
+        }
+
+        .flowing-path {
+            stroke-dasharray: 5;
+            animation: flow 1s linear infinite;
+        }
+
+        .blocked-path {
+            stroke: #ef4444;
+            stroke-dasharray: 5;
+            opacity: 0.5;
+        }
+
+        .node-pulse {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
+        .factor-node {
+            transition: all 0.3s ease;
+            z-index: 20;
+        }
+        
+        .factor-node:hover {
+            transform: scale(1.1) translate(-45%, -45%) !important;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans h-screen flex flex-col overflow-hidden">
+
+    <!-- Header: Adjusted for height and padding -->
+    <header class="bg-white border-b border-slate-200 px-6 py-3 shadow-sm z-30 flex justify-between items-center shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="p-2.5 bg-red-100 rounded-xl shrink-0">
+                <span class="text-2xl">🩸</span>
+            </div>
+            <div class="min-w-0">
+                <h1 class="text-lg md:text-xl font-bold text-slate-800 truncate">Coagulation Cascade Simulator</h1>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                    <p class="text-[11px] text-slate-500 font-medium">Interactive Pharmacodynamics Tool</p>
+                    <span class="hidden sm:inline text-slate-300">•</span>
+                    <p class="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Hafeez Faridi Ph.D.</p>
+                </div>
+            </div>
+        </div>
+        <button onclick="resetSimulation()" class="shrink-0 flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition">
+             Reset
+        </button>
+    </header>
+
+    <!-- Main Layout -->
+    <main class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+        
+        <!-- Left: Interactive Diagram -->
+        <div class="flex-1 relative bg-slate-50 overflow-hidden" id="diagram-container">
+            <!-- Background Grid -->
+            <div class="absolute inset-0 opacity-[0.03]" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 30px 30px;"></div>
+
+            <!-- Labels: Positioned to avoid central nodes -->
+            <div class="absolute top-6 left-6 z-20">
+                <div class="text-[10px] font-black tracking-widest text-blue-600 uppercase bg-blue-100/80 backdrop-blur-sm px-2 py-1 rounded-md border border-blue-200">Intrinsic Pathway</div>
+            </div>
+            <div class="absolute top-6 right-6 z-20">
+                <div class="text-[10px] font-black tracking-widest text-teal-600 uppercase bg-teal-100/80 backdrop-blur-sm px-2 py-1 rounded-md border border-teal-200">Extrinsic Pathway</div>
+            </div>
+            <div class="absolute bottom-10 left-10 z-20">
+                <div class="text-[10px] font-black tracking-widest text-purple-600 uppercase bg-purple-100/80 backdrop-blur-sm px-2 py-1 rounded-md border border-purple-200">Common Pathway</div>
+            </div>
+
+            <!-- SVG Layer for connections -->
+            <svg id="connections-layer" class="absolute inset-0 w-full h-full pointer-events-none z-0"></svg>
+
+            <!-- Nodes Layer -->
+            <div id="nodes-layer" class="absolute inset-0 w-full h-full z-10 pointer-events-none">
+                <!-- Nodes injected by JS -->
+            </div>
+
+            <!-- Animation Status Overlay -->
+            <div id="status-overlay" class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-2.5 rounded-full shadow-2xl text-sm font-bold flex items-center gap-3 transform transition-all duration-300 translate-y-20 opacity-0 z-40">
+                <div class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
+                <span id="status-text">System Ready</span>
+            </div>
+        </div>
+
+        <!-- Right: Controls & Info -->
+        <aside class="w-full lg:w-80 xl:w-96 bg-white border-l border-slate-200 flex flex-col h-[35vh] lg:h-auto shadow-2xl z-30">
+            <div class="flex border-b border-slate-100 shrink-0">
+                <button onclick="switchTab('drugs')" id="tab-btn-drugs" class="flex-1 py-4 text-xs font-bold uppercase tracking-widest border-b-2 border-blue-600 text-blue-600 bg-blue-50/30">Treatments</button>
+                <button onclick="switchTab('info')" id="tab-btn-info" class="flex-1 py-4 text-xs font-bold uppercase tracking-widest border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">Factor Info</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-5 relative">
+                <div id="panel-drugs" class="space-y-4">
+                    <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Select Medication</h3>
+                    <div class="space-y-2" id="drug-list">
+                        <!-- Drug buttons generated by JS -->
+                    </div>
+
+                    <div class="mt-6 p-4 bg-slate-900 rounded-xl text-white">
+                        <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Control Panel</h4>
+                        <button onclick="startSimulation()" id="sim-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg text-sm font-bold transition-all active:scale-95 flex items-center justify-center gap-2">
+                            Start Clotting
+                        </button>
+                    </div>
+                </div>
+
+                <div id="panel-info" class="hidden h-full flex flex-col">
+                    <div id="info-content" class="text-slate-600 text-sm leading-relaxed h-full">
+                        <div class="flex flex-col items-center justify-center h-full text-center text-slate-400 space-y-4">
+                            <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">ℹ️</div>
+                            <p class="text-xs font-medium">Select a Factor node to<br>view clinical details.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <script>
+        // Adjusted Coordinates (Y values increased to prevent overlap with top labels)
+        const factors = [
+            { id: 'XII', name: 'Factor XII', label: 'XII', sub: 'Hageman', x: 20, y: 22, type: 'intrinsic', desc: "Initiates the intrinsic pathway when it contacts a negatively charged surface (like collagen)." },
+            { id: 'XI', name: 'Factor XI', label: 'XI', sub: 'Plasma Thromboplastin', x: 20, y: 35, type: 'intrinsic', desc: "Activated by Factor XIIa. It activates Factor IX." },
+            { id: 'IX', name: 'Factor IX', label: 'IX', sub: 'Christmas', x: 20, y: 48, type: 'intrinsic', desc: "Activated by XIa. Works with Factor VIII to activate Factor X. Vitamin K dependent." },
+            { id: 'VIII', name: 'Factor VIII', label: 'VIII', sub: 'Anti-hemophilic', x: 32, y: 48, type: 'intrinsic', desc: "A cofactor for Factor IXa. Deficiency causes Hemophilia A." },
+            { id: 'TF', name: 'Tissue Factor', label: 'TF', sub: 'III', x: 80, y: 22, type: 'extrinsic', desc: "Released from damaged tissue. Initiates the extrinsic pathway." },
+            { id: 'VII', name: 'Factor VII', label: 'VII', sub: 'Stable', x: 80, y: 35, type: 'extrinsic', desc: "Binds with Tissue Factor to activate Factor X. Vitamin K dependent." },
+            { id: 'X', name: 'Factor X', label: 'X', sub: 'Stuart-Prower', x: 50, y: 62, type: 'common', desc: "Convergence point. Vitamin K dependent." },
+            { id: 'V', name: 'Factor V', label: 'V', sub: 'Labile', x: 62, y: 62, type: 'common', desc: "A cofactor for Factor Xa." },
+            { id: 'II', name: 'Factor II', label: 'II', sub: 'Prothrombin', x: 50, y: 76, type: 'common', desc: "Converted to Thrombin (IIa). Vitamin K dependent." },
+            { id: 'I', name: 'Factor I', label: 'I', sub: 'Fibrinogen', x: 50, y: 88, type: 'common', desc: "Converted by Thrombin into insoluble Fibrin." },
+            { id: 'Clot', name: 'Fibrin Clot', label: 'Clot', sub: '', x: 50, y: 96, type: 'result', desc: "The final mesh that stops bleeding." }
+        ];
+
+        const connections = [
+            { from: 'XII', to: 'XI' }, { from: 'XI', to: 'IX' }, { from: 'IX', to: 'X' },
+            { from: 'VIII', to: 'X', dashed: true }, { from: 'TF', to: 'VII' },
+            { from: 'VII', to: 'X' }, { from: 'X', to: 'II' }, { from: 'V', to: 'II', dashed: true },
+            { from: 'II', to: 'I' }, { from: 'I', to: 'Clot' }
+        ];
+
+        const drugData = [
+            { id: 'none', name: 'Normal Hemostasis', badge: 'Active', targets: [], color: 'blue' },
+            { id: 'warfarin', name: 'Warfarin', badge: 'Vit K Antagonist', targets: ['II', 'VII', 'IX', 'X'], color: 'orange' },
+            { id: 'heparin', name: 'Heparin (UFH)', badge: 'Antithrombin III', targets: ['II', 'X', 'IX', 'XI', 'XII'], color: 'indigo' },
+            { id: 'rivaroxaban', name: 'Rivaroxaban', badge: 'Direct Xa Inh.', targets: ['X'], color: 'emerald' },
+            { id: 'dabigatran', name: 'Dabigatran', badge: 'Direct IIa Inh.', targets: ['II'], color: 'pink' }
+        ];
+
+        let currentDrug = 'none';
+        let isSimulating = false;
+        let animationTimeouts = [];
+
+        function init() {
+            renderDrugButtons();
+            renderNodes();
+            renderConnections();
+            window.addEventListener('resize', () => {
+                renderConnections();
+            });
+        }
+
+        function renderDrugButtons() {
+            const container = document.getElementById('drug-list');
+            container.innerHTML = drugData.map(d => `
+                <button onclick="applyDrug('${d.id}')" id="btn-${d.id}" 
+                    class="drug-btn w-full text-left p-3 rounded-xl border-2 transition-all duration-200 ${d.id === 'none' ? 'border-blue-600 bg-blue-50' : 'border-slate-100 hover:border-slate-300'}">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-xs font-bold text-slate-800">${d.name}</span>
+                        <span class="text-[9px] font-black uppercase tracking-tighter bg-${d.color}-100 text-${d.color}-700 px-1.5 py-0.5 rounded">${d.badge}</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 leading-tight">${d.targets.length ? 'Targets Factors: ' + d.targets.join(', ') : 'Standard physiological clotting'}</p>
+                </button>
+            `).join('');
+        }
+
+        function renderNodes() {
+            const container = document.getElementById('nodes-layer');
+            container.innerHTML = '';
+            factors.forEach(f => {
+                const node = document.createElement('div');
+                node.className = `factor-node absolute flex flex-col items-center justify-center cursor-pointer pointer-events-auto`;
+                node.style.left = `${f.x}%`;
+                node.style.top = `${f.y}%`;
+                node.style.transform = 'translate(-50%, -50%)';
+                node.id = `node-${f.id}`;
+                node.onclick = () => showInfo(f);
+
+                let colorClass = f.type === 'result' ? 'bg-red-600 text-white border-red-700' : 'bg-white text-slate-800 border-slate-200';
+                if(f.type === 'intrinsic') colorClass = 'bg-blue-50 border-blue-200 text-blue-900';
+                if(f.type === 'extrinsic') colorClass = 'bg-teal-50 border-teal-200 text-teal-900';
+                if(f.type === 'common') colorClass = 'bg-purple-50 border-purple-200 text-purple-900';
+
+                node.innerHTML = `
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl border-2 flex flex-col items-center justify-center shadow-sm ${colorClass} overflow-hidden relative font-black text-sm">
+                        ${f.label}
+                        <div class="drug-block-icon hidden absolute inset-0 bg-red-500/80 flex items-center justify-center text-white text-lg">✕</div>
+                    </div>
+                    <span class="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">${f.sub}</span>
+                `;
+                container.appendChild(node);
+            });
+        }
+
+        function renderConnections() {
+            const svg = document.getElementById('connections-layer');
+            svg.innerHTML = '';
+            const rect = document.getElementById('diagram-container').getBoundingClientRect();
+
+            connections.forEach(conn => {
+                const f = factors.find(x => x.id === conn.from);
+                const t = factors.find(x => x.id === conn.to);
+                const x1 = (f.x / 100) * rect.width;
+                const y1 = (f.y / 100) * rect.height;
+                const x2 = (t.x / 100) * rect.width;
+                const y2 = (t.y / 100) * rect.height;
+
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", `M ${x1} ${y1} L ${x2} ${y2}`);
+                path.setAttribute("stroke", "#e2e8f0");
+                path.setAttribute("stroke-width", "3");
+                path.setAttribute("stroke-linecap", "round");
+                if (conn.dashed) path.setAttribute("stroke-dasharray", "6");
+                path.id = `path-${conn.from}-${conn.to}`;
+                svg.appendChild(path);
+            });
+        }
+
+        function applyDrug(key) {
+            resetSimulation();
+            currentDrug = key;
+            document.querySelectorAll('.drug-btn').forEach(b => {
+                b.classList.remove('border-blue-600', 'bg-blue-50');
+                b.classList.add('border-slate-100');
+            });
+            document.getElementById(`btn-${key}`).classList.add('border-blue-600', 'bg-blue-50');
+            
+            const targets = drugData.find(d => d.id === key).targets;
+            factors.forEach(f => {
+                const node = document.getElementById(`node-${f.id}`);
+                const blocked = targets.includes(f.id);
+                node.querySelector('.drug-block-icon').classList.toggle('hidden', !blocked);
+            });
+        }
+
+        function startSimulation() {
+            if(isSimulating) { resetSimulation(); return; }
+            isSimulating = true;
+            document.getElementById('sim-btn').textContent = 'Cancel';
+            const status = document.getElementById('status-overlay');
+            status.classList.remove('translate-y-20', 'opacity-0');
+            document.getElementById('status-text').textContent = "Cascade Initiated...";
+            
+            const targets = drugData.find(d => d.id === currentDrug).targets;
+            
+            runStep('XII', 'TF', 0);
+            propagate('XII', 'XI', 800);
+            propagate('XI', 'IX', 1600);
+            propagate('TF', 'VII', 800);
+            
+            animationTimeouts.push(setTimeout(() => {
+                if (!targets.includes('X') && (!targets.includes('IX') || !targets.includes('VII'))) {
+                    runStep('X', null, 0);
+                    propagate('X', 'II', 1000);
+                    animationTimeouts.push(setTimeout(() => {
+                        if(!targets.includes('II')) {
+                            runStep('II', null, 0);
+                            propagate('II', 'I', 1000);
+                            animationTimeouts.push(setTimeout(() => {
+                                if(!targets.includes('I')) {
+                                    runStep('I', 'Clot', 1000);
+                                    document.getElementById('status-text').textContent = "Hemostasis Achieved";
+                                } else { fail("Fibrinogen Deficiency Simulation"); }
+                            }, 1200));
+                        } else { fail("Thrombin Inhibition Active"); }
+                    }, 1200));
+                } else { fail("Coagulation Arrested"); }
+            }, 2500));
+        }
+
+        function propagate(from, to, delay) {
+            animationTimeouts.push(setTimeout(() => {
+                const p = document.getElementById(`path-${from}-${to}`);
+                const targets = drugData.find(d => d.id === currentDrug).targets;
+                if (!targets.includes(from)) {
+                    p.setAttribute('stroke', '#3b82f6');
+                    p.classList.add('flowing-path');
+                    document.getElementById(`node-${to}`).querySelector('div').classList.add('node-pulse');
+                } else {
+                    p.setAttribute('stroke', '#ef4444');
+                    p.classList.add('blocked-path');
+                }
+            }, delay));
+        }
+
+        function runStep(id1, id2, delay) {
+            animationTimeouts.push(setTimeout(() => {
+                if(id1) document.getElementById(`node-${id1}`).querySelector('div').classList.add('node-pulse');
+                if(id2) document.getElementById(`node-${id2}`).querySelector('div').classList.add('node-pulse');
+            }, delay));
+        }
+
+        function fail(m) { 
+            document.getElementById('status-text').textContent = m;
+            document.getElementById('status-overlay').classList.add('bg-red-600');
+        }
+
+        function resetSimulation() {
+            animationTimeouts.forEach(clearTimeout);
+            animationTimeouts = [];
+            isSimulating = false;
+            document.querySelectorAll('path').forEach(p => {
+                p.classList.remove('flowing-path', 'blocked-path');
+                p.setAttribute('stroke', '#e2e8f0');
+            });
+            document.querySelectorAll('.factor-node div').forEach(d => d.classList.remove('node-pulse', 'ring-4'));
+            document.getElementById('status-overlay').classList.add('translate-y-20', 'opacity-0');
+            document.getElementById('status-overlay').classList.remove('bg-red-600');
+            document.getElementById('sim-btn').textContent = 'Start Clotting';
+        }
+
+        function switchTab(tab) {
+            document.getElementById('panel-drugs').classList.toggle('hidden', tab !== 'drugs');
+            document.getElementById('panel-info').classList.toggle('hidden', tab !== 'info');
+            document.getElementById('tab-btn-drugs').className = tab === 'drugs' ? 'flex-1 py-4 text-xs font-bold uppercase tracking-widest border-b-2 border-blue-600 text-blue-600 bg-blue-50/30' : 'flex-1 py-4 text-xs font-bold uppercase tracking-widest border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition';
+            document.getElementById('tab-btn-info').className = tab === 'info' ? 'flex-1 py-4 text-xs font-bold uppercase tracking-widest border-b-2 border-blue-600 text-blue-600 bg-blue-50/30' : 'flex-1 py-4 text-xs font-bold uppercase tracking-widest border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition';
+        }
+
+        function showInfo(f) {
+            switchTab('info');
+            const targets = drugData.find(d => d.id === currentDrug).targets;
+            const affected = targets.includes(f.id);
+            document.getElementById('info-content').innerHTML = `
+                <div class="space-y-4">
+                    <div class="pb-4 border-b border-slate-100">
+                        <h2 class="text-xl font-black text-slate-800">${f.name}</h2>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">${f.sub || 'Final Product'}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full ${affected ? 'bg-red-500 animate-pulse' : 'bg-green-500'}"></div>
+                        <span class="text-xs font-bold ${affected ? 'text-red-600' : 'text-green-600'} uppercase tracking-tighter">
+                            ${affected ? 'Currently Inhibited' : 'Functional'}
+                        </span>
+                    </div>
+                    <p class="text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 leading-relaxed">${f.desc}</p>
+                </div>
+            `;
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
