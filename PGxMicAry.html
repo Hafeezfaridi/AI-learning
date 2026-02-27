@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gene Expression Browser</title>
+    <style>
+        :root {
+            --bg: #f8f9fa;
+            --primary: #2d3436;
+            --accent: #0984e3;
+            --up: #d63031;
+            --down: #00b894;
+        }
+
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); padding: 20px; color: var(--primary); }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        
+        .header { text-align: center; margin-bottom: 30px; }
+        .controls { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+        
+        input[type="text"] {
+            padding: 10px 15px;
+            border: 2px solid #dfe6e9;
+            border-radius: 8px;
+            width: 300px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus { border-color: var(--accent); }
+
+        .main-view { display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; }
+        
+        /* The Chip */
+        .chip-box { background: #2d3436; padding: 20px; border-radius: 10px; text-align: center; }
+        .chip { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+        .spot { aspect-ratio: 1; border-radius: 50%; background: #444; transition: 0.3s; cursor: pointer; border: 2px solid transparent; }
+        .spot:hover { transform: scale(1.2); z-index: 10; border-color: white; }
+        .spot.active { border-color: #fdcb6e; transform: scale(1.3); box-shadow: 0 0 15px #fdcb6e; }
+
+        /* The Table */
+        .table-scroll { height: 450px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #636e72; color: white; padding: 12px; position: sticky; top: 0; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #f1f2f6; font-size: 0.9rem; }
+        tr.highlight { background-color: #fff9db !important; }
+        
+        .val-up { color: var(--up); font-weight: bold; }
+        .val-down { color: var(--down); font-weight: bold; }
+
+        button { padding: 10px 20px; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🧬 Gene Expression Search Engine</h1>
+        <p>Analyze the transcriptome by searching for specific markers.</p>
+    </div>
+
+    <div class="controls">
+        <button onclick="generateData()">🔬 Run New Analysis</button>
+        <input type="text" id="geneInput" placeholder="Search gene (e.g. TP53, BRCA1)..." onkeyup="searchGenes()">
+    </div>
+
+    <div class="main-view">
+        <div class="chip-box">
+            <h3 style="color: white; margin-top: 0;">Microarray Heatmap</h3>
+            <div class="chip" id="microarray"></div>
+        </div>
+
+        <div class="table-scroll">
+            <table id="geneTable">
+                <thead>
+                    <tr>
+                        <th>Gene ID</th>
+                        <th>Healthy (G)</th>
+                        <th>Disease (R)</th>
+                        <th>Log2FC</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="4" style="text-align:center">Click "Run Analysis" to start.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const genes = ["TP53", "BRCA1", "MYC", "EGFR", "TNF", "IL6", "APOE", "VEGFA", "MTOR", "ESR1", "PTEN", "STAT3", "JUN", "CASP3", "MMP9", "AKT1", "CD44", "KRAS", "E2F1", "BCL2"];
+    
+    function generateData() {
+        const chip = document.getElementById('microarray');
+        const tableBody = document.getElementById('tableBody');
+        chip.innerHTML = "";
+        tableBody.innerHTML = "";
+
+        for (let i = 0; i < 64; i++) {
+            // Simulated intensity values
+            const healthy = Math.floor(Math.random() * 200) + 20;
+            const disease = Math.floor(Math.random() * 200) + 20;
+            const log2fc = Math.log2(disease / healthy).toFixed(2);
+            const geneName = genes[i % genes.length] + "_" + (Math.floor(i/genes.length) + 1);
+
+            // Create Spot
+            const spot = document.createElement('div');
+            spot.className = 'spot';
+            spot.id = `spot-${i}`;
+            // Color mapping: R=Disease, G=Healthy
+            spot.style.background = `rgb(${disease}, ${healthy}, 0)`;
+            spot.title = `${geneName} | Log2FC: ${log2fc}`;
+            chip.appendChild(spot);
+
+            // Create Row
+            const row = document.createElement('tr');
+            row.id = `row-${i}`;
+            row.innerHTML = `
+                <td><b>${geneName}</b></td>
+                <td>${healthy}</td>
+                <td>${disease}</td>
+                <td class="${log2fc > 1 ? 'val-up' : log2fc < -1 ? 'val-down' : ''}">${log2fc}</td>
+            `;
+            tableBody.appendChild(row);
+        }
+    }
+
+    function searchGenes() {
+        const input = document.getElementById('geneInput').value.toUpperCase();
+        const rows = document.getElementById('tableBody').getElementsByTagName('tr');
+        
+        for (let i = 0; i < rows.length; i++) {
+            const geneCell = rows[i].getElementsByTagName('td')[0];
+            const spot = document.getElementById(`spot-${i}`);
+            
+            if (geneCell) {
+                const textValue = geneCell.textContent || geneCell.innerText;
+                if (textValue.toUpperCase().indexOf(input) > -1 && input !== "") {
+                    rows[i].style.display = "";
+                    rows[i].classList.add('highlight');
+                    if (spot) spot.classList.add('active');
+                } else if (input === "") {
+                    rows[i].style.display = "";
+                    rows[i].classList.remove('highlight');
+                    if (spot) spot.classList.remove('active');
+                } else {
+                    rows[i].style.display = "none";
+                    if (spot) spot.classList.remove('active');
+                }
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
