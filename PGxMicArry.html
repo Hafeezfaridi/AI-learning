@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Microarray Explorer</title>
+    <style>
+        :root {
+            --bg: #f4f7f6;
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --healthy: #2ecc71; /* Green Cy3 */
+            --diseased: #e74c3c; /* Red Cy5 */
+            --both: #f1c40f;    /* Yellow */
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h1 { text-align: center; color: var(--primary); }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: var(--accent);
+            color: white;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: bold;
+        }
+
+        button:hover { background: #2980b9; }
+        button:disabled { background: #bdc3c7; cursor: not-allowed; }
+
+        .display-area {
+            display: flex;
+            gap: 40px;
+            margin-top: 20px;
+            align-items: flex-start;
+        }
+
+        /* The Microarray Chip */
+        .chip {
+            display: grid;
+            grid-template-columns: repeat(10, 30px);
+            grid-gap: 5px;
+            background: #222;
+            padding: 15px;
+            border-radius: 5px;
+            border: 4px solid #555;
+        }
+
+        .spot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #333;
+            transition: all 0.5s ease;
+        }
+
+        .info-panel {
+            flex: 1;
+            padding: 20px;
+            border-left: 4px solid var(--accent);
+            background: #f9f9f9;
+        }
+
+        .legend {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            font-size: 0.9em;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+
+        .step-highlight {
+            color: var(--accent);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🔬 Transcriptome Analyzer</h1>
+    <p>Follow the steps to compare gene expression between <b>Healthy</b> and <b>Diseased</b> cells.</p>
+
+    <div class="controls">
+        <button id="step1" onclick="runStep(1)">1. Isolate RNA</button>
+        <button id="step2" onclick="runStep(2)" disabled>2. Label cDNA</button>
+        <button id="step3" onclick="runStep(3)" disabled>3. Hybridize</button>
+        <button id="step4" onclick="runStep(4)" disabled>4. Scan & Analyze</button>
+        <button onclick="reset()">Reset</button>
+    </div>
+
+    <div class="display-area">
+        <div class="chip" id="microarray">
+            </div>
+
+        <div class="info-panel" id="info">
+            <h3>Current Step: <span id="step-name">Preparation</span></h3>
+            <p id="step-desc">Click "Isolate RNA" to begin the experiment.</p>
+            
+            <div class="legend" id="legend" style="visibility: hidden;">
+                <div class="legend-item"><div class="dot" style="background:var(--healthy)"></div> Healthy</div>
+                <div class="legend-item"><div class="dot" style="background:var(--diseased)"></div> Diseased</div>
+                <div class="legend-item"><div class="dot" style="background:var(--both)"></div> Neutral</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const chip = document.getElementById('microarray');
+    const infoTitle = document.getElementById('step-name');
+    const infoDesc = document.getElementById('step-desc');
+    const legend = document.getElementById('legend');
+    
+    // Create the chip grid
+    for (let i = 0; i < 100; i++) {
+        const div = document.createElement('div');
+        div.className = 'spot';
+        div.id = `spot-${i}`;
+        chip.appendChild(div);
+    }
+
+    function runStep(step) {
+        document.getElementById(`step${step}`).disabled = true;
+        if(step < 4) document.getElementById(`step${step+1}`).disabled = false;
+
+        switch(step) {
+            case 1:
+                infoTitle.innerText = "Step 1: RNA Isolation";
+                infoDesc.innerHTML = "We extract mRNA from both samples. <br><br><b>Healthy Sample</b>: The baseline control.<br><b>Diseased Sample</b>: The experimental group.";
+                break;
+            case 2:
+                infoTitle.innerText = "Step 2: Reverse Transcription & Labeling";
+                infoDesc.innerHTML = "mRNA is converted to cDNA. We add fluorescent tags:<br>🟢 <span style='color:green'>Cy3 (Green)</span> for Healthy.<br>🔴 <span style='color:red'>Cy5 (Red)</span> for Diseased.";
+                break;
+            case 3:
+                infoTitle.innerText = "Step 3: Hybridization";
+                infoDesc.innerHTML = "The labeled samples are mixed and poured onto the chip. The cDNA strands bind (hybridize) to their matching DNA probes on the grid.";
+                // Visual effect: random dim colors
+                document.querySelectorAll('.spot').forEach(s => s.style.background = '#444');
+                break;
+            case 4:
+                infoTitle.innerText = "Step 4: Scanning & Analysis";
+                infoDesc.innerHTML = "A laser excites the dyes. <br><br><b>Green:</b> Gene expressed only in healthy cells.<br><b>Red:</b> Gene over-expressed in disease (potential drug target!).<br><b>Yellow:</b> Gene expressed equally in both.";
+                legend.style.visibility = 'visible';
+                analyze();
+                break;
+        }
+    }
+
+    function analyze() {
+        const spots = document.querySelectorAll('.spot');
+        spots.forEach(spot => {
+            const rand = Math.random();
+            if (rand < 0.3) spot.style.background = 'var(--healthy)';
+            else if (rand < 0.6) spot.style.background = 'var(--diseased)';
+            else if (rand < 0.9) spot.style.background = 'var(--both)';
+            else spot.style.background = '#111'; // No expression
+            spot.style.boxShadow = "0 0 10px " + spot.style.background;
+        });
+    }
+
+    function reset() {
+        location.reload();
+    }
+</script>
+
+</body>
+</html>
