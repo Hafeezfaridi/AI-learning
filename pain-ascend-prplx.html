@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mechanism of Pain | Interactive Nociception Pathway</title>
+
+  <style>
+    :root {
+      --bg-a: #040a12;
+      --bg-b: #071a2b;
+      --bg-c: #0b1027;
+      --panel: rgba(11, 34, 57, 0.84);
+      --line-1: #6bd8ff;
+      --line-2: #c989ff;
+      --line-3: #72e6b1;
+      --hot: #ffbf4d;
+      --hot-2: #ff4d6d;
+      --text: #edf8ff;
+      --muted: #aac4d6;
+      --border: rgba(143, 222, 255, 0.30);
+      --focus: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 15% 12%, rgba(39, 130, 187, 0.27), transparent 35%),
+        radial-gradient(circle at 87% 22%, rgba(145, 63, 183, 0.18), transparent 30%),
+        linear-gradient(135deg, var(--bg-a), var(--bg-b) 48%, var(--bg-c));
+    }
+
+    .page {
+      width: min(1440px, 95vw);
+      margin: 0 auto;
+      padding: 42px 0 54px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 4.2rem);
+      letter-spacing: -0.04em;
+      background: linear-gradient(90deg, #f8fbff, #8ee5ff 48%, #e0a8ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .author {
+      margin: 8px 0 0;
+      font-size: 1rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #a7d6ec;
+    }
+
+    .intro {
+      max-width: 900px;
+      margin: 20px auto 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 26px 0 14px;
+      position: relative;
+      z-index: 10;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid rgba(143, 222, 255, 0.38);
+      background: rgba(20, 54, 80, 0.86);
+      color: white;
+      border-radius: 999px;
+      padding: 11px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      pointer-events: auto;
+      transition: transform 0.20s ease, background 0.20s ease, box-shadow 0.20s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, #1f719b, #5a3593);
+      box-shadow: 0 0 22px rgba(107, 216, 255, 0.30);
+    }
+
+    button.active {
+      background: linear-gradient(135deg, #1d8cac, #7342ad);
+      box-shadow: 0 0 25px rgba(107, 216, 255, 0.55);
+      border-color: rgba(255, 255, 255, 0.82);
+    }
+
+    button:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .status {
+      min-height: 28px;
+      margin: 0 auto 12px;
+      text-align: center;
+      color: #d9f5ff;
+      font-size: 0.96rem;
+      font-weight: 650;
+    }
+
+    .stage {
+      position: relative;
+      overflow: hidden;
+      min-height: 680px;
+      border: 1px solid rgba(145, 219, 255, 0.23);
+      border-radius: 24px;
+      background:
+        linear-gradient(rgba(125, 209, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(125, 209, 255, 0.045) 1px, transparent 1px),
+        rgba(5, 22, 38, 0.66);
+      background-size: 30px 30px;
+      box-shadow:
+        inset 0 0 70px rgba(28, 108, 149, 0.16),
+        0 18px 70px rgba(0, 0, 0, 0.28);
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      min-height: 680px;
+    }
+
+    .anatomy {
+      fill: rgba(30, 89, 124, 0.25);
+      stroke: rgba(140, 222, 255, 0.50);
+      stroke-width: 2;
+    }
+
+    .region-label {
+      font-size: 15px;
+      fill: #bce9fb;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .small-label {
+      font-size: 13px;
+      fill: #a6c3d4;
+    }
+
+    .neuron-name {
+      font-size: 17px;
+      fill: white;
+      font-weight: 800;
+    }
+
+    .path {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 10;
+      opacity: 0.84;
+      filter: url(#softGlow);
+      transition: opacity 0.35s ease, stroke-width 0.35s ease;
+    }
+
+    .path.first {
+      stroke: var(--line-1);
+    }
+
+    .path.second {
+      stroke: var(--line-2);
+    }
+
+    .path.third {
+      stroke: var(--line-3);
+    }
+
+    .path.highlight {
+      opacity: 1;
+      stroke-width: 14;
+    }
+
+    .axon-outline {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.18);
+      stroke-width: 2;
+      stroke-dasharray: 4 8;
+    }
+
+    .soma {
+      stroke: rgba(255, 255, 255, 0.75);
+      stroke-width: 2;
+      transition: filter 0.30s ease, stroke-width 0.30s ease;
+    }
+
+    .soma.highlight {
+      filter: url(#signalGlow);
+      stroke: #ffffff;
+      stroke-width: 4;
+    }
+
+    .synapse {
+      fill: #152b49;
+      stroke: #ffcf6a;
+      stroke-width: 3;
+      filter: url(#glow);
+      transition: fill 0.30s ease, stroke 0.30s ease;
+    }
+
+    .synapse.highlight {
+      fill: #9a4d25;
+      stroke: #fff2a8;
+    }
+
+    .synapse-number {
+      fill: #fff5ca;
+      font-size: 15px;
+      font-weight: 900;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .transmitter {
+      font-size: 14px;
+      fill: #ffd779;
+      font-weight: 750;
+    }
+
+    .release-dot {
+      fill: #ffc95c;
+      filter: url(#glow);
+    }
+
+    .signal {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .signal.run {
+      opacity: 1;
+    }
+
+    .signal .core {
+      fill: #fffdf1;
+      filter: url(#signalGlow);
+    }
+
+    .signal .halo {
+      fill: #ffad32;
+      opacity: 0.42;
+      filter: url(#signalGlow);
+    }
+
+    .release {
+      opacity: 0;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .release.run {
+      opacity: 1;
+      animation: vesicleBurst 1.35s ease-out infinite;
+    }
+
+    @keyframes vesicleBurst {
+      0% {
+        opacity: 0;
+        transform: scale(0.30);
+      }
+      22% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      72% {
+        opacity: 0.85;
+        transform: scale(1.45);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(1.9);
+      }
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .card {
+      padding: 17px 18px;
+      border: 1px solid rgba(147, 218, 255, 0.20);
+      background: var(--panel);
+      border-radius: 16px;
+    }
+
+    .card h2 {
+      margin: 0 0 7px;
+      font-size: 1rem;
+      color: #e5f8ff;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.93rem;
+      line-height: 1.5;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding: 14px 17px;
+      margin-top: 16px;
+      border-radius: 16px;
+      background: rgba(11, 39, 62, 0.72);
+      color: var(--muted);
+      font-size: 0.90rem;
+    }
+
+    .key {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot.orange {
+      background: #ffb43d;
+      box-shadow: 0 0 10px #ffb43d;
+    }
+
+    .dot.blue {
+      background: var(--line-1);
+    }
+
+    .dot.purple {
+      background: var(--line-2);
+    }
+
+    .dot.green {
+      background: var(--line-3);
+    }
+
+    .note {
+      margin: 16px 3px 0;
+      color: #8fb2c5;
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 800px) {
+      .page {
+        width: min(100% - 24px, 1440px);
+        padding-top: 24px;
+      }
+
+      .card-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stage {
+        overflow-x: auto;
+      }
+
+      svg {
+        min-width: 980px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <header>
+      <h1>Mechanism of Pain</h1>
+      <p class="author">Hafeez Faridi Ph.D.</p>
+      <p class="intro">
+        A simplified interactive illustration of ascending nociception:
+        tissue injury activates a nociceptor, an action potential travels
+        through first-, second-, and third-order neurons, and neurotransmitters
+        relay the signal at synapses until pain reaches the cerebral cortex.
+      </p>
+    </header>
+
+    <section class="controls" aria-label="Animation controls">
+      <button id="animateAllBtn" class="active" type="button">
+        ▶ Animate Full Pain Signal
+      </button>
+
+      <button id="step1Btn" type="button">
+        1. Peripheral Sensing
+      </button>
+
+      <button id="step2Btn" type="button">
+        2. Spinal Relay
+      </button>
+
+      <button id="step3Btn" type="button">
+        3. Thalamus to Cortex
+      </button>
+
+      <button id="resetBtn" type="button">
+        ↻ Reset
+      </button>
+    </section>
+
+    <p id="animationStatus" class="status" aria-live="polite">
+      Ready to animate the ascending nociceptive pathway.
+    </p>
+
+    <section class="stage" aria-label="Interactive nociceptive pathway diagram">
+      <svg viewBox="0 0 1280 680" role="img"
+        aria-labelledby="diagramTitle diagramDesc">
+
+        <title id="diagramTitle">Ascending pain pathway</title>
+        <desc id="diagramDesc">
+          An interactive diagram of a nociceptor, first-order neuron,
+          spinal synapse, second-order spinothalamic neuron, thalamus,
+          third-order thalamocortical neuron, synapses, neurotransmitter
+          release, and traveling action potentials.
+        </desc>
+
+        <defs>
+          <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="3" result="blur"></feGaussianBlur>
+            <feMerge>
+              <feMergeNode in="blur"></feMergeNode>
+              <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+          </filter>
+
+          <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="5" result="blur"></feGaussianBlur>
+            <feMerge>
+              <feMergeNode in="blur"></feMergeNode>
+              <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+          </filter>
+
+          <filter id="signalGlow" x="-200%" y="-200%" width="500%" height="500%">
+            <feGaussianBlur stdDeviation="9" result="blur"></feGaussianBlur>
+            <feMerge>
+              <feMergeNode in="blur"></feMergeNode>
+              <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+          </filter>
+
+          <path id="firstPath"
+            d="M90,485 C180,485 185,500 245,500 C326,500 310,426 390,426 C465,426 460,470 520,470">
+          </path>
+
+          <path id="secondPath"
+            d="M556,454 C625,425 648,460 668,447 C710,420 682,344 735,300 C788,257 825,275 858,245">
+          </path>
+
+          <path id="thirdPath"
+            d="M915,218 C978,210 1008,190 1045,157 C1092,116 1142,104 1202,112">
+          </path>
+
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(199,239,255,.5)"></path>
+          </marker>
+        </defs>
+
+        <!-- Injured tissue -->
+        <path class="anatomy"
+          d="M38,420 Q114,364 196,420 L196,575 Q111,616 38,568 Z">
+        </path>
+
+        <text x="56" y="449" class="region-label">INJURED TISSUE</text>
+        <text x="56" y="472" class="small-label">Thermal, mechanical, chemical</text>
+
+        <!-- Nociceptor -->
+        <g id="nociceptor">
+          <path
+            d="M92,505 C84,472 70,461 50,448
+               M92,505 C109,475 130,456 145,435
+               M92,505 C107,522 140,530 160,535
+               M92,505 C77,523 57,544 52,560"
+            fill="none"
+            stroke="#78dcff"
+            stroke-width="5"
+            stroke-linecap="round"
+            filter="url(#softGlow)">
+          </path>
+
+          <circle cx="92" cy="505" r="12" fill="#76ddff" filter="url(#glow)"></circle>
+        </g>
+
+        <text x="48" y="610" class="neuron-name">Nociceptor</text>
+        <text x="48" y="633" class="small-label">Pain-sensing free nerve ending</text>
+
+        <!-- Spinal cord -->
+        <path class="anatomy"
+          d="M220,382 Q350,332 470,382 L525,455 Q470,544 345,553 Q250,545 215,475 Z">
+        </path>
+
+        <text x="282" y="370" class="region-label">SPINAL CORD</text>
+        <text x="255" y="399" class="small-label">Dorsal horn: first synaptic relay</text>
+
+        <!-- First-order neuron -->
+        <circle id="soma1" class="soma" cx="246" cy="500" r="28"
+          fill="#388bb5" filter="url(#softGlow)">
+        </circle>
+
+        <circle cx="246" cy="500" r="10" fill="#b9efff"></circle>
+
+        <text x="188" y="570" class="neuron-name">1st-order neuron</text>
+        <text x="188" y="592" class="small-label">Cell body: dorsal root ganglion</text>
+
+        <!-- Second-order neuron -->
+        <circle id="soma2" class="soma" cx="520" cy="470" r="28"
+          fill="#8b53bd" filter="url(#softGlow)">
+        </circle>
+
+        <circle cx="520" cy="470" r="10" fill="#efd0ff"></circle>
+
+        <text x="455" y="525" class="neuron-name">2nd-order neuron</text>
+        <text x="455" y="547" class="small-label">Dorsal horn projection neuron</text>
+
+        <!-- Thalamus -->
+        <path class="anatomy"
+          d="M810,135 C872,95 948,113 970,180
+             C986,231 945,288 886,285
+             C818,278 786,212 810,135 Z">
+        </path>
+
+        <text x="840" y="175" class="region-label">THALAMUS</text>
+        <text x="843" y="199" class="small-label">VPL relay nucleus</text>
+
+        <circle id="soma3" class="soma" cx="888" cy="218" r="29"
+          fill="#55c897" filter="url(#softGlow)">
+        </circle>
+
+        <circle cx="888" cy="218" r="10" fill="#d5ffed"></circle>
+
+        <text x="818" y="320" class="neuron-name">3rd-order neuron</text>
+        <text x="817" y="343" class="small-label">Thalamus to cerebral cortex</text>
+
+        <!-- Somatosensory cortex -->
+        <path id="cortex" class="anatomy"
+          d="M1030,52 C1100,8 1235,34 1254,119
+             C1268,179 1228,251 1155,251
+             C1096,251 1036,211 1026,151
+             C1018,108 1002,71 1030,52 Z">
+        </path>
+
+        <path
+          d="M1056,104 Q1090,75 1124,105
+             Q1156,72 1190,106 Q1213,94 1230,125"
+          fill="none"
+          stroke="rgba(182,235,255,.45)"
+          stroke-width="3">
+        </path>
+
+        <text x="1080" y="159" class="region-label">SOMATOSENSORY</text>
+        <text x="1114" y="180" class="region-label">CORTEX</text>
+        <text x="1074" y="208" class="small-label">Conscious pain perception</text>
+
+        <!-- Axon pathways -->
+        <use id="path1" href="#firstPath" class="path first"></use>
+        <use href="#firstPath" class="axon-outline"></use>
+
+        <use id="path2" href="#secondPath" class="path second"></use>
+        <use href="#secondPath" class="axon-outline"></use>
+
+        <use id="path3" href="#thirdPath" class="path third"></use>
+        <use href="#thirdPath" class="axon-outline"></use>
+
+        <!-- Decussation -->
+        <path
+          d="M584,432 C625,411 653,413 681,430"
+          fill="none"
+          stroke="#ffc45e"
+          stroke-width="3"
+          stroke-dasharray="6 6">
+        </path>
+
+        <text x="575" y="393" class="small-label">Crosses midline</text>
+        <text x="581" y="412" class="small-label">and ascends</text>
+
+        <!-- Synapses -->
+        <g>
+          <circle id="synapse1" class="synapse" cx="541" cy="461" r="22"></circle>
+          <text class="synapse-number" x="541" y="462">1</text>
+          <text x="413" y="604" class="transmitter">Glutamate + Substance P</text>
+          <text x="440" y="624" class="small-label">Primary afferent release</text>
+        </g>
+
+        <g>
+          <circle id="synapse2" class="synapse" cx="875" cy="233" r="22"></circle>
+          <text class="synapse-number" x="875" y="234">2</text>
+          <text x="700" y="110" class="transmitter">Glutamate</text>
+          <text x="700" y="131" class="small-label">Spinothalamic relay</text>
+        </g>
+
+        <g>
+          <circle id="synapse3" class="synapse" cx="1010" cy="189" r="22"></circle>
+          <text class="synapse-number" x="1010" y="190">3</text>
+          <text x="974" y="287" class="transmitter">Glutamate</text>
+          <text x="974" y="308" class="small-label">Thalamocortical relay</text>
+        </g>
+
+        <!-- Transmitter release particles -->
+        <g id="release1" class="release">
+          <circle class="release-dot" cx="560" cy="445" r="6"></circle>
+          <circle class="release-dot" cx="576" cy="453" r="5"></circle>
+          <circle class="release-dot" cx="559" cy="468" r="5"></circle>
+          <circle class="release-dot" cx="580" cy="472" r="4"></circle>
+        </g>
+
+        <g id="release2" class="release">
+          <circle class="release-dot" cx="893" cy="214" r="6"></circle>
+          <circle class="release-dot" cx="908" cy="223" r="5"></circle>
+          <circle class="release-dot" cx="897" cy="237" r="5"></circle>
+          <circle class="release-dot" cx="914" cy="242" r="4"></circle>
+        </g>
+
+        <g id="release3" class="release">
+          <circle class="release-dot" cx="1029" cy="174" r="6"></circle>
+          <circle class="release-dot" cx="1042" cy="184" r="5"></circle>
+          <circle class="release-dot" cx="1029" cy="199" r="5"></circle>
+          <circle class="release-dot" cx="1047" cy="201" r="4"></circle>
+        </g>
+
+        <!-- Action potential: first-order neuron -->
+        <g id="signal1" class="signal">
+          <circle class="halo" r="21"></circle>
+          <circle class="core" r="8"></circle>
+          <animateMotion id="move1" dur="2.5s" begin="indefinite" fill="freeze">
+            <mpath href="#firstPath"></mpath>
+          </animateMotion>
+        </g>
+
+        <!-- Action potential: second-order neuron -->
+        <g id="signal2" class="signal">
+          <circle class="halo" r="21"></circle>
+          <circle class="core" r="8"></circle>
+          <animateMotion id="move2" dur="2.45s" begin="indefinite" fill="freeze">
+            <mpath href="#secondPath"></mpath>
+          </animateMotion>
+        </g>
+
+        <!-- Action potential: third-order neuron -->
+        <g id="signal3" class="signal">
+          <circle class="halo" r="21"></circle>
+          <circle class="core" r="8"></circle>
+          <animateMotion id="move3" dur="2.2s" begin="indefinite" fill="freeze">
+            <mpath href="#thirdPath"></mpath>
+          </animateMotion>
+        </g>
+
+        <!-- Direction label -->
+        <text x="75" y="662" class="small-label">Signal direction</text>
+        <path
+          d="M190,656 H1180"
+          stroke="rgba(199,239,255,.32)"
+          stroke-width="2"
+          marker-end="url(#arrow)">
+        </path>
+      </svg>
+    </section>
+
+    <section class="card-grid" aria-label="Pain pathway explanations">
+      <article class="card">
+        <h2>1. Pain sensing</h2>
+        <p>
+          Noxious heat, pressure, or chemicals activate peripheral nociceptors.
+          The first-order sensory neuron carries the encoded signal through the
+          dorsal root ganglion toward the spinal dorsal horn.
+        </p>
+      </article>
+
+      <article class="card">
+        <h2>2. Spinal transmission</h2>
+        <p>
+          At the dorsal horn synapse, primary afferents release glutamate and
+          may release substance P. The second-order neuron crosses and ascends
+          contralaterally in the anterolateral/spinothalamic pathway.
+        </p>
+      </article>
+
+      <article class="card">
+        <h2>3. Brain perception</h2>
+        <p>
+          Second-order neurons relay in the thalamus. Third-order
+          thalamocortical neurons project to somatosensory cortex, where pain
+          location and intensity are consciously processed.
+        </p>
+      </article>
+    </section>
+
+    <section class="legend" aria-label="Diagram legend">
+      <span class="key"><i class="dot orange"></i> Traveling action potential</span>
+      <span class="key"><i class="dot blue"></i> First-order sensory neuron</span>
+      <span class="key"><i class="dot purple"></i> Second-order spinal neuron</span>
+      <span class="key"><i class="dot green"></i> Third-order thalamocortical neuron</span>
+      <span class="key"><i class="dot orange"></i> Neurotransmitter release at synapse</span>
+    </section>
+
+    <p class="note">
+      Educational simplification: real nociceptive processing includes parallel
+      ascending pathways, interneurons, descending modulation, receptor diversity,
+      and context-dependent neurotransmission.
+    </p>
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const buttons = {
+        all: document.getElementById("animateAllBtn"),
+        step1: document.getElementById("step1Btn"),
+        step2: document.getElementById("step2Btn"),
+        step3: document.getElementById("step3Btn"),
+        reset: document.getElementById("resetBtn")
+      };
+
+      const status = document.getElementById("animationStatus");
+
+      const signalIds = ["signal1", "signal2", "signal3"];
+      const releaseIds = ["release1", "release2", "release3"];
+      const motionIds = ["move1", "move2", "move3"];
+      const pathIds = ["path1", "path2", "path3"];
+      const somaIds = ["soma1", "soma2", "soma3"];
+      const synapseIds = ["synapse1", "synapse2", "synapse3"];
+      const durations = [2500, 2450, 2200];
+
+      let timers = [];
+      let runToken = 0;
+
+      function clearTimers() {
+        timers.forEach((timer) => clearTimeout(timer));
+        timers = [];
+      }
+
+      function schedule(callback, delay) {
+        const timer = window.setTimeout(callback, delay);
+        timers.push(timer);
+        return timer;
+      }
+
+      function setActiveButton(button) {
+        Object.values(buttons).forEach((item) => {
+          if (item) item.classList.remove("active");
+        });
+
+        if (button) button.classList.add("active");
+      }
+
+      function removeHighlights() {
+        pathIds.forEach((id) => {
+          document.getElementById(id)?.classList.remove("highlight");
+        });
+
+        somaIds.forEach((id) => {
+          document.getElementById(id)?.classList.remove("highlight");
+        });
+
+        synapseIds.forEach((id) => {
+          document.getElementById(id)?.classList.remove("highlight");
+        });
+
+        document.getElementById("cortex")?.classList.remove("highlight");
+      }
+
+      function resetVisuals() {
+        signalIds.forEach((id) => {
+          const element = document.getElementById(id);
+          if (element) element.classList.remove("run");
+        });
+
+        releaseIds.forEach((id) => {
+          const element = document.getElementById(id);
+          if (element) element.classList.remove("run");
+        });
+
+        removeHighlights();
+      }
+
+      function resetAnimation(updateStatus = true) {
+        runToken += 1;
+        clearTimers();
+        resetVisuals();
+        setActiveButton(buttons.reset);
+
+        if (updateStatus) {
+          status.textContent = "Animation reset. Choose a pathway step or play the full signal.";
+        }
+      }
+
+      function animateNeuron(index, token) {
+        if (token !== runToken) return;
+
+        const signal = document.getElementById(signalIds[index]);
+        const motion = document.getElementById(motionIds[index]);
+        const release = document.getElementById(releaseIds[index]);
+        const path = document.getElementById(pathIds[index]);
+        const soma = document.getElementById(somaIds[index]);
+        const synapse = document.getElementById(synapseIds[index]);
+
+        if (!signal || !motion || !release || !path || !soma || !synapse) {
+          status.textContent = "A diagram element could not be found. Check the SVG IDs.";
+          return;
+        }
+
+        signal.classList.remove("run");
+        release.classList.remove("run");
+
+        /*
+          Triggering layout ensures that a previously completed SVG signal can
+          be replayed whenever a user presses a button again.
+        */
+        void signal.getBoundingClientRect();
+
+        path.classList.add("highlight");
+        soma.classList.add("highlight");
+        synapse.classList.add("highlight");
+        signal.classList.add("run");
+
+        try {
+          motion.beginElement();
+        } catch (error) {
+          console.error("SVG animation could not start:", error);
+        }
+
+        schedule(() => {
+          if (token === runToken) {
+            release.classList.add("run");
+          }
+        }, durations[index] - 180);
+      }
+
+      function playStep(stepNumber) {
+        const index = stepNumber - 1;
+
+        resetAnimation(false);
+        const token = runToken;
+
+        const messages = [
+          "Step 1: Peripheral nociceptor activation and first-order sensory transmission.",
+          "Step 2: Dorsal horn relay, transmitter release, and contralateral spinal ascent.",
+          "Step 3: Thalamic relay and third-order signaling to the somatosensory cortex."
+        ];
+
+        const activeButtons = [buttons.step1, buttons.step2, buttons.step3];
+        setActiveButton(activeButtons[index]);
+        status.textContent = messages[index];
+
+        animateNeuron(index, token);
+
+        if (stepNumber === 3) {
+          schedule(() => {
+            if (token === runToken) {
+              document.getElementById("cortex")?.classList.add("highlight");
+            }
+          }, 1900);
+        }
+      }
+
+      function startFullAnimation() {
+        resetAnimation(false);
+        const token = runToken;
+
+        setActiveButton(buttons.all);
+        status.textContent = "Full pathway started: peripheral nociceptor activation.";
+
+        animateNeuron(0, token);
+
+        schedule(() => {
+          if (token !== runToken) return;
+          status.textContent = "Spinal relay: neurotransmitter release and spinothalamic ascent.";
+          animateNeuron(1, token);
+        }, 2700);
+
+        schedule(() => {
+          if (token !== runToken) return;
+          status.textContent = "Thalamocortical relay: signal reaches the cerebral cortex.";
+          animateNeuron(2, token);
+        }, 5350);
+
+        schedule(() => {
+          if (token !== runToken) return;
+          document.getElementById("cortex")?.classList.add("highlight");
+          status.textContent = "Full pathway complete: pain is consciously processed in cortex.";
+        }, 7300);
+      }
+
+      buttons.all.addEventListener("click", startFullAnimation);
+      buttons.step1.addEventListener("click", () => playStep(1));
+      buttons.step2.addEventListener("click", () => playStep(2));
+      buttons.step3.addEventListener("click", () => playStep(3));
+      buttons.reset.addEventListener("click", () => resetAnimation(true));
+    });
+  </script>
+</body>
+</html>
