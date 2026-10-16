@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Interactive Schizophrenia Pathophysiology &amp; Pharmacology Simulator</title>
+<style>
+:root{--bg:#f4f6fa;--panel:#fff;--ink:#1b2333;--muted:#5b6578;--line:#d5dbe6;--brand:#2f6fdd;--blue:#2f6fdd;--red:#e5484d;--gray:#8a94a6;--green:#1fa463;--brain:#f3e3dc;--brain2:#e6d2ca;--accent:#eef3fd;--warn:#fff4e0;--shadow:0 2px 10px rgba(20,30,60,.08);--purple:#8b5cf6;--amber:#e8a317;--teal:#14b8a6;--pink:#e879a6;color-scheme:light}
+[data-theme=dark]{--bg:#0f1420;--panel:#171e2e;--ink:#e8edf7;--muted:#9aa6bd;--line:#2c3650;--brain:#3a3040;--brain2:#2f2735;--accent:#1c2640;--warn:#3a2f17;--shadow:none;--blue:#5b94ff;--red:#ff6369;--gray:#8d97ab;--green:#3ddc97;--brand:#5b94ff;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header#top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding:8px 14px 11px;background:var(--panel);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;flex:1 1 260px;min-width:0}
+.brand span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.logo{font-size:22px}
+.brand .auth{font-weight:600;color:var(--brand);white-space:nowrap;flex:none}
+nav,.tools{display:flex;gap:6px;flex-wrap:wrap}
+#topProg{position:absolute;left:0;right:0;bottom:0;height:3px}
+#topProg i{display:block;height:100%;width:0;background:var(--green);transition:width .5s}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:6px 11px;font:inherit;font-size:13px;cursor:pointer;line-height:1.3}
+.btn:hover{border-color:var(--brand)}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.on{background:var(--accent);border-color:var(--brand);color:var(--brand);font-weight:600}
+.btn.ghost{background:transparent}
+#menuBtn{display:none}
+#wrap{display:grid;grid-template-columns:262px minmax(0,1fr)}
+#side{position:sticky;top:var(--hh,56px);align-self:start;height:calc(100vh - var(--hh,56px));overflow:auto;background:var(--panel);border-right:1px solid var(--line);padding:12px}
+#main{padding:18px 22px 60px;max-width:1280px;width:100%;margin:0 auto}
+.sideh{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:12px 6px 6px}
+.si{display:flex;gap:6px;align-items:center;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);padding:7px 8px;border-radius:8px;font:inherit;font-size:13.5px;cursor:pointer}
+.si:hover{background:var(--accent)}
+.si.act{background:var(--accent);color:var(--brand);font-weight:600}
+.si .st{margin-left:auto;font-size:12px;color:var(--green)}
+.pbar{height:8px;background:var(--line);border-radius:6px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--green);transition:width .4s}
+.page h2{margin:.1em 0 .2em;font-size:26px}
+.mnum{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--brand);font-weight:700}
+.sub{color:var(--muted);max-width:85ch;margin:.2em 0 .6em}
+.chip{display:inline-block;background:var(--accent);color:var(--brand);border-radius:999px;padding:1px 9px;font-size:12px;font-weight:600;margin:0 3px 3px 0}
+.objs{font-size:13px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(290px,1fr);gap:14px;margin-top:12px;align-items:start}
+.stage,.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.stage{padding:6px}
+.stage svg{width:100%;height:auto;display:block}
+.panel{padding:12px 14px}
+.side>.panel+.panel{margin-top:12px}
+.ctls{display:flex;flex-direction:column;gap:9px}
+.ctls:empty{display:none}
+.ctl{display:grid;grid-template-columns:1fr auto;gap:2px 8px;font-size:13px;align-items:center}
+.ctl input[type=range]{grid-column:1/3;width:100%}
+.ctl.tog{display:flex;gap:6px;align-items:center;cursor:pointer}
+.ctl select{grid-column:1/3;padding:5px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.info h4{margin:0 0 6px;font-size:16px}
+.info p{margin:.4em 0}
+.info ul{margin:.3em 0;padding-left:1.2em}
+.info li{margin:.2em 0}
+.info small,.muted{color:var(--muted)}
+.tag{display:inline-block;border-radius:6px;padding:0 7px;font-size:12px;font-weight:600;background:var(--accent);color:var(--brand)}
+.tag.r{background:color-mix(in srgb,var(--red) 16%,transparent);color:var(--red)}
+.tag.g{background:color-mix(in srgb,var(--green) 16%,transparent);color:var(--green)}
+.tag.y{background:color-mix(in srgb,var(--amber) 20%,transparent);color:#a06f00}
+[data-theme=dark] .tag.y{color:var(--amber)}
+.chain{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
+.cstep{border:2px solid var(--blue);border-radius:10px;padding:6px 10px;font-weight:600;text-align:center;transition:.3s;background:var(--accent)}
+.cstep small{display:block;font-weight:400;color:var(--muted)}
+.cstep.red{border-color:var(--red);background:color-mix(in srgb,var(--red) 12%,var(--panel))}
+.cstep.gray{border-color:var(--gray);background:color-mix(in srgb,var(--gray) 14%,var(--panel))}
+.cstep.green{border-color:var(--green);background:color-mix(in srgb,var(--green) 12%,var(--panel))}
+.carr{text-align:center;color:var(--muted);line-height:1}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.sym{border:1.5px dashed var(--line);border-radius:999px;padding:2px 10px;font-size:13px;color:var(--muted);transition:.3s}
+.sym.on{border-style:solid;color:var(--ink)}
+.sym.on.red{border-color:var(--red);background:color-mix(in srgb,var(--red) 14%,var(--panel))}
+.sym.on.gray{border-color:var(--gray);background:color-mix(in srgb,var(--gray) 22%,var(--panel))}
+.brow{display:grid;grid-template-columns:140px 1fr 48px;gap:8px;align-items:center;font-size:13px;margin:5px 0}
+.btrack{height:13px;background:var(--line);border-radius:7px;overflow:hidden}
+.btrack i{display:block;height:100%;background:var(--blue);transition:width .3s}
+.btrack i.r{background:var(--red)}.btrack i.g{background:var(--green)}.btrack i.x{background:var(--gray)}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+.t th,.t td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+.t th{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.t tr.sel td{background:var(--accent)}
+.t tr.clk{cursor:pointer}
+.tscroll{overflow:auto}
+.dots i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--line);margin-right:2px}
+.dots i.f{background:var(--blue)}.dots.w i.f{background:var(--amber)}.dots.r i.f{background:var(--red)}
+.extra{margin-top:14px}
+.extra:empty{display:none}
+.take{margin-top:14px;background:var(--accent);border-color:var(--brand)}
+.take h4,.fac h4{margin:0 0 4px}
+.fac{margin-top:14px;background:var(--warn);border-color:var(--amber)}
+.fac p{margin:.3em 0}
+.mnav{display:flex;justify-content:space-between;margin-top:16px;gap:10px}
+.quiz{margin-top:18px}
+.qhead{display:flex;justify-content:space-between;align-items:center}
+.qhead h3{margin:0}
+.qscore{font-weight:700;color:var(--brand)}
+.qcard{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;background:var(--panel)}
+.qtext{font-weight:600;margin-bottom:8px;white-space:pre-line}
+.opt{display:block;width:100%;text-align:left;margin:5px 0;padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font:inherit;font-size:14px;cursor:pointer}
+.opt:hover{border-color:var(--brand)}
+.opt.right{border-color:var(--green);background:color-mix(in srgb,var(--green) 16%,var(--panel))}
+.opt.wrong{border-color:var(--red);background:color-mix(in srgb,var(--red) 14%,var(--panel))}
+.opt.key::after{content:" \2713 key";color:var(--green);font-weight:700;font-size:12px}
+.qfb{display:none;font-size:13.5px;margin-top:6px;padding:8px 10px;border-radius:8px;background:var(--accent)}
+.qfb.show{display:block}
+.qfb.ok{border-left:4px solid var(--green)}.qfb.no{border-left:4px solid var(--red)}
+.qfb.fac{display:block;color:var(--muted)}
+.qdone{margin-top:10px;background:var(--accent)}
+.hero{background:linear-gradient(135deg,var(--accent),var(--panel));border:1px solid var(--line);border-radius:18px;padding:26px 28px}
+.byline{font-size:16px;font-weight:600;color:var(--brand);margin:2px 0 8px}
+.hero h1{margin:.1em 0;font-size:30px;line-height:1.2}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.lg{display:flex;align-items:center;gap:6px;font-size:13px}
+.lg i{width:14px;height:14px;border-radius:50%;display:inline-block}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:12px}
+.mc{padding:12px 14px;cursor:pointer;transition:.15s;text-align:left;font:inherit;color:var(--ink)}
+.mc:hover{transform:translateY(-2px);border-color:var(--brand)}
+.mc b{display:block}
+.mc small{color:var(--muted)}
+.mc .ok{color:var(--green);font-weight:700}
+.cert{border:10px double #b8923a;background:#fffdf5;color:#2b2415;padding:40px 30px;text-align:center;border-radius:6px;max-width:820px;margin:16px auto}
+.cert h1{font-family:Georgia,serif;margin:.2em 0;font-size:34px}
+.cert .nm{font-family:Georgia,serif;font-size:32px;border-bottom:2px solid #b8923a;display:inline-block;padding:0 24px;margin:12px 0}
+.wmdisp{height:96px;display:flex;align-items:center;justify-content:center;font-size:64px;font-weight:700;background:var(--accent);border-radius:12px;margin:8px 0;font-variant-numeric:tabular-nums}
+.recall{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:22px;letter-spacing:.25em}
+input.txt{padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+.legendline{font-size:12px;color:var(--muted)}
+.disc{font-size:12.5px;color:var(--muted);border-left:3px solid var(--amber);padding:4px 10px;margin-top:14px}
+@media print{body *{visibility:hidden}.cert,.cert *{visibility:visible}.cert{position:absolute;left:0;top:0;width:100%;margin:0}}
+@media(max-width:960px){#wrap{grid-template-columns:1fr}#side{position:fixed;left:0;top:var(--hh,56px);width:272px;z-index:25;transform:translateX(-105%);transition:.25s;box-shadow:0 4px 20px rgba(0,0,0,.25)}#side.open{transform:none}#menuBtn{display:inline-block}.grid{grid-template-columns:1fr}#main{padding:14px 12px 50px}.hero h1{font-size:24px}}
+</style>
+</head>
+<body>
+<header id="top">
+  <button id="menuBtn" class="btn ghost" aria-label="Toggle module menu">&#9776;</button>
+  <div class="brand"><span class="logo">&#129504;</span><span>Schizophrenia Pathophysiology &amp; Pharmacology Simulator</span><span class="auth">— Hafeez Faridi Ph.D.</span></div>
+  <nav>
+    <button class="btn" data-go="home">Home</button>
+    <button class="btn" data-go="progress">Progress</button>
+    <button class="btn" data-go="final">Quiz Mode</button>
+    <button class="btn" data-go="cert">Certificate</button>
+  </nav>
+  <div class="tools">
+    <button class="btn" id="modeBtn" title="Switch Student / Faculty mode">Student mode</button>
+    <button class="btn" id="pauseBtn" title="Pause / resume animations">&#9208;</button>
+    <button class="btn" id="darkBtn" title="Dark mode">&#127769;</button>
+    <button class="btn" id="fsBtn" title="Full screen">&#9974;</button>
+    <button class="btn" id="resetBtn" title="Reset all progress">&#10226; Reset</button>
+  </div>
+  <div id="topProg"><i></i></div>
+</header>
+<div id="wrap"><aside id="side"></aside><main id="main"></main></div>
+<script>
+'use strict';
+/* ================= CORE ================= */
+const NS='http://www.w3.org/2000/svg';
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const KEY='schizSim.v1';
+let S={mode:'student',dark:null,paused:false,done:{},best:{},visited:{},attempts:[],name:''};
+try{const r=localStorage.getItem(KEY);if(r)Object.assign(S,JSON.parse(r));}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+const C={blue:'var(--blue)',red:'var(--red)',gray:'var(--gray)',green:'var(--green)',ink:'var(--ink)',mut:'var(--muted)',line:'var(--line)',acc:'var(--accent)',panel:'var(--panel)',purple:'var(--purple)',amber:'var(--amber)',teal:'var(--teal)',pink:'var(--pink)'};
+const OBJ=['Explain the dopamine hypothesis','Explain the glutamate hypothesis','Differentiate positive and negative symptoms','Explain mesolimbic pathway dysfunction','Explain mesocortical pathway dysfunction','Explain antipsychotic mechanisms','Compare first- and second-generation antipsychotics','Recognize adverse effects','Apply pharmacology to patient cases'];
+const MODS=[];
+let cur={page:'home',arg:0};
+const main=$('#main'),side=$('#side');
+
+function h(tag,props,...kids){const e=document.createElement(tag);if(props)for(const k in props){if(k==='class')e.className=props[k];else if(k==='html')e.innerHTML=props[k];else if(k.startsWith('on'))e[k]=props[k];else e.setAttribute(k,props[k]);}kids.forEach(k=>e.append(k));return e;}
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);if(attrs)for(const k in attrs){const v=attrs[k];if(k==='fill'||k==='stroke')e.style[k]=v;else e.setAttribute(k,v);}if(parent)parent.appendChild(e);return e;}
+function txt(parent,x,y,s,o={}){const t=el('text',{x,y,'text-anchor':o.a||'middle','font-size':o.s||13,'font-weight':o.w||500},parent);t.style.fill=o.c||'var(--ink)';if(o.op!=null)t.setAttribute('opacity',o.op);t.textContent=s;return t;}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+function svgDefs(svg){const d=el('defs',{},svg);d.innerHTML='<marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" style="fill:var(--muted)"/></marker><filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7"/></filter>';}
+function legend(svg,items,y=448){let x=20;items.forEach(([c,l])=>{el('circle',{cx:x,cy:y-4,r:5,fill:C[c]},svg);const t=txt(svg,x+9,y,l,{a:'start',s:11.5,c:C.mut});x+=22+l.length*6.2;});}
+
+/* animation loop */
+let frameFn=null;
+function runFrame(fn){frameFn=fn;}
+(function(){let last=0;function loop(t){requestAnimationFrame(loop);const now=t/1000;const dt=Math.min(.05,last?now-last:.016);last=now;if(frameFn&&!S.paused){try{frameFn(dt,now);}catch(e){console.error(e);}}}requestAnimationFrame(loop);})();
+
+/* particle helpers */
+function flow(layer,path,o){const len=path.getTotalLength()||1;const ps=[];return{o,update(dt){while(ps.length<o.n)ps.push({c:el('circle',{r:o.r||4,opacity:.95},layer),u:Math.random()});while(ps.length>o.n)ps.pop().c.remove();ps.forEach(p=>{p.u=(p.u+dt*o.speed/len)%1;const pt=path.getPointAtLength(p.u*len);p.c.setAttribute('cx',pt.x);p.c.setAttribute('cy',pt.y);p.c.style.fill=o.color;});},clear(){ps.forEach(p=>p.c.remove());ps.length=0;}};}
+function cloud(layer,cx,cy,R,o){const ps=[];return{o,update(dt){while(ps.length<o.n){const a=Math.random()*6.283,r=Math.random()*R;ps.push({c:el('circle',{r:o.r||3,opacity:.9},layer),x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r});}while(ps.length>o.n)ps.pop().c.remove();ps.forEach(p=>{p.x+=(Math.random()-.5)*dt*180;p.y+=(Math.random()-.5)*dt*180;const dx=p.x-cx,dy=p.y-cy,d=Math.hypot(dx,dy);if(d>R){p.x=cx+dx/d*R*.95;p.y=cy+dy/d*R*.95;}p.c.setAttribute('cx',p.x);p.c.setAttribute('cy',p.y);p.c.style.fill=o.color;});}};}
+
+/* synaptic cleft engine: dopamine particles -> receptors with block / partial states */
+function synapse(svg,o){
+  const g=el('g',{},svg),N=o.n||6;
+  el('path',{d:'M170,18 L630,18 L630,78 Q400,132 170,78 Z',fill:C.acc,stroke:C.line},g);
+  el('rect',{x:110,y:338,width:580,height:42,rx:8,fill:'var(--brain2)',stroke:C.line},g);
+  txt(g,400,46,o.topLabel||'Presynaptic dopamine terminal',{s:12,c:C.mut});
+  txt(g,400,400,o.botLabel||'Postsynaptic membrane \u2014 D2 receptors',{s:12,c:C.mut});
+  const rec=[];
+  for(let i=0;i<N;i++){
+    const x=N===1?400:200+i*(400/(N-1));
+    const gl=el('circle',{cx:x,cy:320,r:26,fill:C.blue,opacity:0,filter:'url(#glow)'},g);
+    el('path',{d:`M${x-17},296 L${x-17},322 Q${x-17},340 ${x},340 Q${x+17},340 ${x+17},322 L${x+17},296`,fill:'none',stroke:C.mut,'stroke-width':6,'stroke-linecap':'round'},g);
+    const cap=el('circle',{cx:x,cy:314,r:11,fill:C.green,stroke:C.ink,opacity:0},g);
+    rec.push({x,gl,cap,glow:0,capO:0});
+  }
+  const da=[],dr=[];let acc=0;
+  return{g,rec,update(dt,t){
+    acc+=Math.max(0,o.rate())*dt;
+    while(acc>=1){acc--;da.push({c:el('circle',{r:5},g),x:230+Math.random()*340,y:92,i:Math.random()*N|0,back:false,life:1,vx:0});}
+    for(let k=da.length-1;k>=0;k--){
+      const p=da[k],r=rec[p.i];
+      if(!p.back){
+        const dx=r.x-p.x,dy=308-p.y,d=Math.hypot(dx,dy),sp=125*dt;
+        if(d<=sp+1){
+          if(o.state(p.i,t)>0){p.back=true;p.vx=(Math.random()-.5)*90;}
+          else{r.glow=1;p.c.remove();da.splice(k,1);continue;}
+        }else{p.x+=dx/d*sp;p.y+=dy/d*sp;}
+      }else{
+        p.y-=140*dt;p.x+=p.vx*dt;p.life-=dt*.9;p.c.setAttribute('opacity',Math.max(0,p.life));
+        if(p.life<=0||p.y<30){p.c.remove();da.splice(k,1);continue;}
+      }
+      p.c.setAttribute('cx',p.x);p.c.setAttribute('cy',p.y);p.c.style.fill=o.color();
+    }
+    rec.forEach((r,i)=>{
+      const st=o.state(i,t);
+      r.capO+=((st>0?1:0)-r.capO)*Math.min(1,dt*8);
+      r.cap.setAttribute('opacity',r.capO);
+      r.glow=Math.max(r.glow-dt*2.2,0);
+      const base=st===2?(typeof o.ia==='function'?o.ia():(o.ia||.3)):0;
+      r.gl.setAttribute('opacity',Math.max(r.glow,base*r.capO)*.9);
+      r.gl.style.fill=o.color();
+    });
+    const nD=o.drugN?o.drugN():0;
+    while(dr.length<nD)dr.push({c:el('circle',{r:4,fill:C.green,stroke:C.ink},g),x:150+Math.random()*500,y:140+Math.random()*150});
+    while(dr.length>nD)dr.pop().c.remove();
+    dr.forEach(p=>{p.x=clamp(p.x+(Math.random()-.5)*dt*170,150,650);p.y=clamp(p.y+(Math.random()-.5)*dt*170,130,290);p.c.setAttribute('cx',p.x);p.c.setAttribute('cy',p.y);});
+  }};
+}
+
+/* control helpers */
+function ctlSlider(ctl,label,min,max,val,fn,fmt){const w=h('label',{class:'ctl'});const s=h('span',{},label),i=h('input',{type:'range',min,max,value:val,step:1}),v=h('b');const up=()=>{v.textContent=fmt?fmt(+i.value):i.value;fn(+i.value);};i.oninput=up;w.append(s,v,i);ctl.append(w);up();return i;}
+function ctlBtn(ctl,label,fn,cls){const b=h('button',{class:'btn '+(cls||'')},label);b.onclick=()=>fn(b);ctl.append(b);return b;}
+function ctlToggle(ctl,label,fn,init){const w=h('label',{class:'ctl tog'});const i=h('input',{type:'checkbox'});i.checked=!!init;i.onchange=()=>fn(i.checked);w.append(i,document.createTextNode(label));ctl.append(w);fn(i.checked);return i;}
+function ctlTabs(ctl,names,fn,init=0){const row=h('div',{class:'tabs'});const bs=names.map((n,i)=>{const b=h('button',{class:'btn'+(i===init?' on':'')},n);b.onclick=()=>{bs.forEach(x=>x.classList.remove('on'));b.classList.add('on');fn(i);};row.append(b);return b;});ctl.append(row);fn(init);return bs;}
+function ctlSelect(ctl,label,opts,fn,init=0){const w=h('label',{class:'ctl'});const s=h('span',{},label);const sel=h('select');opts.forEach((o,i)=>sel.append(h('option',{value:i},o)));sel.value=init;sel.onchange=()=>fn(+sel.value);w.append(s,h('span'),sel);ctl.append(w);fn(init);return sel;}
+function bars(rows){return rows.map(([l,v,cls,t])=>`<div class="brow"><span>${l}</span><div class="btrack"><i class="${cls||''}" style="width:${clamp(v,0,100)}%"></i></div><b>${t!=null?t:Math.round(v)+'%'}</b></div>`).join('');}
+
+/* quiz engine */
+function renderQuiz(box,qs,opt={}){
+  box.innerHTML='';const total=qs.length;let answered=0,score=0;const res=[];
+  box.append(h('div',{class:'qhead'},h('h3',{},opt.title||'Check your understanding'),h('span',{class:'qscore'},`0 / ${total}`)));
+  qs.forEach((q,qi)=>{
+    const order=q.o.map((_,i)=>i);if(opt.shuffle)shuffle(order);
+    const card=h('div',{class:'qcard'});
+    card.append(h('div',{class:'qtext',html:`<b>${qi+1}.</b> ${q.mod?`<span class="chip">M${q.mod}</span> `:''}${q.q}`}));
+    const fac=S.mode==='faculty';
+    const fb=h('div',{class:'qfb'+(fac?' fac':''),html:fac?`<b>Rationale (faculty view):</b> ${q.e}`:''});
+    const btns=order.map((oi,k)=>{
+      const b=h('button',{class:'opt'+(fac&&oi===q.a?' key':'')},`${'ABCDE'[k]}. ${q.o[oi]}`);
+      b.onclick=()=>{
+        if(card.dataset.done)return;card.dataset.done=1;answered++;
+        const ok=oi===q.a;if(ok)score++;res.push({mod:q.mod,ok});
+        b.classList.add(ok?'right':'wrong');
+        if(!ok)btns[order.indexOf(q.a)].classList.add('right');
+        fb.className='qfb show '+(ok?'ok':'no');
+        fb.innerHTML=`<b>${ok?'Correct.':'Not quite.'}</b> ${q.e}`;
+        $('.qscore',box).textContent=`${score} / ${total}`;
+        if(answered===total)finish();
+      };
+      card.append(b);return b;
+    });
+    card.append(fb);box.append(card);
+  });
+  function finish(){
+    const pct=Math.round(score/total*100);
+    const d=h('div',{class:'qdone panel',html:`<h4>Score: ${score} / ${total} (${pct}%)</h4><p>${pct>=80?'Excellent mastery.':pct>=60?'Good progress \u2014 review the explanations for missed items.':'Revisit the simulation above, then try again.'}</p>`});
+    const b=h('button',{class:'btn pri'},'Retry (shuffled)');b.onclick=()=>renderQuiz(box,qs,{...opt,shuffle:true});
+    d.append(b);box.append(d);
+    if(opt.onDone)opt.onDone(score,total,res,d);
+  }
+}
+
+/* module page */
+function openModule(i){
+  const m=MODS[i];S.visited[m.id]=1;save();
+  const pg=h('section',{class:'page'});main.append(pg);
+  pg.append(h('div',{class:'mnum'},`Module ${m.n} of ${MODS.length}`),h('h2',{},`${m.icon} ${m.title}`),h('p',{class:'sub',html:m.sub}),h('div',{class:'objs',html:'Learning objectives addressed: '+m.obj.map(o=>`<span class="chip" title="${OBJ[o-1]}">#${o} ${OBJ[o-1]}</span>`).join('')}));
+  const extra=h('div',{class:'extra'});
+  const ctx={extra,frame:runFrame};
+  if(m.noStage){
+    const info=h('div',{class:'panel info',style:'margin-top:12px'});pg.append(info);ctx.info=info;ctx.ctl=h('div');ctx.svg=null;
+  }else{
+    const svg=el('svg',{viewBox:'0 0 800 460',role:'img','aria-label':m.title});svgDefs(svg);
+    const ctl=h('div',{class:'ctls panel'}),info=h('div',{class:'panel info'});
+    pg.append(h('div',{class:'grid'},h('div',{class:'stage'},svg),h('div',{class:'side'},ctl,info)));
+    Object.assign(ctx,{svg,ctl,info});
+  }
+  ctx.setInfo=s=>{ctx.info.innerHTML=s;};
+  pg.append(extra);
+  m.build(ctx);
+  if(m.take)pg.append(h('div',{class:'panel take',html:`<h4>Key takeaways</h4>${m.take}`}));
+  if(S.mode==='faculty'&&m.faculty)pg.append(h('div',{class:'panel fac',html:`<h4>Faculty notes</h4>${m.faculty}`}));
+  const qbox=h('div',{class:'quiz panel'});pg.append(qbox);
+  renderQuiz(qbox,m.quiz,{title:`Module ${m.n} quiz`,onDone:(sc)=>{S.best[m.id]=Math.max(S.best[m.id]||0,sc);S.done[m.id]=1;save();chrome();}});
+  const nav=h('div',{class:'mnav'});
+  const pv=h('button',{class:'btn'},i>0?`\u2190 ${MODS[i-1].title}`:'\u2190 Home');pv.onclick=()=>i>0?go('mod',i-1):go('home');
+  const nx=h('button',{class:'btn pri'},i<MODS.length-1?`${MODS[i+1].title} \u2192`:'Final quiz \u2192');nx.onclick=()=>i<MODS.length-1?go('mod',i+1):go('final');
+  nav.append(pv,nx);pg.append(nav);
+  pg.append(h('div',{class:'disc',html:'Educational simulation. Receptor-occupancy figures, risk scores, and animations are simplified teaching models, not dosing guidance. Always verify against current prescribing information and local protocols.'}));
+}
+
+/* chrome / router */
+function applyTheme(){const dk=S.dark===null?(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches):S.dark;document.documentElement.dataset.theme=dk?'dark':'light';$('#darkBtn').textContent=dk?'\u2600\uFE0F':'\uD83C\uDF19';}
+function chrome(){
+  const dn=MODS.filter(m=>S.done[m.id]).length,pc=dn/MODS.length*100;
+  $('#topProg i').style.width=pc+'%';
+  $('#modeBtn').textContent=S.mode==='faculty'?'Faculty mode':'Student mode';
+  $('#modeBtn').classList.toggle('on',S.mode==='faculty');
+  $('#pauseBtn').textContent=S.paused?'\u25B6':'\u23F8';
+  $$('[data-go]').forEach(b=>b.classList.toggle('on',cur.page===b.dataset.go));
+  side.innerHTML='';
+  side.append(h('div',{class:'sideh'},'Your progress'),h('div',{class:'pbar'},h('i',{style:`width:${pc}%`})),h('div',{class:'muted',style:'font-size:12px;margin:4px 6px'},`${dn} of ${MODS.length} modules complete`));
+  side.append(h('div',{class:'sideh'},'Modules'));
+  MODS.forEach((m,i)=>{const b=h('button',{class:'si'+(cur.page==='mod'&&cur.arg===i?' act':'')},`${m.icon} ${m.n}. ${m.title}`);if(S.done[m.id])b.append(h('span',{class:'st'},'\u2713'));b.onclick=()=>go('mod',i);side.append(b);});
+  side.append(h('div',{class:'sideh'},'Assessment'));
+  [['final','\uD83D\uDCDD Quiz Mode (final exam)'],['progress','\uD83D\uDCCA Progress tracker'],['cert','\uD83C\uDF93 Certificate']].forEach(([p,l])=>{const b=h('button',{class:'si'+(cur.page===p?' act':'')},l);b.onclick=()=>go(p);side.append(b);});
+}
+function go(page,arg=0){
+  cur={page,arg};frameFn=null;main.innerHTML='';
+  ({home:pageHome,mod:openModule,progress:pageProgress,final:pageFinal,cert:pageCert})[page](arg);
+  chrome();side.classList.remove('open');window.scrollTo(0,0);
+}
+function hh(){document.documentElement.style.setProperty('--hh',$('#top').offsetHeight+'px');}
+$$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+$('#menuBtn').onclick=()=>side.classList.toggle('open');
+$('#modeBtn').onclick=()=>{S.mode=S.mode==='faculty'?'student':'faculty';save();go(cur.page,cur.arg);};
+$('#pauseBtn').onclick=()=>{S.paused=!S.paused;save();chrome();};
+$('#darkBtn').onclick=()=>{const dk=document.documentElement.dataset.theme==='dark';S.dark=!dk;save();applyTheme();};
+$('#fsBtn').onclick=()=>{try{if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}catch(e){}};
+$('#resetBtn').onclick=()=>{if(confirm('Reset ALL progress, scores, and settings?')){try{localStorage.removeItem(KEY);}catch(e){}S={mode:'student',dark:null,paused:false,done:{},best:{},visited:{},attempts:[],name:''};applyTheme();go('home');}};
+window.addEventListener('resize',hh);
+
+/* ================= SHARED BRAIN MAP ================= */
+const CEREB='M110,215 C95,110 210,45 400,45 C590,45 705,120 690,230 C682,300 640,338 560,345 L480,350 C440,352 400,352 360,352 C250,350 125,325 110,215 Z';
+const PW={
+  meso:{n:'Mesolimbic',d:'M462,338 C400,350 300,335 238,275',end:[236,272]},
+  cort:{n:'Mesocortical',d:'M462,338 C420,200 280,120 180,150',end:[172,150]},
+  nigro:{n:'Nigrostriatal',d:'M462,338 C470,270 420,215 345,205',end:[340,205]},
+  ti:{n:'Tuberoinfundibular',d:'M385,262 C385,290 365,300 352,312',end:[352,312]}
+};
+function drawBrain(svg,show){
+  const r={paths:{},hit:{},nodes:{}};
+  el('ellipse',{cx:600,cy:352,rx:72,ry:40,fill:'var(--brain2)',stroke:C.line},svg);
+  el('path',{d:'M440,340 L492,340 C498,380 505,420 500,445 L446,445 C448,410 442,370 440,340Z',fill:'var(--brain2)',stroke:C.line},svg);
+  el('path',{d:CEREB,fill:'var(--brain)',stroke:C.line,'stroke-width':2},svg);
+  ['M200,110 C260,80 330,85 380,100','M520,100 C590,100 650,140 665,195','M150,255 C200,225 240,225 270,240'].forEach(d=>el('path',{d,fill:'none',stroke:C.line,opacity:.7},svg));
+  txt(svg,600,200,'Cerebral cortex',{s:12,c:C.mut,op:.7});
+  txt(svg,600,392,'Cerebellum',{s:11,c:C.mut,op:.7});
+  show.forEach(k=>{
+    const p=PW[k];
+    r.paths[k]=el('path',{d:p.d,fill:'none',stroke:C.blue,'stroke-width':5,'stroke-linecap':'round',opacity:.85},svg);
+    r.hit[k]=el('path',{d:p.d,fill:'none',stroke:'transparent','stroke-width':26},svg);r.hit[k].style.cursor='pointer';
+  });
+  const nd=(x,y,rr)=>el('circle',{cx:x,cy:y,r:rr,fill:C.acc,stroke:C.blue,'stroke-width':2.5},svg);
+  show.forEach(k=>{r.nodes[k]=nd(PW[k].end[0],PW[k].end[1],13);});
+  if(show.includes('ti'))nd(385,262,9);
+  nd(462,338,11);
+  txt(svg,510,336,'Midbrain: VTA / SNc',{a:'start',s:12,w:700});
+  if(show.includes('cort'))txt(svg,172,122,'Prefrontal cortex',{s:12.5,w:700});
+  if(show.includes('meso'))txt(svg,236,304,'Nucleus accumbens',{s:12.5,w:700});
+  if(show.includes('nigro'))txt(svg,340,180,'Dorsal striatum',{s:12.5,w:700});
+  if(show.includes('ti')){txt(svg,400,258,'Hypothalamus',{a:'start',s:12.5,w:700});txt(svg,338,320,'Pituitary',{a:'end',s:12.5,w:700});}
+  return r;
+}
+
+/* ================= MODULE 1 ================= */
+MODS.push({id:'m1',n:1,icon:'\uD83E\uDDED',title:'Normal Dopamine Pathways',obj:[4,5],
+sub:'Four dopamine projection systems arise from the midbrain and hypothalamus. Hover or tap a pathway (or use the buttons) to explore its normal function.',
+take:'<ul><li>Four pathways, four jobs: reward/salience (mesolimbic), cognition and drive (mesocortical), movement (nigrostriatal), prolactin control (tuberoinfundibular).</li><li>A systemic D2 blocker acts on <b>all four</b> at once \u2014 this explains both efficacy and adverse effects.</li></ul>',
+faculty:'<p><b>Time:</b> 10\u201315 min. <b>Teaching point:</b> have students pair each pathway with one symptom and one adverse effect. <b>Misconception:</b> "dopamine = pleasure." Emphasize salience and prediction-error signaling. <b>Discussion:</b> why can\u2019t a D2 antagonist be mesolimbic-selective?</p>',
+build(ctx){
+  const {svg,ctl}=ctx;const keys=['meso','cort','nigro','ti'];
+  const B=drawBrain(svg,keys);const gF=el('g',{},svg);const F={};
+  let rate=5,burst=0,bs;
+  keys.forEach(k=>F[k]=flow(gF,B.paths[k],{color:C.blue,n:5,speed:80,r:4.5}));
+  legend(svg,[['blue','Normal dopamine signaling']]);
+  const INFO={
+  _:'<h4>Select a pathway</h4><p>Dopamine neurons in the midbrain (VTA, SNc) and hypothalamus project along four major pathways. <b style="color:var(--blue)">Blue</b> = normal signaling. Hover a pathway on the map or use the buttons above.</p>',
+  meso:'<h4>Mesolimbic pathway</h4><p><span class="tag">VTA \u2192 nucleus accumbens, amygdala, hippocampus</span></p><ul><li><b>Normal function:</b> reward, motivation, incentive salience ("wanting"), emotional learning.</li><li><b>Release pattern:</b> phasic bursts flag salient events; tonic release sets baseline.</li><li><b>In schizophrenia:</b> hyperactivity \u2192 <b>positive symptoms</b>.</li><li><b>Drug target:</b> D2 blockade here produces the antipsychotic effect.</li></ul>',
+  cort:'<h4>Mesocortical pathway</h4><p><span class="tag">VTA \u2192 prefrontal cortex</span></p><ul><li><b>Normal function:</b> executive function, working memory, attention, motivation, emotional regulation (largely via cortical D1 receptors).</li><li><b>In schizophrenia:</b> hypoactivity \u2192 <b>negative and cognitive symptoms</b>.</li><li><b>Drug effect:</b> D2 blockers do not correct this deficit and may worsen it.</li></ul>',
+  nigro:'<h4>Nigrostriatal pathway</h4><p><span class="tag">Substantia nigra pars compacta \u2192 dorsal striatum (caudate, putamen)</span></p><ul><li><b>Normal function:</b> initiation and smoothing of voluntary movement (direct D1 / indirect D2 loops). Contains the majority of brain dopamine.</li><li><b>Degeneration:</b> Parkinson disease.</li><li><b>Drug effect:</b> D2 blockade (above roughly 80% occupancy) \u2192 <b>extrapyramidal symptoms (EPS)</b>.</li></ul>',
+  ti:'<h4>Tuberoinfundibular pathway</h4><p><span class="tag">Arcuate nucleus (hypothalamus) \u2192 median eminence \u2192 anterior pituitary</span></p><ul><li><b>Normal function:</b> dopamine tonically <b>inhibits prolactin</b> release from lactotrophs via D2 receptors.</li><li><b>Drug effect:</b> D2 blockade \u2192 <b>hyperprolactinemia</b> (galactorrhea, amenorrhea, gynecomastia, sexual dysfunction, bone loss).</li><li><b>Pearl:</b> the pituitary sits outside the blood\u2013brain barrier, so even drugs with limited brain penetration can raise prolactin.</li></ul>'};
+  function select(k){
+    keys.forEach(x=>{B.paths[x].setAttribute('stroke-width',x===k?10:5);B.paths[x].style.opacity=(!k||x===k)?1:.3;});
+    if(bs)bs.forEach((b,i)=>b.classList.toggle('on',keys[i]===k));
+    ctx.setInfo(k?INFO[k]:INFO._);
+  }
+  keys.forEach(k=>{B.hit[k].onmouseenter=()=>select(k);B.hit[k].onclick=()=>select(k);});
+  bs=ctlTabs(ctl,keys.map(k=>PW[k].n),i=>select(keys[i]),0);
+  ctlSlider(ctl,'Tonic firing rate',1,10,5,v=>{rate=v;},v=>v+' Hz');
+  ctlBtn(ctl,'\u26A1 Trigger phasic burst',()=>{burst=1.8;});
+  ctx.frame((dt,t)=>{
+    burst=Math.max(0,burst-dt);
+    keys.forEach((k,i)=>{F[k].o.n=Math.round(rate*(burst>0?2.4:1));F[k].o.speed=60+rate*10+(burst>0?60:0);F[k].update(dt);B.nodes[k].setAttribute('r',13+(burst>0?4:2)*Math.sin(t*3+i));});
+  });
+},
+quiz:[
+ {q:'Which pathway projects from the substantia nigra to the dorsal striatum and regulates voluntary movement?',o:['Mesolimbic','Mesocortical','Nigrostriatal','Tuberoinfundibular'],a:2,e:'The nigrostriatal pathway carries most of the brain\u2019s dopamine; its D2 blockade causes EPS and its degeneration causes Parkinson disease.'},
+ {q:'D2 blockade in which pathway is responsible for antipsychotic-induced hyperprolactinemia?',o:['Nigrostriatal','Tuberoinfundibular','Mesocortical','Mesolimbic'],a:1,e:'Dopamine from the tuberoinfundibular pathway inhibits pituitary lactotrophs; blocking D2 releases that inhibition.'},
+ {q:'The mesocortical pathway projects from the VTA to the:',o:['Nucleus accumbens','Dorsal striatum','Prefrontal cortex','Anterior pituitary'],a:2,e:'Mesocortical dopamine modulates prefrontal function (working memory, executive function, motivation).'}
+]});
+
+/* ================= MODULE 2 ================= */
+MODS.push({id:'m2',n:2,icon:'\uD83D\uDD34',title:'Dopamine Hypothesis',obj:[1,3,4],
+sub:'Mesolimbic dopamine excess \u2192 aberrant salience \u2192 positive symptoms. Raise the dopamine slider and watch the pathway flood.',
+take:'<ul><li>Striatal hyperdopaminergia (\u2191 synthesis capacity and release) is the best-replicated dopamine finding; it is linked to <b>positive symptoms</b>.</li><li>Evidence: amphetamine can provoke psychosis, and antipsychotic potency tracks D2 affinity.</li><li>Limits: the hypothesis explains negative/cognitive symptoms poorly, and roughly a third of patients do not respond to D2 blockade.</li></ul>',
+faculty:'<p><b>Time:</b> 10 min. <b>Teaching point:</b> Kapur\u2019s aberrant-salience framing links neurochemistry to experience; delusions are the mind\u2019s explanation for salient-feeling noise. <b>Discussion:</b> why do antipsychotics take days\u2013weeks to reduce delusional conviction even though D2 blockade is immediate?</p>',
+build(ctx){
+  const {svg,ctl}=ctx;const B=drawBrain(svg,['meso']);const g=el('g',{},svg);const [nx,ny]=PW.meso.end;
+  const halo=el('circle',{cx:nx,cy:ny,r:34,fill:C.red,opacity:0,filter:'url(#glow)'},g);
+  const F=flow(g,B.paths.meso,{color:C.blue,n:8,speed:90,r:4.5});
+  const jit=cloud(g,nx,ny,46,{n:0,color:C.red,r:3.2});
+  const drg=cloud(g,nx,ny,34,{n:0,color:C.green,r:4});
+  legend(svg,[['blue','Normal'],['red','Excess dopamine'],['green','D2 antagonist']]);
+  let lvl=180,ant=false;
+  const sig=()=>lvl/100*(ant?.35:1);
+  function render(){
+    const s=sig(),hi=s>1.25,c=hi?'red':'';
+    ctx.setInfo(`<div class="chain"><div class="cstep ${c}">Mesolimbic dopamine ${hi?'excess':'within normal range'}<small>effective D2 signal \u2248 ${Math.round(s*100)}% of normal</small></div><div class="carr">\u2193</div><div class="cstep ${c}">Aberrant salience<small>${hi?'irrelevant stimuli feel significant':'salience assigned appropriately'}</small></div><div class="carr">\u2193</div><div class="cstep ${c}">Positive symptoms</div></div><div class="chips">${['Hallucinations','Delusions','Disorganized thinking'].map(x=>`<span class="sym ${hi?'on red':''}">${x}</span>`).join('')}</div><p><small>${ant?'The D2 antagonist (green) is damping postsynaptic signaling in this pathway \u2014 the basis of antipsychotic action.':'Evidence: \u2191 presynaptic dopamine synthesis (F-DOPA PET), amphetamine-induced psychosis, and D2 affinity correlating with antipsychotic potency.'}</small></p>`);
+  }
+  ctlSlider(ctl,'Mesolimbic dopamine release (% of normal)',40,250,180,v=>{lvl=v;render();});
+  ctlToggle(ctl,' Add D2 antagonist (green)',v=>{ant=v;render();},false);
+  ctx.frame((dt,t)=>{
+    const s=sig(),hi=s>1.25;
+    F.o.n=Math.round(Math.min(42,3+s*9));F.o.speed=70+s*35;F.o.color=hi?C.red:C.blue;
+    jit.o.n=hi?Math.round((s-1.25)*22):0;drg.o.n=ant?10:0;
+    halo.setAttribute('opacity',hi?.35+.25*Math.sin(t*6):0);
+    B.paths.meso.style.stroke=hi?C.red:C.blue;B.nodes.meso.style.stroke=hi?C.red:C.blue;
+    F.update(dt);jit.update(dt);drg.update(dt);
+  });
+},
+quiz:[
+ {q:'Which dopamine pathway is primarily associated with positive symptoms of schizophrenia?',o:['Mesolimbic pathway','Mesocortical pathway','Nigrostriatal pathway','Tuberoinfundibular pathway'],a:0,e:'Mesolimbic hyperactivity (aberrant salience) underlies hallucinations and delusions.'},
+ {q:'The aberrant-salience model proposes that dopamine dysregulation causes:',o:['Loss of dopamine neurons','Inappropriate significance to irrelevant stimuli','Reduced NMDA receptor density','Excess prolactin release'],a:1,e:'Dysregulated phasic dopamine makes neutral events feel meaningful; delusions are an attempt to explain them.'},
+ {q:'Which finding best supports the dopamine hypothesis?',o:['Ketamine induces dissociation','All effective antipsychotics block D2 receptors and amphetamine can precipitate psychosis','Lithium reduces mania','SSRIs treat negative symptoms'],a:1,e:'D2 antagonism is the shared property of effective antipsychotics, and dopamine releasers can provoke psychosis.'}
+]});
+
+/* ================= MODULE 3 ================= */
+MODS.push({id:'m3',n:3,icon:'\u26AB',title:'Negative Symptoms',obj:[3,5],
+sub:'Mesocortical dopamine deficiency reduces prefrontal drive. Lower the slider and watch signaling fade while mesolimbic excess can coexist.',
+take:'<ul><li>Negative symptoms = <b>diminished</b> function: avolition, alogia, anhedonia, affective flattening, social withdrawal.</li><li>Cortical hypodopaminergia (\u2193 D1 stimulation) is proposed; it may even disinhibit subcortical dopamine \u2014 hence <b>both</b> pathways can be abnormal at once.</li><li>Rule out <b>secondary</b> causes first: depression, EPS, sedation, social isolation, substance use.</li></ul>',
+faculty:'<p><b>Time:</b> 10 min. <b>Teaching point:</b> contrast positive ("too much") vs. negative ("too little"). <b>Misconception:</b> negative symptoms are laziness or non-compliance. <b>Discussion:</b> what non-drug interventions help (CBT, social-skills training, exercise, supported employment)?</p>',
+build(ctx){
+  const {svg,ctl}=ctx;const B=drawBrain(svg,['cort','meso']);const g=el('g',{},svg);const [px,py]=PW.cort.end,[nx,ny]=PW.meso.end;
+  const pfc=el('circle',{cx:px,cy:py,r:40,fill:C.blue,opacity:.3,filter:'url(#glow)'},g);
+  const Fc=flow(g,B.paths.cort,{color:C.gray,n:2,speed:60,r:4.5});
+  const Fm=flow(g,B.paths.meso,{color:C.red,n:0,speed:110,r:4.5});
+  const jit=cloud(g,nx,ny,44,{n:0,color:C.red,r:3});
+  legend(svg,[['blue','Normal'],['gray','Dopamine deficiency'],['red','Excess dopamine']]);
+  let lvl=30,both=true;
+  const SYM=['Avolition','Alogia','Anhedonia','Affective flattening','Social withdrawal'];
+  function render(){
+    const d=lvl<70,k=Math.round((1-lvl/100)*SYM.length+.5);
+    ctx.setInfo(`<div class="chain"><div class="cstep ${d?'gray':''}">Mesocortical dopamine ${d?'deficiency':'adequate'}<small>level \u2248 ${lvl}% of normal (\u2193 PFC D1 stimulation)</small></div><div class="carr">\u2193</div><div class="cstep ${d?'gray':''}">Reduced prefrontal activity and drive</div><div class="carr">\u2193</div><div class="cstep ${d?'gray':''}">Negative symptoms</div></div><div class="chips">${SYM.map((x,i)=>`<span class="sym ${d&&i<Math.max(k,1)?'on gray':''}">${x}</span>`).join('')}</div><p><small>${both?'Dual dysregulation shown: mesocortical hypofunction alongside mesolimbic excess. D2 blockers treat the second but do little for the first.':'Mesocortical deficit alone shown.'}</small></p><p><small><b>Secondary negative symptoms</b> (depression, EPS, sedation, paranoia-driven withdrawal) often respond when the cause is treated.</small></p>`);
+  }
+  ctlSlider(ctl,'Mesocortical dopamine (% of normal)',10,120,30,v=>{lvl=v;render();});
+  ctlToggle(ctl,' Show coexisting mesolimbic excess',v=>{both=v;render();},true);
+  ctx.frame((dt,t)=>{
+    const d=lvl<70;
+    Fc.o.n=Math.max(1,Math.round(lvl/100*8));Fc.o.speed=30+lvl*.6;Fc.o.color=d?C.gray:C.blue;
+    B.paths.cort.style.stroke=d?C.gray:C.blue;B.paths.cort.style.opacity=d?.5:.9;
+    pfc.setAttribute('opacity',.08+.4*(lvl/120)*(.8+.2*Math.sin(t*3)));pfc.style.fill=d?C.gray:C.blue;
+    Fm.o.n=both?24:0;jit.o.n=both?12:0;B.paths.meso.style.stroke=both?C.red:C.blue;
+    Fc.update(dt);Fm.update(dt);jit.update(dt);
+  });
+},
+quiz:[
+ {q:'Negative symptoms of schizophrenia are most closely associated with:',o:['Mesolimbic dopamine excess','Mesocortical dopamine deficiency','Nigrostriatal dopamine excess','Increased prolactin'],a:1,e:'Reduced dopamine (D1) signaling in prefrontal cortex is linked to negative and cognitive symptoms.'},
+ {q:'Which of the following is a NEGATIVE symptom?',o:['Auditory hallucinations','Avolition','Delusions of reference','Bizarre behavior'],a:1,e:'Avolition (reduced goal-directed behavior) is a core negative symptom, along with alogia, anhedonia, flat affect, and asociality.'},
+ {q:'Why do D2 antagonists generally fail to improve primary negative symptoms?',o:['They raise cortical dopamine','They do not restore cortical dopamine signaling and can worsen secondary negative symptoms via EPS or sedation','They only act on serotonin','They are not absorbed centrally'],a:1,e:'D2 blockade does not correct the cortical deficit; EPS and sedation can mimic or worsen negative symptoms.'}
+]});
+
+/* ================= MODULE 4 ================= */
+MODS.push({id:'m4',n:4,icon:'\uD83E\uDDEC',title:'Glutamate Hypothesis',obj:[2],
+sub:'NMDA receptor hypofunction (the ketamine/PCP model) disrupts cortical regulation and, downstream, dopamine signaling. Adjust receptor function and toggle ketamine.',
+take:'<ul><li>NMDA receptors need <b>glutamate + glycine/D-serine + depolarization</b> (to expel Mg\u00B2\u207A) to open.</li><li>Ketamine/PCP are open-channel blockers; in healthy volunteers they produce positive, negative <b>and</b> cognitive-like symptoms \u2014 a fuller model than amphetamine.</li><li>Hypofunction on <b>GABA parvalbumin interneurons</b> \u2192 cortical disinhibition \u2192 disrupted dopamine regulation.</li><li>Glutamate-targeted drugs have not yet succeeded clinically; the first non-D2 antipsychotic approved (xanomeline\u2013trospium, 2024) acts on muscarinic M1/M4 receptors.</li></ul>',
+faculty:'<p><b>Time:</b> 10\u201315 min. <b>Teaching point:</b> glutamate sits upstream of dopamine; this explains why D2 blockade treats the downstream signal but not the cause. <b>Discussion:</b> why do anti-NMDA-receptor encephalitis and ketamine intoxication matter in the differential diagnosis of new-onset psychosis?</p>',
+build(ctx){
+  const {svg,ctl}=ctx;let fn=100,ket=false,coag=true,dep=true;
+  const g=el('g',{},svg);
+  el('path',{d:'M240,8 L560,8 L560,66 Q400,110 240,66 Z',fill:C.acc,stroke:C.line},g);
+  txt(g,400,34,'Presynaptic glutamatergic terminal',{s:12.5,c:C.mut});
+  el('rect',{x:150,y:238,width:215,height:40,rx:6,fill:'var(--brain2)',stroke:C.line},g);
+  el('rect',{x:435,y:238,width:215,height:40,rx:6,fill:'var(--brain2)',stroke:C.line},g);
+  el('rect',{x:352,y:196,width:36,height:88,rx:10,fill:C.purple,opacity:.8},g);
+  el('rect',{x:412,y:196,width:36,height:88,rx:10,fill:C.purple,opacity:.8},g);
+  txt(g,400,184,'NMDA receptor',{s:13,w:700});
+  txt(g,200,262,'Postsynaptic membrane',{s:11.5,c:C.mut});
+  txt(g,400,318,'Cytoplasm \u2014 Ca\u00B2\u207A signaling',{s:12,c:C.mut});
+  el('circle',{cx:370,cy:196,r:6,fill:C.purple,stroke:C.ink},g);el('circle',{cx:430,cy:196,r:6,fill:C.purple,stroke:C.ink},g);
+  const co=el('circle',{cx:460,cy:232,r:6,fill:C.teal,stroke:C.ink},g);
+  const coT=txt(g,470,226,'Glycine / D-serine',{a:'start',s:11.5});
+  const mg=el('circle',{cx:400,cy:240,r:11,fill:C.gray,stroke:C.ink},g);const mgT=txt(g,400,244,'Mg',{s:9,w:700,c:'#fff'});
+  const kt=el('circle',{cx:400,cy:262,r:9,fill:C.green,stroke:C.ink,opacity:0},g);const ktT=txt(g,330,300,'Ketamine / PCP',{a:'end',s:12,w:700,c:C.green,op:0});
+  txt(g,700,100,'Ca\u00B2\u207A influx',{s:12,c:C.mut});
+  el('rect',{x:685,y:112,width:30,height:190,rx:6,fill:'var(--line)'},g);
+  const meter=el('rect',{x:685,y:302,width:30,height:0,rx:6,fill:C.amber},g);
+  const gl=[],ca=[];let a1=0,a2=0,mgx=400,mgy=240,ko=0;
+  // chain
+  const names=[['NMDA hypofunction','(PV interneurons)'],['\u2193 GABA release','cortical disinhibition'],['Disrupted dopamine','\u2193 cortical, \u2191 subcortical'],['Psychosis + negative','+ cognitive symptoms']];
+  const boxes=names.map((nm,i)=>{const x=20+i*195;const r=el('rect',{x,y:350,width:175,height:62,rx:10,fill:C.acc,stroke:C.blue,'stroke-width':2.5},g);txt(g,x+87,376,nm[0],{s:12.5,w:700});txt(g,x+87,396,nm[1],{s:11.5,c:C.mut});if(i<3)el('path',{d:`M${x+177},381 L${x+193},381`,stroke:C.mut,'stroke-width':2,'marker-end':'url(#arr)'},g);return r;});
+  const eff=()=>fn*(coag?1:.15)*(dep?1:.12)*(ket?.08:1);
+  function render(){
+    const e=eff(),lo=e<50;
+    boxes.forEach((b,i)=>{b.style.stroke=lo?(i<2?C.gray:C.red):C.blue;});
+    ctx.setInfo(`<h4>Effective NMDA signaling: ${Math.round(e)}%</h4>${bars([['Receptor function',fn,fn<50?'x':'',fn+'%'],['Net Ca\u00B2\u207A influx',e,lo?'x':'',Math.round(e)+'%']])}<ul><li><b>Co-agonist site:</b> ${coag?'occupied \u2014 permissive':'<b>empty</b> \u2014 receptor cannot open'}</li><li><b>Mg\u00B2\u207A block:</b> ${dep?'relieved by depolarization':'<b>in place</b> \u2014 pore plugged'}</li><li><b>Ketamine/PCP:</b> ${ket?'<b>blocking the pore</b> (non-competitive, open-channel)':'absent'}</li></ul><p><small>${lo?'<b>Hypofunction:</b> reduced drive on GABAergic interneurons \u2192 disinhibited cortical output and dysregulated dopamine. In healthy volunteers, ketamine reproduces positive, negative, and cognitive-like features.':'Normal excitatory signaling maintains inhibitory tone via interneurons.'}</small></p>`);
+  }
+  ctlSlider(ctl,'Baseline NMDA receptor function',0,100,100,v=>{fn=v;render();},v=>v+'%');
+  ctlToggle(ctl,' Ketamine / PCP present',v=>{ket=v;render();},false);
+  ctlToggle(ctl,' Glycine / D-serine co-agonist bound',v=>{coag=v;render();},true);
+  ctlToggle(ctl,' Postsynaptic depolarization (Mg\u00B2\u207A leaves)',v=>{dep=v;render();},true);
+  ctx.frame((dt,t)=>{
+    const e=eff();
+    a1+=3*dt;while(a1>=1){a1--;gl.push({c:el('circle',{r:4.5,fill:C.purple},g),x:340+Math.random()*120,y:86});}
+    for(let k=gl.length-1;k>=0;k--){const p=gl[k];const dx=(p.x<400?372:428)-p.x,dy=200-p.y,d=Math.hypot(dx,dy),sp=95*dt;if(d<sp+1){p.c.remove();gl.splice(k,1);continue;}p.x+=dx/d*sp;p.y+=dy/d*sp;p.c.setAttribute('cx',p.x);p.c.setAttribute('cy',p.y);}
+    a2+=e/100*10*dt;while(a2>=1){a2--;ca.push({c:el('circle',{r:3.8,fill:C.amber},g),x:400+(Math.random()-.5)*10,y:206,vx:0});}
+    for(let k=ca.length-1;k>=0;k--){const p=ca[k];p.y+=100*dt;if(p.y>285)p.vx=p.vx||(Math.random()-.5)*120;p.x+=(p.vx||0)*dt;if(p.y>345){p.c.remove();ca.splice(k,1);continue;}p.c.setAttribute('cx',p.x);p.c.setAttribute('cy',p.y);}
+    const mt=dep?[500,170]:[400,240];mgx=lerp(mgx,mt[0],dt*3);mgy=lerp(mgy,mt[1],dt*3);
+    mg.setAttribute('cx',mgx);mg.setAttribute('cy',mgy);mgT.setAttribute('x',mgx);mgT.setAttribute('y',mgy+4);
+    ko=lerp(ko,ket?1:0,dt*6);kt.setAttribute('opacity',ko);ktT.setAttribute('opacity',ko);
+    co.setAttribute('opacity',coag?1:.25);coT.setAttribute('opacity',coag?1:.4);
+    const hgt=190*e/100;meter.setAttribute('height',hgt);meter.setAttribute('y',302-hgt);
+  });
+},
+quiz:[
+ {q:'Ketamine and phencyclidine (PCP) produce schizophrenia-like symptoms in healthy volunteers by:',o:['Blocking D2 receptors','Non-competitive blockade of the NMDA receptor channel','Activating 5-HT2A receptors','Inhibiting dopamine reuptake'],a:1,e:'They are open-channel NMDA antagonists and reproduce positive, negative, and cognitive-like symptoms.'},
+ {q:'Besides glutamate binding, NMDA receptor activation requires:',o:['GABA and chloride','A glycine/D-serine co-agonist and depolarization to relieve Mg\u00B2\u207A block','Dopamine and cAMP','Acetylcholine and sodium'],a:1,e:'The receptor is a coincidence detector: glutamate + co-agonist + membrane depolarization.'},
+ {q:'In the glutamate hypothesis, hypofunction of NMDA receptors on which cells leads to cortical disinhibition?',o:['Dopaminergic VTA neurons','GABAergic parvalbumin interneurons','Cholinergic interneurons','Serotonergic raphe neurons'],a:1,e:'Reduced excitation of inhibitory interneurons lowers GABA tone and disinhibits pyramidal output and subcortical dopamine regulation.'}
+]});
+
+/* ================= MODULE 5 ================= */
+MODS.push({id:'m5',n:5,icon:'\uD83E\uDDE9',title:'Pathophysiology Integration',obj:[1,2],
+sub:'Genes, environment, and development converge on circuit dysfunction. Click any box for details, press Play to trace the cascade, and use the sliders to explore a liability-threshold model.',
+take:'<ul><li>Schizophrenia is <b>polygenic and multifactorial</b>: heritability is high (~60\u201380%) but concordance in identical twins is only ~40\u201350%.</li><li>A neurodevelopmental sequence (prenatal insult \u2192 adolescent pruning/stress) leads to dopamine <b>and</b> glutamate circuit dysfunction.</li><li>Dopamine dysfunction is the final common pathway targeted by current antipsychotics.</li></ul>',
+faculty:'<p><b>Time:</b> 15 min. <b>Teaching point:</b> use the threshold sliders to show that no single factor is necessary or sufficient. <b>Misconception:</b> "it is genetic, therefore inevitable." <b>Discussion:</b> how does early adolescent cannabis exposure fit a two-hit model?</p>',
+build(ctx){
+  const {svg,ctl}=ctx;const g=el('g',{},svg);
+  const N={};const stageOf={G:0,E:0,ND:1,DA:2,GLU:2,POS:3,NEG:3,COG:3};
+  const defs=[['G',200,50,250,54,['Genetic vulnerability','polygenic + rare variants']],['E',600,50,250,54,['Environmental risk','prenatal, cannabis, adversity']],['ND',400,150,320,54,['Neurodevelopmental changes','pruning \u00B7 interneurons \u00B7 circuits']],['DA',215,262,260,54,['Dopamine dysfunction','\u2191 striatal \u00B7 \u2193 cortical']],['GLU',585,262,260,54,['Glutamate (NMDA) dysfunction','PV interneuron hypofunction']],['POS',140,392,210,50,['Positive symptoms']],['NEG',400,392,210,50,['Negative symptoms']],['COG',660,392,210,50,['Cognitive symptoms']]];
+  const links=[['G','ND'],['E','ND'],['ND','DA'],['ND','GLU'],['DA','POS'],['DA','NEG'],['GLU','NEG'],['GLU','COG']];
+  const gC=el('g',{},g),gF=el('g',{},g),gN=el('g',{},g);
+  defs.forEach(d=>{N[d[0]]={cx:d[1],cy:d[2],w:d[3],h:d[4]};});
+  const flows=links.map(([a,b])=>{const A=N[a],Bn=N[b];const y1=A.cy+A.h/2,y2=Bn.cy-Bn.h/2,m=(y1+y2)/2;const p=el('path',{d:`M${A.cx},${y1} C${A.cx},${m} ${Bn.cx},${m} ${Bn.cx},${y2}`,fill:'none',stroke:C.mut,'stroke-width':2,'marker-end':'url(#arr)',opacity:.7},gC);return flow(gF,p,{color:C.blue,n:2,speed:70,r:4});});
+  el('path',{d:'M345,262 L455,262',fill:'none',stroke:C.mut,'stroke-width':2,'stroke-dasharray':'5 4','marker-end':'url(#arr)','marker-start':'url(#arr)'},gC);
+  txt(gC,400,252,'regulates',{s:11,c:C.mut});
+  defs.forEach(d=>{
+    const n=el('g',{style:'cursor:pointer',tabindex:0},gN);
+    const r=el('rect',{x:d[1]-d[3]/2,y:d[2]-d[4]/2,width:d[3],height:d[4],rx:12,fill:C.acc,stroke:C.blue,'stroke-width':2},n);
+    d[5].forEach((l,i)=>txt(n,d[1],d[2]+(i-(d[5].length-1)/2)*17+5,l,{s:i?11.5:13.5,w:i?500:700,c:i?C.mut:C.ink}));
+    n.onclick=()=>pick(d[0]);n.onkeydown=e=>{if(e.key==='Enter')pick(d[0]);};
+    N[d[0]].r=r;N[d[0]].g=n;
+  });
+  const INFO={
+   G:'<h4>Genetic vulnerability</h4><ul><li>Heritability ~60\u201380%; lifetime risk ~1% in the general population, ~10% with an affected first-degree relative, ~40\u201350% concordance in identical twins.</li><li><b>Polygenic:</b> hundreds of common variants of small effect (e.g., complement <i>C4A</i>, which influences synaptic pruning) plus rare large-effect variants (e.g., 22q11.2 deletion).</li><li>No single gene is causal or diagnostic.</li></ul>',
+   E:'<h4>Environmental risk factors</h4><ul><li>Obstetric complications, prenatal infection or malnutrition, winter birth.</li><li>Urban upbringing, migration, childhood trauma and social adversity.</li><li><b>Heavy adolescent cannabis use</b> (higher potency, earlier, more frequent = higher risk).</li><li>Advanced paternal age.</li></ul>',
+   ND:'<h4>Neurodevelopmental changes</h4><ul><li>"Two-hit" model: an early (prenatal) vulnerability is unmasked by later (adolescent) stressors.</li><li>Excess synaptic pruning in late adolescence; immature parvalbumin interneurons; reduced cortical gray matter; enlarged ventricles.</li><li>Typical onset: late teens\u2013early 30s (earlier in males), often preceded by a prodrome.</li></ul>',
+   DA:'<h4>Dopamine dysfunction</h4><ul><li><b>Subcortical (mesolimbic):</b> \u2191 presynaptic synthesis and release \u2192 aberrant salience \u2192 positive symptoms.</li><li><b>Cortical (mesocortical):</b> \u2193 D1 stimulation \u2192 negative/cognitive symptoms.</li><li>All current antipsychotics reduce D2 signaling.</li></ul>',
+   GLU:'<h4>Glutamate (NMDA) dysfunction</h4><ul><li>NMDA receptor hypofunction, especially on GABA parvalbumin interneurons \u2192 cortical disinhibition and gamma-oscillation deficits.</li><li>Upstream regulator of dopamine neurons.</li><li>Ketamine/PCP model; glutamate-targeted drugs not yet approved.</li></ul>',
+   POS:'<h4>Positive symptoms</h4><p>Hallucinations, delusions, disorganized thinking/behavior. Best treated by D2 antagonism or partial agonism.</p>',
+   NEG:'<h4>Negative symptoms</h4><p>Avolition, alogia, anhedonia, affective flattening, asociality. Poor response to current drugs; strongly affect functional outcome.</p>',
+   COG:'<h4>Cognitive symptoms</h4><p>Working memory, attention, executive function, processing speed. The best predictor of real-world functioning; minimal response to antipsychotics.</p>'};
+  let sel=null,playing=false,stage=0,pt=0;
+  function style(){
+    Object.keys(N).forEach(k=>{const n=N[k];const hl=!playing||stageOf[k]<=stage;n.g.setAttribute('opacity',hl?1:.35);n.r.setAttribute('stroke-width',k===sel?4.5:2);n.r.style.stroke=(playing&&stageOf[k]===stage)?C.green:C.blue;});
+  }
+  function pick(k){sel=k;ctx.setInfo(INFO[k]);style();}
+  ctx.setInfo('<h4>Click any box</h4><p>Follow the cascade: genetic vulnerability and environmental exposures converge on <b>neurodevelopmental change</b>, producing <b>dopamine and glutamate circuit dysfunction</b> and the three symptom domains.</p>');
+  ctlBtn(ctl,'\u25B6 Play cascade',b=>{playing=true;stage=0;pt=0;style();},'pri');
+  ctlBtn(ctl,'\u25A0 Show all',()=>{playing=false;style();});
+  const ext=ctx.extra;ext.className='extra panel';
+  ext.innerHTML='<h4 style="margin:0 0 6px">Liability-threshold model (illustrative)</h4><div id="thrw"></div>';
+  let gv=40,ev=30;
+  function thr(){const tot=gv+ev;$('#thrw',ext).innerHTML=`<div class="brow"><span>Total liability</span><div class="btrack" style="position:relative"><i class="${tot>=100?'r':''}" style="width:${clamp(tot/2,0,100)}%"></i><span style="position:absolute;left:50%;top:-2px;bottom:-2px;border-left:2px dashed var(--ink)"></span></div><b>${tot}</b></div><p class="muted" style="margin:4px 0 0;font-size:13px">Dashed line = threshold. ${tot>=100?'<b>Above threshold:</b> illness expression becomes likely in this model.':'Below threshold: unaffected in this model.'} Real risk is probabilistic; this is a teaching device, not a predictor.</p>`;}
+  ctlSlider(ctl,'Genetic loading',0,100,40,v=>{gv=v;thr();});
+  ctlSlider(ctl,'Environmental load',0,100,30,v=>{ev=v;thr();});
+  ctx.frame((dt)=>{
+    flows.forEach(f=>f.update(dt));
+    if(playing){pt+=dt;if(pt>1.4){pt=0;stage++;if(stage>3){playing=false;stage=0;}style();}}
+  });
+},
+quiz:[
+ {q:'Excessive synaptic pruning during late adolescence (e.g., involving complement C4A) best illustrates which model?',o:['Monoamine depletion','Neurodevelopmental model','Neuroendocrine model','Pure environmental model'],a:1,e:'Aberrant developmental pruning is a leading neurodevelopmental mechanism.'},
+ {q:'Which is an established environmental risk factor for schizophrenia?',o:['Heavy adolescent cannabis use','Moderate caffeine intake','Left-handedness','Vegetarian diet'],a:0,e:'Early, frequent, high-potency cannabis use is a replicated risk factor; others include urbanicity, migration, childhood adversity, and obstetric complications.'},
+ {q:'Concordance for schizophrenia in identical twins is about 40\u201350%. This indicates that:',o:['The disorder is purely genetic','Genes and environment both contribute','The disorder is purely environmental','Twin studies are invalid'],a:1,e:'If genes alone determined illness, concordance would approach 100%.'}
+]});
+
+/* ================= MODULE 6 ================= */
+MODS.push({id:'m6',n:6,icon:'\uD83D\uDDE3\uFE0F',title:'Positive Symptoms',obj:[3,4],
+sub:'Three simulations: how auditory hallucinations arise, how aberrant salience tags neutral objects, and how a delusion forms. Use the tabs.',
+take:'<ul><li><b>Hallucinations:</b> failed corollary discharge \u2192 self-generated speech is misattributed as external; auditory cortex (STG) activates without an external source.</li><li><b>Aberrant salience:</b> noisy dopamine bursts tag irrelevant stimuli as meaningful.</li><li><b>Delusions:</b> the top-down attempt to explain salient experiences; reinforced by confirmation bias and jumping to conclusions.</li><li>Antipsychotics reduce the emotional charge of experiences first; conviction softens more slowly.</li></ul>',
+faculty:'<p><b>Time:</b> 15 min. <b>Teaching point:</b> let students click objects in the salience tab at high dopamine and discuss what "meaning" feels like. <b>Communication tip:</b> experiences are real to the patient \u2014 validate the distress, not the content. <b>Discussion:</b> differential diagnosis of hallucinations (substances, delirium, mood disorders, neurologic disease).</p>',
+build(ctx){
+  const {svg,ctl}=ctx;let intact=false,da=80,delStep=0,tab=0,meanings=0;
+  /* --- scene 0: hallucination --- */
+  function mkHall(){
+    const g=el('g',{},svg);
+    el('ellipse',{cx:430,cy:225,rx:140,ry:160,fill:'var(--brain)',stroke:C.line,'stroke-width':2},g);
+    el('path',{d:'M568,215 L598,250 L566,254',fill:'var(--brain)',stroke:C.line,'stroke-width':2},g);
+    el('ellipse',{cx:330,cy:240,rx:14,ry:28,fill:'var(--brain2)',stroke:C.line},g);
+    const stg=el('ellipse',{cx:395,cy:262,rx:58,ry:26,fill:C.red,opacity:.2,filter:'url(#glow)'},g);
+    const stg2=el('ellipse',{cx:395,cy:262,rx:50,ry:20,fill:C.blue,stroke:C.ink,opacity:.55},g);
+    el('ellipse',{cx:505,cy:205,rx:32,ry:24,fill:C.teal,stroke:C.ink,opacity:.6},g);
+    txt(g,395,312,'Superior temporal gyrus (auditory cortex)',{s:11.5,c:C.mut});
+    txt(g,505,170,'Broca area (speech production)',{s:11.5,c:C.mut});
+    const cd=el('path',{d:'M485,226 C470,276 445,282 432,268',fill:'none',stroke:C.green,'stroke-width':3,'marker-end':'url(#arr)'},g);
+    const cdT=txt(g,525,285,'corollary discharge',{s:11.5,w:700,c:C.green});
+    const waves=[0,1,2].map(()=>el('path',{fill:'none',stroke:C.red,'stroke-width':3,'stroke-linecap':'round'},g));
+    const src=txt(g,130,345,'No one is speaking',{s:12.5,w:700,c:C.red});
+    const cap=txt(g,430,40,'',{s:14,w:700});
+    return{g,update(dt,t){
+      waves.forEach((w,k)=>{const ph=((t*.7)+k/3)%1,x=300-ph*130;w.setAttribute('d',`M${x},${195+ph*10} Q${x+30},240 ${x},${285-ph*10}`);w.setAttribute('opacity',intact?0:(1-ph)*.9);});
+      stg.setAttribute('opacity',intact?.05:.35+.3*Math.sin(t*7));stg2.setAttribute('opacity',intact?.3:.85);
+      stg2.style.fill=intact?C.blue:C.red;
+      cd.style.stroke=intact?C.green:C.gray;cd.setAttribute('stroke-dasharray',intact?'0':'6 6');
+      cdT.style.fill=intact?C.green:C.gray;cdT.textContent=intact?'corollary discharge: intact':'corollary discharge: failed';
+      src.setAttribute('opacity',intact?0:1);
+      cap.textContent=intact?'Inner speech recognized as self-generated':'Inner speech perceived as an external voice';
+    },info(){ctx.setInfo(`<h4>Auditory verbal hallucination</h4><p>${intact?'Broca area sends a <b>corollary-discharge</b> copy to auditory cortex, dampening its response, so inner speech is tagged as "mine."':'The corollary-discharge signal <b>fails</b>. Auditory cortex responds as if the speech were external, producing a voice with no external source.'}</p>${bars([['STG activity',intact?18:85,intact?'':'r']])}<ul><li>Imaging: STG and Broca area active during hallucinations.</li><li>Often 2nd/3rd-person voices; may comment or command.</li><li>Dopamine dysregulation and salience contribute to their intrusiveness.</li></ul><p><small>Rule out substances, delirium, mood disorder with psychosis, and neurologic causes.</small></p>`);}};
+  }
+  /* --- scene 1: aberrant salience --- */
+  function mkSal(){
+    const g=el('g',{},svg);
+    const items=[['\u23F0','clock'],['\uD83D\uDE97','car'],['\uD83C\uDF33','tree'],['\uD83D\uDCF1','phone'],['\uD83D\uDCF0','newspaper'],['\uD83D\uDC26','bird'],['\uD83D\uDEAA','door'],['\u2615','cup'],['\uD83D\uDD14','bell']];
+    const sal=items.map(()=>0),halos=[],marks=[];let nextT=1;
+    items.forEach((it,i)=>{
+      const x=180+(i%3)*220,y=95+Math.floor(i/3)*125;
+      const gg=el('g',{style:'cursor:pointer'},g);
+      halos.push(el('circle',{cx:x,cy:y,r:48,fill:C.red,opacity:0,filter:'url(#glow)'},gg));
+      el('circle',{cx:x,cy:y,r:40,fill:C.acc,stroke:C.line},gg);
+      const e=el('text',{x,y:y+14,'text-anchor':'middle','font-size':38},gg);e.textContent=it[0];
+      txt(gg,x,y+58,it[1],{s:12,c:C.mut});
+      marks.push(txt(gg,x+34,y-24,'!',{s:22,w:800,c:C.red,op:0}));
+      gg.onclick=()=>{meanings++;sal[i]=1;this_info(`<b>You assigned meaning to the ${it[1]}.</b> At high dopamine noise, a neutral object feels <i>significant</i> \u2014 the mind then searches for a reason.`);};
+    });
+    let note='';function this_info(n){note=n;api.info();}
+    const api={g,update(dt){
+      nextT-=dt;
+      if(nextT<=0){nextT=1+Math.random()*1.2;const p=clamp((da-45)/55,0,1);if(Math.random()<p){sal[Math.random()*9|0]=1;if(da>85&&Math.random()<.6)sal[Math.random()*9|0]=1;}}
+      sal.forEach((s,i)=>{sal[i]=Math.max(0,s-dt*.3);halos[i].setAttribute('opacity',sal[i]*.8);marks[i].setAttribute('opacity',sal[i]);});
+    },info(){ctx.setInfo(`<h4>Aberrant salience</h4><p>Tap any object. Dopamine signaling noise: <b>${da}%</b>.</p>${bars([['Spurious salience',clamp((da-45)*1.8,0,100),da>60?'r':'']])}<p>${note||'At low dopamine noise, objects remain neutral. Raise the slider and watch random, irrelevant objects light up.'}</p><p><small>Meanings assigned this session: ${meanings}</small></p><ul><li>Phasic dopamine normally signals relevance/prediction error.</li><li>Stochastic bursts assign salience to the wrong stimuli.</li></ul>`);}};
+    return api;
+  }
+  /* --- scene 2: delusion formation --- */
+  function mkDel(){
+    const g=el('g',{});svg.append(g);
+    const T=[['Aberrant','salience'],['Delusional','mood'],['Search for','explanation'],['Belief','crystallizes'],['Reinforcement','& fixity'],['Antipsychotic','effect']];
+    const boxes=T.map((tt,i)=>{const x=75+i*130;const r=el('rect',{x:x-58,y:150,width:116,height:100,rx:12,fill:C.acc,stroke:C.blue,'stroke-width':2},g);txt(g,x,196,tt[0],{s:13,w:700});txt(g,x,214,tt[1],{s:13,w:700});if(i<5)el('path',{d:`M${x+60},200 L${x+70},200`,stroke:C.mut,'stroke-width':2,'marker-end':'url(#arr)'},g);return r;});
+    el('line',{x1:75,y1:320,x2:725,y2:320,stroke:C.line,'stroke-width':6,'stroke-linecap':'round'},g);
+    const dot=el('circle',{cx:75,cy:320,r:10,fill:C.red},g);let dx=75;
+    txt(g,400,120,'Click Next / Previous to walk through the sequence',{s:13,c:C.mut});
+    const S_=[
+     ['1. Aberrant salience','Neutral events begin to feel unusually significant. <i>Example: a stranger glances across the bus; the glance feels loaded with meaning.</i>'],
+     ['2. Delusional mood','A pervasive sense that something important is happening, with anxiety and perplexity.'],
+     ['3. Search for explanation','The mind seeks a reason for the salient experiences. Jumping to conclusions and attributional bias favor threatening or self-referential explanations.'],
+     ['4. Belief crystallizes','An explanation ("that person is watching me") brings relief and coherence. It becomes a fixed, false belief held with conviction.'],
+     ['5. Reinforcement and fixity','Confirmation bias and further salient events reinforce the belief; contrary evidence is discounted.'],
+     ['6. Treatment','D2 blockade reduces the emotional charge of experiences within days; conviction and preoccupation fall more slowly. Adherence, CBT for psychosis, and family support matter.']];
+    return{g,update(dt){dx=lerp(dx,75+delStep*130,dt*4);dot.setAttribute('cx',dx);dot.style.fill=delStep===5?C.green:C.red;boxes.forEach((b,i)=>{b.style.stroke=i===5?C.green:C.blue;b.setAttribute('stroke-width',i===delStep?5:2);b.setAttribute('opacity',i<=delStep?1:.45);});},
+     info(){const s=S_[delStep];ctx.setInfo(`<h4>${s[0]}</h4><p>${s[1]}</p><p><small>Step ${delStep+1} of 6.</small></p>`);}};
+  }
+  const scenes=[mkHall(),mkSal(),mkDel()];
+  const sub=h('div',{class:'ctls'});
+  const subs=[
+    ()=>ctlToggle(sub,' Corollary discharge intact (normal)',v=>{intact=v;scenes[0].info();},intact),
+    ()=>ctlSlider(sub,'Dopamine signaling noise',0,100,da,v=>{da=v;scenes[1].info();},v=>v+'%'),
+    ()=>{ctlBtn(sub,'\u2190 Previous',()=>{delStep=Math.max(0,delStep-1);scenes[2].info();});ctlBtn(sub,'Next \u2192',()=>{delStep=Math.min(5,delStep+1);scenes[2].info();},'pri');}
+  ];
+  ctlTabs(ctl,['Hallucination','Salience','Delusion'],i=>{tab=i;scenes.forEach((s,k)=>{s.g.style.display=k===i?'':'none';});sub.innerHTML='';subs[i]();scenes[i].info();});
+  ctl.append(sub);
+  ctx.frame((dt,t)=>scenes[tab].update(dt,t));
+},
+quiz:[
+ {q:'Auditory verbal hallucinations are thought to arise partly from failure of:',o:['Corollary discharge (efference copy) dampening of self-generated speech','Retinal signal processing','Cerebellar timing','Spinal reflexes'],a:0,e:'Self-generated inner speech is misattributed as external when the dampening signal to auditory cortex fails.'},
+ {q:'Delusions are best understood in the aberrant-salience framework as:',o:['Random false statements','Top-down cognitive efforts to explain aberrantly salient experiences','Memory loss','Purely a mood symptom'],a:1,e:'Salient-feeling experiences prompt a search for meaning; the resulting belief is reinforced.'},
+ {q:'Which brain region is typically activated during auditory hallucinations?',o:['Primary visual cortex','Superior temporal gyrus','Cerebellar vermis','Occipital pole'],a:1,e:'STG (auditory association cortex) and Broca area show activity during hallucinations.'}
+]});
+
+/* ================= MODULE 7 ================= */
+MODS.push({id:'m7',n:7,icon:'\uD83E\uDDE0',title:'Negative & Cognitive Symptoms',obj:[3,5],
+sub:'Reduced prefrontal activity impairs working memory, attention, and executive function. Set the PFC function level and try the digit-span task against a simulated patient.',
+take:'<ul><li>Cognitive deficits (working memory, attention, executive function, processing speed) often precede psychosis and <b>predict functional outcome</b> better than positive symptoms.</li><li>Dorsolateral PFC dopamine acts on D1 receptors with an <b>inverted-U</b> dose\u2013response: too little <i>or</i> too much impairs performance.</li><li>Reduced gamma oscillations reflect interneuron dysfunction.</li><li>Antipsychotics have little effect; cognitive remediation and psychosocial treatment are important.</li></ul>',
+faculty:'<p><b>Time:</b> 10\u201315 min. Run the digit-span task live with students (normal span ~7 \u00B1 2). <b>Discussion:</b> why does impaired working memory make everyday functioning (work, school, medication management) so difficult? What accommodations help?</p>',
+build(ctx){
+  const {svg,ctl}=ctx;drawBrain(svg,[]);const g=el('g',{},svg);
+  const pfc=el('ellipse',{cx:172,cy:150,rx:62,ry:50,fill:C.blue,opacity:.5,filter:'url(#glow)'},g);
+  el('ellipse',{cx:172,cy:150,rx:52,ry:40,fill:C.blue,stroke:C.ink,opacity:.5},g);
+  txt(g,172,100,'Prefrontal cortex (DLPFC)',{s:12.5,w:700});
+  el('rect',{x:60,y:396,width:680,height:50,rx:8,fill:C.acc,stroke:C.line},g);
+  txt(g,400,390,'PFC gamma-band oscillations (\u2193 in schizophrenia)',{s:11.5,c:C.mut});
+  const wave=el('polyline',{fill:'none',stroke:C.blue,'stroke-width':2.5},g);
+  let p=.55,len=6,dist=false,seq=[],busy=false;
+  const ext=ctx.extra;ext.className='extra panel';
+  ext.innerHTML='<h4 style="margin:0 0 6px">Digit-span working-memory task</h4><p class="muted" style="margin:0 0 6px;font-size:13px">Watch the digits, then type them in order. The simulated patient shows what the PFC function set above would retain.</p><div class="wmdisp" id="wmd">Ready</div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn pri" id="wmgo">Start trial</button><input class="txt" id="wmin" placeholder="Type digits, then Check" disabled inputmode="numeric"><button class="btn" id="wmok" disabled>Check</button></div><div id="wmres" style="margin-top:8px"></div>';
+  const cap=()=>Math.max(1,Math.round(7*Math.pow(p,1.3))-(dist&&p<.8?1:0));
+  function metrics(){
+    ctx.setInfo(`<h4>Simulated PFC function: ${Math.round(p*100)}%</h4>${bars([['Working memory',p*100,p<.6?'x':'',cap()+' digits'],['Sustained attention',40+60*p,p<.6?'x':''],['Executive function',35+65*Math.pow(p,1.5),p<.6?'x':'']])}<ul><li><b>Executive function:</b> planning, set-shifting, abstraction (perseveration is typical).</li><li><b>Attention:</b> vigilance and filtering of distractors.</li><li><b>Working memory:</b> holding and manipulating information over seconds.</li></ul><p><small>Bars are illustrative teaching values, not clinical norms.</small></p>`);
+  }
+  ctlSlider(ctl,'PFC function (% of normal)',20,100,55,v=>{p=v/100;metrics();},v=>v+'%');
+  ctlSlider(ctl,'Sequence length',3,9,6,v=>{len=v;});
+  ctlToggle(ctl,' Add distractor (count backwards)',v=>{dist=v;metrics();},false);
+  $('#wmgo',ext).onclick=()=>{
+    if(busy)return;busy=true;
+    const d=$('#wmd',ext),inp=$('#wmin',ext),ok=$('#wmok',ext);
+    seq=Array.from({length:len},()=>Math.floor(Math.random()*10));
+    $('#wmres',ext).innerHTML='';inp.value='';inp.disabled=true;ok.disabled=true;
+    let i=0;
+    const ready=()=>{d.textContent='Recall now';inp.disabled=false;ok.disabled=false;inp.focus();busy=false;};
+    const tick=()=>{
+      if(!ext.isConnected)return;
+      if(i<seq.length){d.textContent=seq[i++];setTimeout(()=>{d.textContent='';setTimeout(tick,250);},650);}
+      else if(dist){d.textContent='Count back by 3 from 100\u2026';setTimeout(ready,3500);}
+      else ready();
+    };
+    d.textContent='\u2022';setTimeout(tick,500);
+  };
+  $('#wmok',ext).onclick=()=>{
+    const you=$('#wmin',ext).value.replace(/\D/g,'').split('');
+    const c=cap(),sim=seq.map((x,i)=>i<c?x:'_');
+    const score=seq.filter((x,i)=>you[i]===String(x)).length;
+    $('#wmres',ext).innerHTML=`<div class="recall">Sequence&nbsp;&nbsp;${seq.join(' ')}</div><div class="recall">You&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${you.join(' ')||'\u2014'}</div><div class="recall" style="color:var(--gray)">Patient&nbsp;&nbsp;&nbsp;&nbsp;${sim.join(' ')}</div><p class="muted" style="font-size:13px">You: ${score}/${seq.length} correct. Simulated patient (PFC ${Math.round(p*100)}%${dist?', with distractor':''}) retains about <b>${c}</b> item${c>1?'s':''}; later items are lost.</p>`;
+    $('#wmok',ext).disabled=true;
+  };
+  ctx.frame((dt,t)=>{
+    pfc.setAttribute('opacity',.1+.45*p*(.85+.15*Math.sin(t*3)));pfc.style.fill=p<.6?C.gray:C.blue;
+    wave.style.stroke=p<.6?C.gray:C.blue;
+    let pts='';for(let x=70;x<=730;x+=8){const y=421+Math.sin(x*.12+t*9)*20*p+(Math.sin(x*3.7+t*13)+Math.sin(x*1.3-t*7))*5*(1-p);pts+=x+','+y.toFixed(1)+' ';}
+    wave.setAttribute('points',pts);
+  });
+},
+quiz:[
+ {q:'Working-memory deficits in schizophrenia are most associated with hypoactivation of the:',o:['Dorsolateral prefrontal cortex','Primary motor cortex','Occipital cortex','Cerebellar vermis'],a:0,e:'DLPFC supports working memory and executive function.'},
+ {q:'Prefrontal dopamine modulates working memory mainly through which receptor, with an inverted-U dose response?',o:['D1','D2 only','5-HT3','Mu opioid'],a:0,e:'Cortical D1 receptor stimulation has an optimal range; too little or too much impairs performance.'},
+ {q:'Which statement about cognitive symptoms is correct?',o:['They respond robustly to D2 antagonists','They are a major determinant of functional outcome and respond poorly to current antipsychotics','They only occur after treatment starts','They are identical to positive symptoms'],a:1,e:'Cognitive impairment strongly predicts functioning; cognitive remediation and psychosocial supports are used.'}
+]});
+
+/* ================= MODULE 8 ================= */
+MODS.push({id:'m8',n:8,icon:'\uD83D\uDC8A',title:'First-Generation Antipsychotics',obj:[6,7,8],
+sub:'Drug mechanism lab: choose a drug, set the dose, and see D2 receptor blockade and occupancy. Switch regions to see efficacy, EPS, and prolactin effects.',
+take:'<ul><li>FGAs are D2 antagonists with <b>no regional selectivity</b>: therapeutic occupancy (~65\u201380%) is close to the occupancy that causes prolactin elevation (~&gt;72%) and EPS (~&gt;80%).</li><li><b>High potency</b> (haloperidol, fluphenazine): more EPS, less sedation/anticholinergic/orthostasis. <b>Low potency</b> (chlorpromazine): the reverse.</li><li>Decanoate long-acting injectables exist for haloperidol and fluphenazine.</li></ul>',
+faculty:'<p><b>Time:</b> 15 min. <b>Teaching point:</b> occupancy vs. effect (Kapur/Farde PET data). Ask students to find the dose where response is likely but EPS risk is still low. <b>Misconception:</b> "higher dose = better response" \u2014 beyond ~80% occupancy, EPS rises without added efficacy. <b>Dose equivalence:</b> chlorpromazine 100 mg \u2248 haloperidol 2 mg \u2248 fluphenazine 2 mg (oral, approximate).</p>',
+build(ctx){
+  const {svg,ctl}=ctx;
+  const D=[
+   {n:'Haloperidol',d50:.7,min:.5,max:20,fx:'<b>Butyrophenone, high potency.</b> Very high D2 affinity, minimal H1/M1/\u03B11 blockade. Decanoate LAI (~q4 weeks). AEs: EPS (dose-dependent), hyperprolactinemia, QTc prolongation (especially IV). Less sedation, orthostasis, anticholinergic effects.'},
+   {n:'Chlorpromazine',d50:35,min:25,max:800,fx:'<b>Phenothiazine, low potency.</b> D2 plus H1, \u03B11, M1, 5-HT2A blockade. AEs: sedation, orthostasis, anticholinergic effects, photosensitivity, blue-gray skin pigmentation, ocular deposits, lowered seizure threshold, QTc. Fewer EPS at equipotent doses.'},
+   {n:'Fluphenazine',d50:.7,min:.5,max:20,fx:'<b>Phenothiazine (piperazine), high potency.</b> Decanoate LAI (~q2\u20134 weeks). AEs: prominent EPS, hyperprolactinemia; limited sedation/anticholinergic effects. Oral 2 mg \u2248 chlorpromazine 100 mg.'}];
+  let di=0,sv=30,region=0;
+  const doseAt=s=>{const d=D[di],x=(s/100)**2,v=d.min+(d.max-d.min)*x;return di===1?Math.round(v/5)*5:Math.round(v*10)/10;};
+  const dose=()=>doseAt(sv);
+  const occ=()=>dose()/(dose()+D[di].d50);
+  const ord=[0,4,2,6,1,5,3,7];
+  const syn=synapse(svg,{n:8,rate:()=>region===0?6:3.5,color:()=>region===0?C.red:C.blue,state:i=>ord.indexOf(i)<Math.round(occ()*8)?1:0,drugN:()=>Math.round(occ()*9)});
+  const gg=el('g',{},svg);
+  el('rect',{x:100,y:418,width:390,height:16,fill:C.gray,opacity:.5},gg);
+  el('rect',{x:490,y:418,width:90,height:16,fill:C.green,opacity:.75},gg);
+  el('rect',{x:580,y:418,width:120,height:16,fill:C.red,opacity:.6},gg);
+  [65,72,80].forEach(v=>{const x=100+v*6;el('line',{x1:x,y1:414,x2:x,y2:438,stroke:C.ink,'stroke-width':1.5},gg);txt(gg,x,452,v+'%',{s:11,c:C.mut});});
+  txt(gg,100,452,'0',{s:11,c:C.mut,a:'start'});txt(gg,700,452,'100%',{s:11,c:C.mut,a:'end'});
+  txt(gg,100,411,'D2 occupancy',{s:11.5,w:700,a:'start'});
+  const mk=el('path',{d:'M0,0 L-7,-12 L7,-12 Z',fill:C.ink},gg);
+  legend(svg,[['red','Dopamine (excess)'],['blue','Dopamine (normal)'],['green','Antipsychotic']],14);
+  function info(){
+    const o=occ(),pc=Math.round(o*100);
+    let eff;
+    if(region===0)eff=o>=.65?'<span class="tag g">\u2193 Positive symptoms \u2014 response likely</span>':'<span class="tag y">Insufficient blockade for reliable response</span>';
+    else if(region===1)eff=o>=.8?'<span class="tag r">EPS likely \u2014 parkinsonism, akathisia, dystonia</span>':o>=.65?'<span class="tag y">EPS risk rising</span>':'<span class="tag g">Low EPS risk</span>';
+    else eff=o>=.72?'<span class="tag r">\u2191 Prolactin \u2014 galactorrhea, amenorrhea, sexual dysfunction</span>':'<span class="tag g">Minimal prolactin effect</span>';
+    ctx.setInfo(`<h4>${D[di].n} ${dose()} mg/day</h4>${bars([['D2 occupancy',pc,o>.8?'r':o>=.65?'g':'x']])}<p>${eff}</p><p><small>${['Mesolimbic: therapeutic target.','Nigrostriatal: blockade here causes EPS.','Tuberoinfundibular: removes dopaminergic inhibition of prolactin.'][region]} Occupancy values are approximate (hyperbolic dose\u2013occupancy teaching model).</small></p><p>${D[di].fx}</p>`);
+  }
+  var sl=null;
+  ctlTabs(ctl,D.map(d=>d.n),i=>{di=i;if(sl){sl.value=30;sl.oninput();}else info();});
+  sl=ctlSlider(ctl,'Dose',1,100,30,v=>{sv=v;info();},v=>doseAt(v)+' mg');
+  ctlTabs(ctl,['Mesolimbic','Nigrostriatal','Tuberoinfundibular'],i=>{region=i;info();});
+  ctx.frame((dt)=>{syn.update(dt);const x=100+occ()*600;mk.setAttribute('transform',`translate(${x},418)`);});
+},
+quiz:[
+ {q:'Extrapyramidal symptoms from first-generation antipsychotics result mainly from D2 blockade in the:',o:['Mesolimbic pathway','Nigrostriatal pathway','Tuberoinfundibular pathway','Mesocortical pathway'],a:1,e:'Blockade of nigrostriatal D2 receptors (above roughly 80% occupancy) disrupts motor control.'},
+ {q:'Which first-generation agent is a low-potency drug with prominent sedation, orthostasis, and anticholinergic effects?',o:['Haloperidol','Fluphenazine','Chlorpromazine','Trifluoperazine'],a:2,e:'Chlorpromazine also blocks H1, \u03B11, and muscarinic receptors.'},
+ {q:'Which first-generation antipsychotics are available as long-acting decanoate injections?',o:['Chlorpromazine and thioridazine','Haloperidol and fluphenazine','Only haloperidol','Neither'],a:1,e:'Both haloperidol decanoate and fluphenazine decanoate are available.'}
+]});
+
+/* ================= MODULE 9 ================= */
+MODS.push({id:'m9',n:9,icon:'\u2696\uFE0F',title:'Second-Generation Antipsychotics',obj:[6,7,8],
+sub:'D2 antagonism plus 5-HT2A antagonism. Toggle 5-HT2A blockade and switch to the nigrostriatal pathway to see how EPS risk falls. Choose a drug to load its profile.',
+take:'<ul><li>SGAs combine D2 blockade with <b>5-HT2A antagonism</b>; 5-HT normally inhibits dopamine release, so blocking 5-HT2A <b>increases dopamine release in the nigrostriatal pathway</b>, reducing EPS.</li><li>Other contributors: faster D2 dissociation ("fast-off": quetiapine, clozapine) and partial agonism/other receptor actions.</li><li>Trade-off: <b>metabolic</b> effects (olanzapine &gt; quetiapine &gt; risperidone), prolactin (risperidone, paliperidone), QTc (ziprasidone).</li><li>Efficacy for positive symptoms is broadly similar to FGAs; tolerability differences guide choice.</li></ul>',
+faculty:'<p><b>Time:</b> 15 min. <b>Teaching point:</b> "atypical" is a tolerability label, not an efficacy claim. <b>Practical pearls to assign:</b> ziprasidone needs \u2265500 kcal with doses; lurasidone needs \u2265350 kcal; olanzapine pamoate requires post-injection observation. <b>Discussion:</b> choose an SGA for a patient with obesity and prediabetes versus one with amenorrhea on risperidone.</p>',
+build(ctx){
+  const {svg,ctl}=ctx;
+  const D=[
+   {n:'Risperidone',occ:78,off:false,k:'High D2 and 5-HT2A affinity; \u03B11, H1 moderate. Dose-dependent EPS (higher above ~6 mg/day); <b>marked prolactin elevation</b>; orthostasis. Oral, ODT, solution, LAI. CYP2D6 substrate.'},
+   {n:'Paliperidone',occ:78,off:false,k:'Active metabolite of risperidone (9-OH-risperidone); renally cleared \u2014 adjust for CrCl; fewer CYP interactions. <b>Prolactin elevation</b>, dose-dependent EPS. ER oral; LAIs monthly, 3-monthly, 6-monthly.'},
+   {n:'Olanzapine',occ:75,off:false,k:'Broad profile (5-HT2A/2C, D2, H1, M1, \u03B11). <b>Greatest weight gain and dyslipidemia/hyperglycemia</b>, sedation, anticholinergic effects; low EPS. LAI pamoate: post-injection delirium/sedation syndrome (observe ~3 h). Smoking induces CYP1A2.'},
+   {n:'Quetiapine',occ:50,off:true,k:'Low D2 affinity with <b>fast dissociation</b>; H1, \u03B11, 5-HT2A; norquetiapine inhibits NET. Sedation, orthostasis, metabolic effects; low EPS and prolactin. Antipsychotic doses ~400\u2013800 mg/day (low doses are mostly sedative). CYP3A4.'},
+   {n:'Ziprasidone',occ:70,off:false,k:'D2, 5-HT2A antagonism; 5-HT1A agonism. <b>QTc prolongation</b>; low metabolic risk; akathisia. <b>Must be taken with a meal \u2265500 kcal</b> (absorption roughly doubles). IM formulation for agitation.'},
+   {n:'Lurasidone',occ:75,off:false,k:'D2, 5-HT2A, 5-HT7 antagonism; 5-HT1A partial agonism; minimal H1/M1. Akathisia, nausea; <b>take with \u2265350 kcal</b>; CYP3A4 substrate (avoid strong inhibitors/inducers). Low metabolic risk.'}];
+  let di=0,oc=78,ht=true,region=1;
+  const flick=Array(8).fill(false);let ft=0;
+  const ord=[0,4,2,6,1,5,3,7];
+  const relF=()=>ht?(region===1?1.4:1.1):1;
+  const syn=synapse(svg,{n:8,rate:()=>(region===0?6:4)*relF(),color:()=>region===0?C.red:C.blue,
+    state:i=>D[di].off?(flick[i]?1:0):(ord.indexOf(i)<Math.round(oc/100*8)?1:0),drugN:()=>Math.round(oc/10)});
+  const g=el('g',{},svg);
+  el('circle',{cx:58,cy:62,r:30,fill:C.acc,stroke:C.purple,'stroke-width':2.5},g);txt(g,58,60,'5-HT',{s:12,w:700,c:C.purple});txt(g,58,74,'raphe',{s:10.5,c:C.mut});
+  const rc=el('circle',{cx:172,cy:52,r:9,fill:C.green,stroke:C.ink,opacity:0},g);
+  el('path',{d:'M172,42 A10,10 0 0,0 172,62',fill:'none',stroke:C.purple,'stroke-width':4},g);
+  txt(g,172,36,'5-HT2A',{s:10.5,c:C.purple,w:700});
+  const ser=[];let sa=0,rco=0;
+  legend(svg,[['purple','Serotonin'],['green','Antipsychotic'],['blue','Dopamine']],446);
+  function info(){
+    const net=oc/100*(1-(ht?(region===1?.3:.07):0));
+    const lvl=net<.65?['Low','g']:net<.78?['Moderate','y']:['High','r'];
+    ctx.setInfo(`<h4>${D[di].n}</h4>${bars([['D2 occupancy',oc,oc>80?'r':'g'],['Net functional D2 block',net*100,net>.78?'r':'g']])}<p>${region===1?'Nigrostriatal EPS risk (teaching model): ':'Mesolimbic antipsychotic effect preserved. EPS model: '}<span class="tag ${lvl[1]}">${lvl[0]}</span></p><p><small>${ht?'5-HT2A blocked \u2192 serotonergic brake on dopamine release removed \u2192 more dopamine competes at D2 in the nigrostriatal pathway.':'5-HT2A unblocked (FGA-like): serotonin restrains dopamine release \u2192 EPS risk tracks D2 occupancy.'}${D[di].off?' <b>Fast-off:</b> brief D2 occupancy; receptors flicker between blocked and free.':''}</small></p><p>${D[di].k}</p>`);
+    $$('tr',ext).forEach((tr,i)=>tr.classList.toggle('sel',i-1===di));
+  }
+  const ext=ctx.extra;ext.className='extra panel tscroll';
+  ext.innerHTML='<table class="t"><tr><th>Drug</th><th>Mechanistic and clinical pearls</th></tr>'+D.map((d,i)=>`<tr class="clk" data-i="${i}"><td><b>${d.n}</b></td><td>${d.k}</td></tr>`).join('')+'</table>';
+  $$('tr.clk',ext).forEach(tr=>tr.onclick=()=>{sel.value=tr.dataset.i;sel.onchange();});
+  const sel=ctlSelect(ctl,'Drug',D.map(d=>d.n),i=>{di=i;oc=D[i].occ;if(sl)sl.value=oc;if(sl)sl.oninput();info();});
+  var sl=ctlSlider(ctl,'D2 occupancy (typical \u2248 shown)',20,95,78,v=>{oc=v;info();},v=>v+'%');
+  ctlToggle(ctl,' 5-HT2A antagonism (SGA)',v=>{ht=v;info();},true);
+  ctlTabs(ctl,['Mesolimbic','Nigrostriatal'],i=>{region=i===0?0:1;info();},1);
+  ctx.frame((dt,t)=>{
+    ft+=dt;if(ft>.9){ft=0;for(let i=0;i<8;i++)flick[i]=Math.random()<oc/100;}
+    syn.update(dt,t);
+    rco=lerp(rco,ht?1:0,dt*6);rc.setAttribute('opacity',rco);
+    sa+=2*dt;while(sa>=1){sa--;ser.push({c:el('circle',{r:4,fill:C.purple},g),x:90,y:58,back:false,l:1});}
+    for(let k=ser.length-1;k>=0;k--){const p=ser[k];if(!p.back){p.x+=110*dt;if(p.x>=163){if(ht)p.back=true;else{p.c.remove();ser.splice(k,1);continue;}}}else{p.x-=110*dt;p.l-=dt;p.c.setAttribute('opacity',Math.max(0,p.l));if(p.l<=0){p.c.remove();ser.splice(k,1);continue;}}p.c.setAttribute('cx',p.x);p.c.setAttribute('cy',p.y);}
+  });
+},
+quiz:[
+ {q:'The lower EPS liability of many second-generation antipsychotics is attributed in part to:',o:['Stronger D2 blockade','5-HT2A antagonism that increases nigrostriatal dopamine release','Muscarinic agonism','NMDA enhancement'],a:1,e:'Blocking 5-HT2A removes serotonergic inhibition of dopamine release in the nigrostriatal pathway; fast D2 dissociation also contributes for some agents.'},
+ {q:'Which second-generation antipsychotic must be taken with a meal of at least 500 kcal and carries a QTc warning?',o:['Olanzapine','Ziprasidone','Risperidone','Paliperidone'],a:1,e:'Ziprasidone absorption roughly doubles with food and it prolongs QTc.'},
+ {q:'Which agent is associated with the greatest weight gain and metabolic risk among those listed?',o:['Ziprasidone','Lurasidone','Olanzapine','Aripiprazole'],a:2,e:'Olanzapine (with clozapine) carries the highest metabolic risk.'}
+]});
+
+/* ================= MODULE 10 ================= */
+MODS.push({id:'m10',n:10,icon:'\uD83C\uDF9B\uFE0F',title:'Partial Agonists',obj:[6,7],
+sub:'Dopamine stabilizers: a partial agonist dampens signaling when dopamine is high and supports it when dopamine is low. Move the dopamine-tone slider and compare drugs.',
+take:'<ul><li>A D2 <b>partial agonist</b> competes with dopamine and activates the receptor at a fixed fraction of full activity \u2192 it acts as a <b>functional antagonist</b> where dopamine is high (mesolimbic) and a <b>functional agonist</b> where it is very low.</li><li>Aripiprazole, brexpiprazole, cariprazine: low prolactin and metabolic burden; <b>akathisia</b> is the characteristic adverse effect.</li><li>Cariprazine is D3-preferring and has long-lived active metabolites (weeks).</li></ul>',
+faculty:'<p><b>Time:</b> 10\u201315 min. <b>Teaching point:</b> intrinsic activity values here are illustrative; clinical differences also involve 5-HT1A/2A and \u03B1 receptor actions. <b>Discussion:</b> why can switching from a full D2 antagonist to aripiprazole transiently cause activation, akathisia, or withdrawal-like effects? (Cross-taper strategies.)</p>',
+build(ctx){
+  const {svg,ctl}=ctx;
+  const IA=[null,0,.3,.25,.25],OCC=.8;
+  let sel=2,tone=90;
+  const ord=[0,4,2,6,1,5,3,7];
+  const toneColor=()=>tone>75?C.red:tone<30?C.gray:C.blue;
+  const syn=synapse(svg,{n:8,rate:()=>tone/100*8,color:toneColor,ia:()=>IA[sel]||.3,
+    state:i=>sel===0?0:(ord.indexOf(i)<Math.round(OCC*8)?(sel===1?1:2):0),drugN:()=>sel===0?0:8,botLabel:'Postsynaptic D2 receptors \u2014 blue/red/gray glow = receptor activation'});
+  legend(svg,[['red','High dopamine tone'],['blue','Normal'],['gray','Low'],['green','Drug']],446);
+  const DR=['No drug (dopamine only)','Full D2 antagonist (haloperidol-like)','Aripiprazole','Brexpiprazole','Cariprazine'];
+  const FX=[
+   '',
+   '<b>Full antagonist:</b> zero intrinsic activity \u2014 signal can only fall as occupancy rises.',
+   '<b>Aripiprazole:</b> D2 and 5-HT1A partial agonist, 5-HT2A antagonist. AEs: akathisia, activation/insomnia, nausea; impulse-control problems (e.g., gambling). Low metabolic risk; lowers prolactin. Half-life ~75 h. LAIs available. CYP2D6/3A4 dose adjustments.',
+   '<b>Brexpiprazole:</b> D2 partial agonist with lower intrinsic activity than aripiprazole; stronger 5-HT1A partial agonism and 5-HT2A/\u03B11B/\u03B12C antagonism. Akathisia (generally less), modest weight gain. Also adjunct in MDD; agitation in Alzheimer dementia. CYP2D6/3A4 adjustments.',
+   '<b>Cariprazine:</b> <b>D3-preferring</b> D3/D2 partial agonist; 5-HT1A partial agonist. Akathisia and EPS; evidence in predominantly negative symptoms. <b>Active metabolites with very long half-lives (weeks)</b> \u2014 adverse effects can emerge late and persist after stopping. CYP3A4.'];
+  const sat=da=>da/(da+.3);
+  const ext=ctx.extra;ext.className='extra panel';
+  function info(){
+    const da=tone/100*1.2,s0=sat(da),sA=(1-OCC)*s0,ia=IA[sel]==null||sel<2?.3:IA[sel],sP=(1-OCC)*s0+OCC*ia;
+    const verdict=sP<s0-.03?'<span class="tag r">dampens (functional antagonist)</span>':sP>s0+.03?'<span class="tag g">boosts (functional agonist)</span>':'<span class="tag">\u2248 neutral</span>';
+    ext.innerHTML=`<h4 style="margin:0 0 6px">Net D2 signaling at ${Math.round(OCC*100)}% receptor occupancy (teaching model)</h4>${bars([['Dopamine only',s0*100,tone>75?'r':tone<30?'x':''],['Full antagonist',sA*100,'x'],[`Partial agonist (IA ${Math.round(ia*100)}%)`,sP*100,'g']])}<p style="margin:6px 0 0">At this dopamine tone the partial agonist ${verdict}. Signal is pulled toward a fixed intermediate level regardless of tone \u2014 <b>stabilization</b>.</p><p class="muted" style="font-size:12.5px;margin:4px 0 0">Intrinsic-activity (IA) values are illustrative, not measured constants. Mesolimbic hyperactivity \u2248 high tone; mesocortical deficit \u2248 low tone.</p>`;
+    ctx.setInfo(`<h4>${DR[sel]}</h4><p>${FX[sel]||'Receptors are activated whenever dopamine arrives; signaling follows the dopamine tone.'}</p><p><small>Dopamine tone: <b>${tone}%</b> \u2014 ${tone>75?'mesolimbic-like (hyperdopaminergic)':tone<30?'mesocortical-like (hypodopaminergic)':'near normal'}.</small></p>`);
+  }
+  ctlSelect(ctl,'Drug',DR,i=>{sel=i;info();},2);
+  ctlSlider(ctl,'Endogenous dopamine tone',5,100,90,v=>{tone=v;info();},v=>v+'%');
+  ctx.frame((dt,t)=>syn.update(dt,t));
+},
+quiz:[
+ {q:'In a hyperdopaminergic state (e.g., mesolimbic pathway in psychosis), a D2 partial agonist acts as a:',o:['Functional antagonist','Full agonist','Reuptake inhibitor','NMDA agonist'],a:0,e:'It displaces dopamine but activates the receptor only partially, lowering net signaling.'},
+ {q:'Which adverse effect is most characteristic of aripiprazole and cariprazine?',o:['Hyperprolactinemia','Akathisia','Marked weight gain','Agranulocytosis'],a:1,e:'Akathisia is the hallmark adverse effect of the D2 partial agonists; prolactin and metabolic effects are minimal.'},
+ {q:'Which feature distinguishes cariprazine?',o:['Pure 5-HT2A antagonism','D3-preferring partial agonism with very long-lived active metabolites','Muscarinic agonism','NMDA modulation'],a:1,e:'Cariprazine and its metabolites have long half-lives, so adverse effects may emerge late and persist.'}
+]});
+
+/* ================= MODULE 11 ================= */
+MODS.push({id:'m11',n:11,icon:'\uD83E\uDE78',title:'Clozapine Module',obj:[6,7,8],
+sub:'Treatment-resistant schizophrenia, clozapine\u2019s multi-receptor mechanism, its serious risks, and an ANC monitoring dashboard with an interactive ANC interpreter.',
+take:'<ul><li><b>TRS</b> = inadequate response to \u22652 adequate antipsychotic trials (\u22656 weeks, adequate dose, adherence verified). Clozapine is the only antipsychotic with proven superiority in TRS and reduces suicidal behavior.</li><li>Low-affinity, fast-off D2 blockade (few EPS, little prolactin) plus broad receptor actions.</li><li>Key risks: <b>severe neutropenia, myocarditis, seizures, metabolic effects</b>, plus sialorrhea and constipation/ileus.</li><li>ANC monitoring: weekly for 6 months, every 2 weeks for months 6\u201312, then monthly (check current labeling).</li></ul>',
+faculty:'<p><b>Time:</b> 20 min. <b>Teaching point:</b> clozapine is under-used; barriers include monitoring burden and clinician fear. <b>Pearls to quiz:</b> smoking cessation \u2191 levels; fluvoxamine/ciprofloxacin \u2191 levels; re-titrate if &gt;2 days missed; avoid carbamazepine (marrow toxicity); constipation can progress to fatal ileus. <b>Regulatory note:</b> the FDA removed the clozapine REMS program in 2025, but labeling still recommends ANC monitoring \u2014 confirm current requirements for your setting.</p>',
+build(ctx){
+  const {svg,ctl}=ctx;let tab=0,week=4,boxSel=-1,riskSel=0;
+  const G=[el('g',{},svg),el('g',{},svg),el('g',{},svg)];
+  /* tab 0: algorithm + receptor bars */
+  const ALG=[['Confirm diagnosis','& adherence'],['Trial 1','\u22656 wk, adequate dose'],['Trial 2','different drug, \u22656 wk'],['Treatment-resistant','schizophrenia (TRS)'],['Clozapine','only proven drug in TRS']];
+  const ALGI=[
+   '<b>Confirm diagnosis and adherence.</b> Exclude substance use, medical causes, and pseudo-resistance (non-adherence, subtherapeutic dose, drug interactions). Consider plasma levels or long-acting injectables.',
+   '<b>Adequate trial 1.</b> A single antipsychotic at an adequate dose for at least ~6 weeks with adherence verified.',
+   '<b>Adequate trial 2.</b> A second, different antipsychotic (ideally with a different receptor profile) at an adequate dose for \u22656 weeks.',
+   '<b>TRS defined.</b> About 20\u201330% of patients meet criteria. Do not delay clozapine with repeated antipsychotic switches or polypharmacy.',
+   '<b>Clozapine.</b> Start 12.5 mg, titrate slowly; typical dose 300\u2013450 mg/day; trough level target ~350 ng/mL or higher; allow up to ~3\u20136 months for full benefit.'];
+  ALG.forEach((a,i)=>{
+    const x=82+i*159,gg=el('g',{style:'cursor:pointer'},G[0]);
+    const r=el('rect',{x:x-68,y:18,width:136,height:76,rx:12,fill:C.acc,stroke:i===4?C.green:C.blue,'stroke-width':2.5},gg);
+    txt(gg,x,50,a[0],{s:12.5,w:700});txt(gg,x,68,a[1],{s:11,c:C.mut});
+    if(i<4)el('path',{d:`M${x+70},56 L${x+88},56`,stroke:C.mut,'stroke-width':2,'marker-end':'url(#arr)'},G[0]);
+    gg.onclick=()=>{boxSel=i;info();};ALG[i].r=r;
+  });
+  txt(G[0],400,130,'Clozapine receptor profile (relative affinity \u2014 illustrative)',{s:13,w:700});
+  const RP=[['5-HT2A antagonism',5],['H1 antagonism',5],['5-HT2C antagonism',4],['\u03B11 antagonism',4],['M1 muscarinic*',4],['\u03B12 antagonism',3],['D4 antagonism',3],['D2 (low, fast-off)',2]];
+  const rb=RP.map((r,i)=>{const y=148+i*34;txt(G[0],24,y+17,r[0],{a:'start',s:12.5});el('rect',{x:190,y,width:520,height:22,rx:6,fill:'var(--line)'},G[0]);const b=el('rect',{x:190,y,width:0,height:22,rx:6,fill:i===7?C.gray:C.green},G[0]);return{b,t:r[1]/5*520,w:0};});
+  /* tab 1: risk cards */
+  const RK=[
+   ['Severe neutropenia','ANC < 500/\u00B5L','~1% cumulative; peak weeks 4\u201318','r','<h4>Severe neutropenia / agranulocytosis</h4><ul><li><b>Onset:</b> most cases within the first 18 weeks; can occur later.</li><li><b>Mechanism:</b> not fully understood (immune-mediated and/or toxic).</li><li><b>Action:</b> routine ANC monitoring; urgent CBC for fever, sore throat, or infection. If ANC falls, follow the label algorithm and involve hematology; benign ethnic neutropenia (BEN) has adjusted ranges.</li></ul>'],
+   ['Myocarditis','Weeks 1\u20138 (peak ~2\u20134)','~0.1\u20131%; can be fatal','r','<h4>Myocarditis / cardiomyopathy</h4><ul><li><b>Onset:</b> typically the first 4\u20138 weeks; risk rises with rapid titration and valproate co-prescription.</li><li><b>Signs:</b> fever, tachycardia, chest pain, dyspnea, flu-like illness.</li><li><b>Monitoring:</b> baseline troponin/CRP/ECG; weekly CRP and troponin for the first ~4 weeks in many protocols. Stop and refer if markedly elevated (thresholds vary by protocol).</li></ul>'],
+   ['Seizures','Dose-related','~1% at low dose; up to ~5% at high doses','y','<h4>Seizures</h4><ul><li>Dose- and level-dependent (rapid titration, high doses, high plasma levels).</li><li><b>Management:</b> slower titration, dose reduction; add valproate if needed. <b>Avoid carbamazepine</b> (additive marrow toxicity).</li><li>Smoking cessation and CYP1A2 inhibitors raise levels.</li></ul>'],
+   ['Metabolic effects','Weight, lipids, glucose','Among the highest of any antipsychotic','y','<h4>Metabolic and other adverse effects</h4><ul><li><b>Metabolic:</b> weight gain, dyslipidemia, type 2 diabetes \u2014 monitor and treat (metformin helps).</li><li><b>Sialorrhea:</b> very common (sublingual atropine drops, glycopyrrolate).</li><li><b>Constipation / ileus:</b> can be fatal \u2014 treat aggressively.</li><li>Orthostasis, tachycardia, sedation, QTc; <b>abrupt discontinuation</b> \u2192 cholinergic rebound and relapse.</li></ul>']];
+  const cards=RK.map((k,i)=>{
+    const x=20+(i%2)*390,y=18+Math.floor(i/2)*205,gg=el('g',{style:'cursor:pointer'},G[1]);
+    const r=el('rect',{x,y,width:370,height:185,rx:14,fill:C.acc,stroke:k[3]==='r'?C.red:C.amber,'stroke-width':2.5},gg);
+    txt(gg,x+185,y+44,k[0],{s:17,w:800});txt(gg,x+185,y+82,k[1],{s:15,w:600,c:k[3]==='r'?C.red:C.amber});txt(gg,x+185,y+112,k[2],{s:12.5,c:C.mut});
+    txt(gg,x+185,y+156,'tap for details',{s:11,c:C.mut,op:.7});
+    gg.onclick=()=>{riskSel=i;info();};return r;
+  });
+  /* tab 2: ANC timeline */
+  const X=w=>60+w*(680/60);
+  const ancY=100,lanes=[['ANC checks',ancY],['Neutropenia risk',185],['Myocarditis risk',255],['Seizure risk',320],['Metabolic risk',385]];
+  lanes.forEach(l=>txt(G[2],60,l[1]-8,l[0],{a:'start',s:12,w:700,c:C.mut}));
+  el('line',{x1:60,y1:ancY+34,x2:740,y2:ancY+34,stroke:C.line,'stroke-width':2},G[2]);
+  const tick=(w)=>el('rect',{x:X(w)-1.5,y:ancY-2,width:3,height:26,rx:1,fill:C.green},G[2]);
+  for(let w=1;w<=26;w++)tick(w);for(let w=28;w<=52;w+=2)tick(w);for(let w=56;w<=60;w+=4)tick(w);
+  [0,10,20,26,30,40,52,60].forEach(w=>txt(G[2],X(w),ancY+52,w===0?'wk 0':String(w),{s:10.5,c:C.mut}));
+  const band=(w0,w1,y,col,op,h2=24)=>el('rect',{x:X(w0),y,width:X(w1)-X(w0),height:h2,rx:5,fill:col,opacity:op},G[2]);
+  band(2,18,170,C.red,.85);band(18,52,170,C.amber,.4);band(0,8,240,C.red,.5);band(2,4,240,C.red,.9);band(0,60,305,C.amber,.45);
+  for(let k=0;k<12;k++)band(k*5,k*5+5,370,C.amber,.15+k*.06);
+  txt(G[2],X(10),187,'peak risk',{s:11,c:'#fff',w:700});txt(G[2],X(35),187,'persisting lower risk',{s:11,c:C.mut});
+  txt(G[2],X(4),257,'titration window',{s:11,c:C.ink});txt(G[2],X(30),322,'dose / level dependent',{s:11,c:C.ink});txt(G[2],X(30),387,'ongoing \u2014 monitor weight, glucose, lipids',{s:11,c:C.ink});
+  const ph=el('line',{x1:X(4),y1:70,x2:X(4),y2:412,stroke:C.ink,'stroke-width':2.5,'stroke-dasharray':'5 3'},G[2]);
+  const phT=txt(G[2],X(4),62,'wk 4',{s:12,w:700});
+  const ancF=w=>w<=26?'weekly':w<=52?'every 2 weeks':'monthly';
+  const ext=ctx.extra;ext.className='extra panel';
+  ext.innerHTML='<h4 style="margin:0 0 6px">ANC interpreter (educational \u2014 follow the current label and local protocol)</h4><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><label>ANC (cells/\u00B5L) <input class="txt" id="anc" type="number" min="0" max="20000" value="1800" style="width:110px"></label><label><input type="checkbox" id="ben"> Benign ethnic neutropenia (BEN)</label></div><div id="ancout" style="margin-top:8px"></div>';
+  function ancCalc(){
+    const v=+$('#anc',ext).value,ben=$('#ben',ext).checked;let c,t,a;
+    const nl=ben?1000:1500;
+    if(v>=nl){c='g';t='Normal range';a='Continue clozapine and the scheduled ANC monitoring.';}
+    else if(v>=(ben?500:1000)){c='y';t=ben?'Below BEN baseline range':'Mild neutropenia (1000\u20131499)';a='Continue treatment; check ANC three times weekly until back in the normal range, then resume the usual schedule. Look for infection.';}
+    else if(v>=500){c='r';t='Moderate neutropenia (500\u2013999)';a='Interrupt treatment if clozapine-induced neutropenia is suspected; urgent hematology input; daily ANC until \u22651000, then three times weekly until \u22651500.';}
+    else{c='r';t='Severe neutropenia (< 500)';a='Interrupt clozapine; hematology consultation; infection precautions; daily ANC until recovery. Rechallenge only by specialist decision.';}
+    $('#ancout',ext).innerHTML=`<span class="tag ${c}">${t}</span> <span style="font-size:13.5px">${a}</span>`;
+  }
+  $('#anc',ext).oninput=ancCalc;$('#ben',ext).onchange=ancCalc;ancCalc();
+  /* info */
+  function info(){
+    if(tab===0){
+      ALG.forEach((a,i)=>a.r&&a.r.setAttribute('stroke-width',i===boxSel?5:2.5));
+      ctx.setInfo(boxSel>=0?`<h4>${ALG[boxSel][0]} ${ALG[boxSel][1]}</h4><p>${ALGI[boxSel]}</p>`:'<h4>TRS and mechanism</h4><ul><li><b>TRS:</b> inadequate response to \u22652 adequate antipsychotic trials, adherence verified.</li><li><b>Mechanism:</b> low-affinity, fast-dissociating D2 blockade (few EPS, little prolactin) with strong 5-HT2A, plus D4, M1 (the metabolite N-desmethylclozapine is an M1 agonist), \u03B11/\u03B12, H1, and 5-HT2C actions. Why it works better in TRS is unresolved.</li><li><b>Also:</b> reduces suicidal behavior in schizophrenia/schizoaffective disorder.</li><li><b>Dosing pearls:</b> start 12.5 mg and titrate slowly; if &gt;2 days are missed, re-titrate. Smoking induces CYP1A2 (cessation raises levels); fluvoxamine and ciprofloxacin raise levels.</li></ul><p><small>Tap the algorithm boxes. *Bars are illustrative.</small></p>');
+    }else if(tab===1){
+      cards.forEach((r,i)=>r.setAttribute('stroke-width',i===riskSel?6:2.5));ctx.setInfo(RK[riskSel][4]);
+    }else{
+      ph.setAttribute('x1',X(week));ph.setAttribute('x2',X(week));phT.setAttribute('x',X(week));phT.textContent='wk '+week;
+      const risks=[];if(week<=18)risks.push('neutropenia (peak window)');else if(week<=52)risks.push('neutropenia (lower, persisting)');if(week<=8)risks.push('myocarditis (titration window)');risks.push('seizures (dose-related)','metabolic effects (ongoing)');
+      ctx.setInfo(`<h4>Week ${week} of clozapine therapy</h4><p><span class="tag g">ANC monitoring: ${ancF(week)}</span></p><p><b>Active risk windows:</b> ${risks.join('; ')}.</p><ul><li>Baseline ANC must be in the acceptable range (\u22651500; BEN \u22651000) before starting.</li><li>Weekly for 6 months \u2192 every 2 weeks for months 6\u201312 \u2192 monthly thereafter if ANC stays normal.</li><li>Myocarditis surveillance (CRP, troponin) concentrates in the first ~4 weeks; ask about fever and chest symptoms.</li></ul><p><small>Schedule reflects labeling; the clozapine REMS was removed in 2025 but ANC monitoring remains recommended. Verify current requirements.</small></p>`);
+    }
+  }
+  const sub=h('div',{class:'ctls'});
+  ctlTabs(ctl,['TRS & mechanism','Safety risks','ANC monitoring'],i=>{tab=i;G.forEach((g,k)=>{g.style.display=k===i?'':'none';});ext.style.display=i===2?'':'none';sub.innerHTML='';if(i===2)ctlSlider(sub,'Week of therapy',0,60,week,v=>{week=v;info();},v=>'wk '+v);info();});
+  ctl.append(sub);
+  ctx.frame((dt,t)=>{
+    if(tab===0)rb.forEach(r=>{r.w=lerp(r.w,r.t,dt*3);r.b.setAttribute('width',r.w);});
+    if(tab===1)cards.forEach((c,i)=>c.setAttribute('opacity',i===riskSel?.8+.2*Math.sin(t*4):1));
+  });
+},
+quiz:[
+ {q:'Treatment-resistant schizophrenia is generally defined as failure of:',o:['One antipsychotic trial of 2 weeks','At least two adequate antipsychotic trials (adequate dose, \u2265~6 weeks, adherence verified)','Any three medications of any class','Psychotherapy alone'],a:1,e:'Clozapine should be considered after two adequate trials; avoid prolonged antipsychotic polypharmacy first.'},
+ {q:'Per labeling, which ANC monitoring schedule applies to a patient with a normal ANC on clozapine?',o:['Monthly from day 1','Weekly for 6 months, every 2 weeks for months 6\u201312, then monthly','Only at baseline','Daily for the first month'],a:1,e:'Weekly (first 6 months) \u2192 every 2 weeks (months 6\u201312) \u2192 monthly thereafter, while ANC remains normal.'},
+ {q:'Clozapine-associated myocarditis most often presents:',o:['After 5 years of treatment','Within the first 4\u20138 weeks, especially with rapid titration','Only after abrupt discontinuation','Only in patients over 70'],a:1,e:'Early myocarditis risk is the rationale for slow titration and troponin/CRP surveillance in the first weeks.'}
+]});
+
+/* ================= MODULE 12 ================= */
+function person(parent,x,y,sc){
+  const root=el('g',{transform:`translate(${x},${y}) scale(${sc})`},parent);
+  const st={stroke:C.ink,'stroke-width':9,'stroke-linecap':'round','stroke-linejoin':'round',fill:'none'};
+  const mk=(tag,a,p)=>el(tag,{...st,...a},p);
+  const legL=el('g',{},root),legR=el('g',{},root),body=el('g',{},root);
+  mk('path',{d:'M0,0 L0,100 L16,100'},legL);mk('path',{d:'M0,0 L0,100 L16,100'},legR);
+  mk('line',{x1:0,y1:0,x2:0,y2:-110},body);
+  const armL=el('g',{},body),armR=el('g',{},body);
+  mk('line',{x1:0,y1:-95,x2:-8,y2:-20},armL);mk('line',{x1:0,y1:-95,x2:8,y2:-20},armR);
+  const head=el('g',{},body);
+  el('circle',{cx:0,cy:-138,r:26,fill:C.acc,stroke:C.ink,'stroke-width':4},head);
+  const eyes=[-9,9].map(dx=>el('circle',{cx:dx,cy:-142,r:3.5,fill:C.ink},head));
+  const mouth=el('path',{d:'M-9,-126 Q0,-120 9,-126',fill:'none',stroke:C.ink,'stroke-width':3,'stroke-linecap':'round'},head);
+  const rot=(g,a,px,py)=>g.setAttribute('transform',`rotate(${a} ${px} ${py})`);
+  return{root,set(o){rot(body,o.lean||0,0,0);rot(head,o.head||0,0,-112);rot(armL,o.armL||0,0,-95);rot(armR,o.armR||0,0,-95);rot(legL,o.legL||0,0,0);rot(legR,o.legR||0,0,0);eyes.forEach(e=>e.setAttribute('cy',-142+(o.eyeUp||0)));mouth.setAttribute('d',o.mouth||'M-9,-126 Q0,-120 9,-126');}};
+}
+const DRUGS=[
+ ['Haloperidol','FGA',4,3,1,1,2,1],['Chlorpromazine','FGA',2,3,3,4,2,4],['Fluphenazine','FGA',4,3,1,1,1,1],
+ ['Risperidone','SGA',2,4,2,1,1,2],['Paliperidone','SGA',2,4,2,1,1,2],['Olanzapine','SGA',1,1,4,3,1,1],['Quetiapine','SGA',0,0,3,4,2,3],
+ ['Ziprasidone','SGA',1,1,1,1,3,1],['Lurasidone','SGA',2,1,1,2,0,1],['Aripiprazole','Partial agonist',1,0,1,1,0,1],['Brexpiprazole','Partial agonist',1,1,2,2,0,1],
+ ['Cariprazine','Partial agonist',2,0,1,1,0,0],['Clozapine','SGA',0,1,4,4,2,4]];
+MODS.push({id:'m12',n:12,icon:'\u26A0\uFE0F',title:'Adverse Effects Lab',obj:[8],
+sub:'Visualize EPS (acute dystonia, akathisia, parkinsonism, tardive dyskinesia), endocrine effects (hyperprolactinemia), and metabolic/QTc effects. Adjust severity and compare drug profiles.',
+take:'<ul><li><b>Timing:</b> dystonia (hours\u2013days) \u2192 akathisia (days\u2013weeks) \u2192 parkinsonism (weeks) \u2192 tardive dyskinesia (months\u2013years).</li><li><b>Rescue:</b> dystonia \u2192 IM/IV anticholinergic (benztropine) or diphenhydramine; parkinsonism \u2192 reduce dose/switch (anticholinergic short-term); akathisia \u2192 lower dose, propranolol, mirtazapine; TD \u2192 VMAT2 inhibitor (valbenazine, deutetrabenazine).</li><li>Hyperprolactinemia: D2 blockade in the tuberoinfundibular pathway \u2192 switch/add a prolactin-sparing agent (e.g., aripiprazole).</li><li>Monitor metabolic parameters and ECG per consensus guidelines.</li></ul>',
+faculty:'<p><b>Time:</b> 20 min. <b>Teaching point:</b> map each effect to onset, mechanism, and a specific first-line action. Use the comparator table to match patient risk factors to drug choice. <b>Misconception:</b> anticholinergics treat TD (they can worsen it). <b>Assessment tie-in:</b> AIMS exam technique and baseline/follow-up schedule.</p>',
+build(ctx){
+  const {svg,ctl}=ctx;let tab=0,sev=70;
+  const G=[0,1,2,3,4,5].map(()=>el('g',{},svg));
+  const P=[person(G[0],400,255,1.5),person(G[1],400,255,1.5),person(G[2],400,255,1.5)];
+  const rays=[0,1,2].map(i=>el('path',{d:`M${436+i*16},${108-i*16} l22,${-8-i*4}`,stroke:C.red,'stroke-width':4,'stroke-linecap':'round'},G[0]));
+  txt(G[0],40,50,'Torticollis + oculogyric crisis',{a:'start',s:15,w:700});txt(G[0],40,72,'Sustained, painful muscle contraction',{a:'start',s:12,c:C.mut});
+  const bub=el('ellipse',{cx:640,cy:100,rx:120,ry:42,fill:C.acc,stroke:C.ink},G[1]);txt(G[1],640,96,'"I can\u2019t sit still"',{s:14,w:700});txt(G[1],640,115,'inner restlessness',{s:11.5,c:C.mut});
+  txt(G[1],40,50,'Akathisia',{a:'start',s:15,w:700});txt(G[1],40,72,'Subjective restlessness + pacing, rocking, leg-swinging',{a:'start',s:12,c:C.mut});
+  txt(G[2],40,50,'Drug-induced parkinsonism',{a:'start',s:15,w:700});txt(G[2],40,72,'Tremor \u00B7 rigidity \u00B7 bradykinesia \u00B7 masked face \u00B7 shuffling gait',{a:'start',s:12,c:C.mut});
+  /* TD face */
+  txt(G[3],40,50,'Tardive dyskinesia',{a:'start',s:15,w:700});txt(G[3],40,72,'Orofacial: lip smacking, tongue protrusion, chewing',{a:'start',s:12,c:C.mut});
+  el('circle',{cx:400,cy:235,r:150,fill:C.acc,stroke:C.ink,'stroke-width':4},G[3]);
+  [350,450].forEach(x=>{el('circle',{cx:x,cy:190,r:10,fill:C.ink},G[3]);});
+  const chL=el('circle',{cx:305,cy:265,r:20,fill:'var(--brain)',opacity:.7},G[3]),chR=el('circle',{cx:495,cy:265,r:20,fill:'var(--brain)',opacity:.7},G[3]);
+  const mouth=el('ellipse',{cx:400,cy:305,rx:48,ry:10,fill:'#5a1f2b',stroke:C.ink,'stroke-width':3},G[3]);
+  const tongue=el('ellipse',{cx:400,cy:312,rx:22,ry:14,fill:C.pink,stroke:C.ink,'stroke-width':2},G[3]);
+  /* hyperprolactinemia */
+  const ord6=[0,3,1,4,2,5],prl=[];let pa=0;
+  const syn=synapse(svg,{n:6,rate:()=>6,color:()=>C.blue,state:i=>ord6.indexOf(i)<Math.round(sev/100*6)?1:0,drugN:()=>Math.round(sev/12),topLabel:'Hypothalamic dopamine neuron terminal (median eminence)',botLabel:'Anterior pituitary lactotroph \u2014 D2 receptors'});
+  G[4].append(syn.g);
+  const prT=txt(G[4],400,452,'',{s:12.5,w:700,c:C.pink});
+  /* metabolic bars */
+  txt(G[5],400,34,'Mean weight gain at ~10 weeks, kg (Allison 1999 meta-analysis; approximate)',{s:13,w:700});
+  const W=[['Clozapine',4.45],['Olanzapine',4.15],['Chlorpromazine',3.19],['Risperidone',2.10],['Haloperidol',1.08],['Ziprasidone',.04]];
+  const wb=W.map((w,i)=>{const y=66+i*58;txt(G[5],20,y+19,w[0],{a:'start',s:13,w:600});el('rect',{x:160,y,width:560,height:26,rx:6,fill:'var(--line)'},G[5]);const r=el('rect',{x:160,y,width:0,height:26,rx:6,fill:i<2?C.red:i<4?C.amber:C.blue},G[5]);const v=txt(G[5],728,y+19,w[1].toFixed(2)+' kg',{a:'start',s:12,w:700});return{r,t:w[1]*115,w:0};});
+  const INFO=[
+   '<h4>Acute dystonia</h4><p><span class="tag r">Onset: hours\u2013days</span></p><ul><li><b>Presentation:</b> torticollis/retrocollis, oculogyric crisis, trismus, opisthotonus; <b>laryngeal dystonia is an airway emergency</b>.</li><li><b>Risk:</b> young males, high-potency FGAs (haloperidol), IM/high dose, prior dystonia, cocaine use.</li><li><b>Mechanism:</b> acute nigrostriatal D2 blockade with dopamine\u2013acetylcholine imbalance.</li><li><b>Treatment:</b> benztropine 1\u20132 mg IM/IV or diphenhydramine 25\u201350 mg IM/IV; then reassess dose, consider switching.</li></ul>',
+   '<h4>Akathisia</h4><p><span class="tag y">Onset: days\u2013weeks</span></p><ul><li><b>Presentation:</b> inner restlessness with pacing, rocking, inability to sit. Distressing; linked to dysphoria and non-adherence.</li><li><b>Risk:</b> high-potency FGAs, aripiprazole/cariprazine/lurasidone, rapid titration.</li><li><b>Treatment:</b> reduce dose or switch; propranolol 10\u201320 mg two to three times daily; low-dose mirtazapine; short-term benzodiazepine. Anticholinergics are less effective unless parkinsonism coexists.</li><li><b>Differentiate</b> from psychotic agitation or anxiety \u2014 increasing the antipsychotic can worsen akathisia.</li></ul>',
+   '<h4>Drug-induced parkinsonism</h4><p><span class="tag y">Onset: days\u2013weeks (up to ~3 months)</span></p><ul><li><b>Presentation:</b> bradykinesia, cogwheel rigidity, resting (pill-rolling) tremor, masked facies, shuffling gait, postural instability.</li><li><b>Risk:</b> older age, female sex, high-potency FGAs, high D2 occupancy (&gt;~80%).</li><li><b>Mechanism:</b> nigrostriatal D2 blockade.</li><li><b>Treatment:</b> reduce dose or switch to a lower-risk SGA; short-term anticholinergic (benztropine) or amantadine; avoid prolonged anticholinergic use (cognitive and anticholinergic burden).</li></ul>',
+   '<h4>Tardive dyskinesia</h4><p><span class="tag r">Onset: months\u2013years</span></p><ul><li><b>Presentation:</b> involuntary orofacial movements (lip smacking, tongue protrusion), choreoathetoid limb or truncal movements; can be irreversible.</li><li><b>Risk:</b> older age, female sex, long exposure, prior EPS, diabetes, substance use. Annual incidence ~5% with FGAs; lower with SGAs.</li><li><b>Mechanism:</b> proposed D2 receptor supersensitivity and maladaptive striatal plasticity.</li><li><b>Treatment:</b> <b>VMAT2 inhibitors (valbenazine, deutetrabenazine)</b>; use the lowest effective antipsychotic dose or switch (clozapine has the lowest risk). Anticholinergics may worsen TD.</li><li><b>Screening:</b> AIMS at baseline and regularly (e.g., every 6\u201312 months; more often in high-risk patients).</li></ul>',
+   null,
+   '<h4>Metabolic effects and QTc</h4><ul><li><b>Highest metabolic risk:</b> clozapine, olanzapine; moderate: quetiapine, risperidone, chlorpromazine; lower: aripiprazole, lurasidone, ziprasidone.</li><li><b>Monitor (consensus guidelines):</b> weight/BMI at baseline, 4, 8, 12 weeks, then quarterly; waist circumference, blood pressure, fasting glucose/A1c, and lipids at baseline, ~12 weeks, then at least annually.</li><li><b>Manage:</b> lifestyle intervention, metformin, switch to a weight-neutral agent.</li><li><b>QTc:</b> highest concern with ziprasidone, IV haloperidol, thioridazine; obtain a baseline ECG when risk factors exist; QTc &gt; 500 ms warrants action.</li></ul>'];
+  function info(){
+    if(tab===4){
+      const prl2=Math.round(15+sev*1.9);
+      ctx.setInfo(`<h4>Hyperprolactinemia</h4><p><span class="tag y">Onset: weeks</span> <span class="tag">illustrative prolactin \u2248 ${prl2} ng/mL</span></p><ul><li><b>Mechanism:</b> dopamine from the tuberoinfundibular pathway normally inhibits lactotrophs via D2 receptors; blockade \u2192 prolactin \u2191.</li><li><b>Women:</b> galactorrhea, oligo/amenorrhea, infertility, vaginal dryness. <b>Men:</b> gynecomastia, erectile dysfunction, low libido. <b>Both:</b> reduced bone density long term.</li><li><b>Highest risk:</b> risperidone, paliperidone, FGAs. <b>Lowest:</b> aripiprazole (can lower prolactin), quetiapine, clozapine.</li><li><b>Workup:</b> pregnancy test, TSH, renal function, review other drugs; consider macroprolactin and pituitary imaging if very high.</li><li><b>Management:</b> reduce dose, switch to a prolactin-sparing agent, or add low-dose aripiprazole; dopamine agonists are a less favored option (risk of psychosis worsening).</li></ul>`);
+    }else ctx.setInfo(INFO[tab]);
+  }
+  const U=[
+   (dt,t)=>{const s=sev/100;P[0].set({head:-38*s*(1+.05*Math.sin(t*6)),lean:-3*s,eyeUp:-8*s,mouth:'M-9,-124 Q0,-128 9,-124'});rays.forEach((r,i)=>r.setAttribute('opacity',s*(.4+.6*Math.abs(Math.sin(t*5+i)))));},
+   (dt,t)=>{const s=sev/100,a=8+22*s;P[1].set({legL:Math.sin(t*4)*a,legR:-Math.sin(t*4)*a,lean:Math.sin(t*2)*4*s,armL:Math.sin(t*5)*12*s,armR:-Math.sin(t*5)*12*s});bub.setAttribute('opacity',.4+.6*s);},
+   (dt,t)=>{const s=sev/100;P[2].set({lean:14*s,head:9*s,armR:Math.sin(t*31)*(3+7*s),armL:0,legL:Math.sin(t*2.5)*4,legR:-Math.sin(t*2.5)*4,mouth:'M-9,-125 L9,-125'});},
+   (dt,t)=>{const s=sev/100,o=(.5+.5*Math.sin(t*5))*s,pr=Math.max(0,Math.sin(t*5-1.2))*s;mouth.setAttribute('ry',8+26*o);tongue.setAttribute('cy',312+pr*38);tongue.setAttribute('ry',14+pr*18);const p=18+10*s*(.5+.5*Math.sin(t*2.5));chL.setAttribute('r',p);chR.setAttribute('r',p);},
+   (dt,t)=>{syn.update(dt,t);pa+=(.25+sev/100*9)*dt;while(pa>=1){pa--;prl.push({c:el('circle',{r:5,fill:C.pink},G[4]),x:240+Math.random()*320,y:385});}for(let k=prl.length-1;k>=0;k--){const p=prl[k];p.y+=70*dt;if(p.y>440){p.c.remove();prl.splice(k,1);continue;}p.c.setAttribute('cx',p.x);p.c.setAttribute('cy',p.y);}prT.textContent=sev>55?'\u2191 prolactin \u2192 breast, gonads, bone':'';},
+   (dt)=>{wb.forEach(w=>{w.w=lerp(w.w,w.t,dt*3);w.r.setAttribute('width',Math.max(0,w.w));});}
+  ];
+  const sub=h('div',{class:'ctls'});
+  const LB=['Dystonia severity','Restlessness severity','Parkinsonism severity','Dyskinesia severity','D2 blockade at pituitary',null];
+  ctlTabs(ctl,['Dystonia','Akathisia','Parkinsonism','Tardive dysk.','Prolactin','Metabolic/QTc'],i=>{tab=i;G.forEach((g,k)=>{g.style.display=k===i?'':'none';});sub.innerHTML='';if(LB[i])ctlSlider(sub,LB[i],0,100,sev,v=>{sev=v;info();},v=>v+'%');info();});
+  ctl.append(sub);
+  const ext=ctx.extra;ext.className='extra panel tscroll';
+  const dots=v=>`<span class="dots ${v>=3?'r':v===2?'w':''}">${[1,2,3,4].map(k=>`<i class="${k<=v?'f':''}"></i>`).join('')}</span>`;
+  ext.innerHTML='<h4 style="margin:0 0 6px">Relative adverse-effect profile (population-level, approximate)</h4><table class="t"><tr><th>Drug</th><th>Class</th><th>EPS</th><th>Prolactin</th><th>Metabolic</th><th>Sedation</th><th>QTc</th><th>Orthostasis</th></tr>'+DRUGS.map(d=>`<tr><td><b>${d[0]}</b></td><td>${d[1]}</td>${d.slice(2).map(v=>`<td>${dots(v)}</td>`).join('')}</tr>`).join('')+'</table><p class="muted" style="font-size:12.5px;margin:6px 0 0">Scale: 0 = minimal, 4 = highest. Teaching summary of general tendencies; individual risk varies with dose, age, sex, and comorbidity.</p>';
+  ctx.frame((dt,t)=>U[tab](dt,t));
+},
+quiz:[
+ {q:'Which extrapyramidal reaction appears earliest, typically within hours to days of starting a high-potency antipsychotic?',o:['Tardive dyskinesia','Acute dystonia','Parkinsonism','Neuroleptic malignant syndrome only'],a:1,e:'Acute dystonia usually occurs within the first days; parkinsonism takes days to weeks and TD months to years.'},
+ {q:'First-line treatment for acute dystonia is:',o:['An IM/IV anticholinergic (benztropine) or diphenhydramine','Propranolol PO','Valbenazine','Increasing the antipsychotic dose'],a:0,e:'Parenteral anticholinergic or antihistamine resolves dystonia within minutes.'},
+ {q:'Antipsychotic-induced hyperprolactinemia results from:',o:['D2 blockade on pituitary lactotrophs (tuberoinfundibular pathway)','5-HT2A agonism','Muscarinic blockade','Histamine H1 blockade'],a:0,e:'Dopamine tonically inhibits prolactin release; D2 blockade removes this brake.'},
+ {q:'Which medication class is FDA-approved for treating tardive dyskinesia?',o:['VMAT2 inhibitors (valbenazine, deutetrabenazine)','Anticholinergics','Benzodiazepines','Beta-blockers'],a:0,e:'VMAT2 inhibitors are approved for TD; anticholinergics can worsen it.'}
+]});
+
+/* ================= MODULE 13 ================= */
+MODS.push({id:'m13',n:13,icon:'\uD83D\uDCCB',title:'Clinical Cases',obj:[9],noStage:true,
+sub:'Apply the pharmacology to six patient scenarios. Work through each vignette using the framework below.',
+faculty:'<p><b>Time:</b> 20\u201330 min as small-group work. Have teams commit to an answer before revealing the rationale, then compare second-best options. Add follow-up questions: monitoring plan, counseling points, interactions.</p>',
+build(ctx){
+  ctx.setInfo('<h4>Case approach framework</h4><div class="cards" style="margin-top:6px"><div class="panel"><b>1. Symptom domain</b><br><small>Positive, negative, cognitive, mood, agitation?</small></div><div class="panel"><b>2. Treatment history</b><br><small>Prior drugs, doses, duration, adherence, levels.</small></div><div class="panel"><b>3. Risk profile</b><br><small>Metabolic, QTc, prolactin, EPS risk, pregnancy, substance use.</small></div><div class="panel"><b>4. Mechanism-based choice</b><br><small>Match receptor profile to benefits and risks.</small></div><div class="panel"><b>5. Monitoring and rescue</b><br><small>Baseline labs, ECG, AIMS, plan for adverse effects.</small></div></div>');
+},
+quiz:[
+ {q:'<b>Case 1 \u2014 First episode.</b>\nA 24-year-old man has 6 weeks of auditory hallucinations and persecutory delusions. BMI 34, fasting glucose 108 mg/dL, strong family history of type 2 diabetes. He is worried about weight gain.\nWhich first-line choice best fits his priorities?',o:['Olanzapine','Quetiapine','Aripiprazole','Chlorpromazine'],a:2,e:'Aripiprazole has low metabolic and prolactin liability. Olanzapine, quetiapine, and chlorpromazine carry higher weight/metabolic risk (lurasidone or ziprasidone are other lower-metabolic options). Shared decision-making with baseline metabolic monitoring is key.'},
+ {q:'<b>Case 2 \u2014 Day 2 on haloperidol 5 mg.</b>\nA 22-year-old man develops painful twisting of the neck to the right with upward eye deviation. Vitals are stable and there is no stridor.\nBest immediate treatment?',o:['Benztropine 1\u20132 mg IM','Propranolol orally','Valbenazine','Observe without treatment'],a:0,e:'This is acute dystonia; a parenteral anticholinergic (or diphenhydramine) gives rapid relief. Reassess the dose and drug choice afterward.'},
+ {q:'<b>Case 3 \u2014 Risperidone.</b>\nA 35-year-old woman on risperidone 6 mg/day with good symptom control reports 4 months of amenorrhea and galactorrhea. Pregnancy test is negative; prolactin is 85 ng/mL.\nBest next step?',o:['Add benztropine','Increase risperidone','Switch to, or add, a prolactin-sparing agent such as aripiprazole','Switch to haloperidol'],a:2,e:'Risperidone raises prolactin via tuberoinfundibular D2 blockade. Switching to aripiprazole (or adding low-dose aripiprazole) lowers prolactin while maintaining control. Haloperidol also raises prolactin; anticholinergics do not help.'},
+ {q:'<b>Case 4 \u2014 Persistent psychosis.</b>\nA 42-year-old woman has ongoing hallucinations despite olanzapine 20 mg/day for 8 weeks and risperidone 6 mg/day for 8 weeks. Adherence is confirmed with therapeutic plasma levels.\nBest next step?',o:['Add a second antipsychotic to olanzapine','Switch to haloperidol decanoate','Begin clozapine with ANC monitoring','Increase risperidone to 12 mg/day'],a:2,e:'She meets criteria for treatment-resistant schizophrenia (two adequate trials with verified adherence). Clozapine is the evidence-based next step.'},
+ {q:'<b>Case 5 \u2014 Smoke-free ward.</b>\nA 50-year-old man stable on clozapine 400 mg/day is admitted to a smoke-free unit. By day 5 he is markedly sedated, tachycardic, drooling, with a myoclonic jerk.\nMost likely explanation?',o:['Clozapine-induced agranulocytosis','Rising clozapine levels after abrupt smoking cessation (loss of CYP1A2 induction)','Tardive dyskinesia','Acute dystonia'],a:1,e:'Tobacco smoke induces CYP1A2; stopping smoking can raise clozapine levels substantially (~50%), causing toxicity. Check a level and reduce the dose.'},
+ {q:'<b>Case 6 \u2014 Long-term haloperidol.</b>\nA 58-year-old man on haloperidol for 14 years has rhythmic tongue protrusion and lip smacking; AIMS is positive.\nBesides reviewing the antipsychotic, which intervention is most appropriate?',o:['Add benztropine','Start a VMAT2 inhibitor (valbenazine or deutetrabenazine)','Increase haloperidol','Start metoclopramide'],a:1,e:'This is tardive dyskinesia. VMAT2 inhibitors are the approved treatment; anticholinergics can worsen TD, and dopamine blockers (haloperidol, metoclopramide) may aggravate it.'}
+]});
+
+/* ================= PAGES ================= */
+function pageHome(){
+  const dn=MODS.filter(m=>S.done[m.id]).length;
+  const nextI=MODS.findIndex(m=>!S.done[m.id]);
+  const hero=h('div',{class:'hero'});
+  hero.innerHTML=`<div class="mnum">Interactive medical-education simulator</div><h1>Schizophrenia Pathophysiology &amp; Pharmacology Simulator</h1><div class="byline">Hafeez Faridi Ph.D.</div><p class="sub">Explore dopamine and glutamate circuits, symptom domains, antipsychotic mechanisms, and adverse effects through animated, interactive models. Built for PharmD, medical, PA, resident, and fellow learners. Works offline in a single file.</p><div class="legend"><span class="lg"><i style="background:var(--blue)"></i>Blue = normal signaling</span><span class="lg"><i style="background:var(--red)"></i>Red = excess dopamine</span><span class="lg"><i style="background:var(--gray)"></i>Gray = dopamine deficiency</span><span class="lg"><i style="background:var(--green)"></i>Green = drug action</span></div>`;
+  const row=h('div',{class:'tabs'});
+  const b1=h('button',{class:'btn pri'},dn===0?'\u25B6 Start Module 1':nextI>=0?`\u25B6 Continue: Module ${nextI+1}`:'\u2713 All modules complete');b1.onclick=()=>go('mod',nextI>=0?nextI:0);
+  const b2=h('button',{class:'btn'},'\uD83D\uDCDD Take the final quiz');b2.onclick=()=>go('final');
+  const b3=h('button',{class:'btn'},'\uD83D\uDCCA Progress');b3.onclick=()=>go('progress');
+  row.append(b1,b2,b3);hero.append(row);
+  hero.append(h('p',{class:'muted',style:'font-size:13px;margin:10px 0 0',html:'<b>Student mode</b> shows the simulations, takeaways, and quizzes with immediate feedback. <b>Faculty mode</b> (top bar) adds teaching notes, answer keys, and rationales. Progress is saved in your browser.'}));
+  main.append(hero);
+  const ob=h('div',{class:'panel',style:'margin-top:14px'});
+  ob.innerHTML='<h3 style="margin:0 0 6px">Learning objectives</h3><ol style="margin:0;padding-left:1.3em">'+OBJ.map((o,i)=>`<li style="margin:3px 0">${o} <span class="muted">\u2014 ${MODS.filter(m=>m.obj.includes(i+1)).map(m=>'M'+m.n).join(', ')}</span></li>`).join('')+'</ol>';
+  main.append(ob);
+  main.append(h('h3',{style:'margin:18px 0 0'},'Modules'));
+  const cards=h('div',{class:'cards'});
+  MODS.forEach((m,i)=>{const c=h('button',{class:'card mc'});c.innerHTML=`<span style="font-size:24px">${m.icon}</span><b>${m.n}. ${m.title}</b><small>${S.done[m.id]?`<span class="ok">\u2713 Complete</span> \u00B7 best ${S.best[m.id]||0}/${m.quiz.length}`:S.visited[m.id]?'In progress':'Not started'}</small>`;c.onclick=()=>go('mod',i);cards.append(c);});
+  main.append(cards);
+  main.append(h('div',{class:'disc',html:'<b>Educational use only.</b> This simulator uses simplified models, approximate figures, and illustrative values; it does not provide patient-specific dosing or clinical advice. Always verify against current prescribing information, guidelines, and local protocols.'}));
+}
+function bestPct(){return S.attempts.length?Math.max(...S.attempts.map(a=>a.pct)):0;}
+function pageProgress(){
+  const dn=MODS.filter(m=>S.done[m.id]).length;
+  main.append(h('h2',{},'\uD83D\uDCCA Progress Tracker'));
+  const top=h('div',{class:'panel'});
+  top.innerHTML=`<div class="pbar" style="height:14px"><i style="width:${dn/MODS.length*100}%"></i></div><p style="margin:8px 0 0"><b>${dn} of ${MODS.length}</b> modules complete \u00B7 Best final-exam score: <b>${S.attempts.length?bestPct()+'%':'\u2014'}</b></p>`;
+  main.append(top);
+  const t=h('div',{class:'panel tscroll',style:'margin-top:12px'});
+  t.innerHTML='<table class="t"><tr><th>Module</th><th>Status</th><th>Best quiz score</th><th></th></tr>'+MODS.map((m,i)=>`<tr><td>${m.icon} ${m.n}. ${m.title}</td><td>${S.done[m.id]?'<span class="tag g">Complete</span>':S.visited[m.id]?'<span class="tag y">In progress</span>':'<span class="tag">Not started</span>'}</td><td>${S.done[m.id]?`${S.best[m.id]||0} / ${m.quiz.length}`:'\u2014'}</td><td><button class="btn" data-m="${i}">Open</button></td></tr>`).join('')+'</table>';
+  main.append(t);$$('[data-m]',t).forEach(b=>b.onclick=()=>go('mod',+b.dataset.m));
+  const oc=h('div',{class:'panel',style:'margin-top:12px'});
+  oc.innerHTML='<h4 style="margin:0 0 6px">Learning-objective coverage</h4>'+OBJ.map((o,i)=>{const ms=MODS.filter(m=>m.obj.includes(i+1));const d=ms.filter(m=>S.done[m.id]).length;return `<div class="brow" style="grid-template-columns:1fr 120px 48px"><span>${i+1}. ${o}</span><div class="btrack"><i class="g" style="width:${d/ms.length*100}%"></i></div><b>${d}/${ms.length}</b></div>`;}).join('');
+  main.append(oc);
+  const at=h('div',{class:'panel',style:'margin-top:12px'});
+  at.innerHTML='<h4 style="margin:0 0 6px">Final-exam attempts</h4>'+(S.attempts.length?'<table class="t"><tr><th>Date</th><th>Score</th><th>%</th></tr>'+S.attempts.slice().reverse().map(a=>`<tr><td>${new Date(a.d).toLocaleString()}</td><td>${a.sc} / ${a.tot}</td><td>${a.pct}%</td></tr>`).join('')+'</table>':'<p class="muted">No attempts yet.</p>');
+  main.append(at);
+}
+function pageFinal(){
+  main.append(h('h2',{},'\uD83D\uDCDD Quiz Mode \u2014 Final Exam'),h('p',{class:'sub'},'Questions are drawn from every module and the clinical cases and are shuffled each attempt. Score 70% or higher (with all modules complete) to unlock your certificate.'));
+  const pool=[];MODS.forEach(m=>m.quiz.forEach(q=>pool.push({...q,mod:m.n})));
+  const bar=h('div',{class:'panel'});bar.append(h('b',{},'Choose length: '));
+  const qbox=h('div',{class:'quiz panel',style:'display:none'});
+  [10,20,pool.length].forEach((n,i)=>{const b=h('button',{class:'btn',style:'margin-left:6px'},i===2?`All ${n} questions`:`${n} questions`);b.onclick=()=>run(n);bar.append(b);});
+  main.append(bar,qbox);
+  function run(n){
+    qbox.style.display='';
+    const qs=shuffle(pool.slice()).slice(0,n);
+    renderQuiz(qbox,qs,{shuffle:true,title:`Final exam \u2014 ${n} questions`,onDone:(sc,tot,res,d)=>{
+      const pct=Math.round(sc/tot*100);S.attempts.push({d:Date.now(),sc,tot,pct});S.attempts=S.attempts.slice(-30);save();
+      const miss=[...new Set(res.filter(r=>!r.ok).map(r=>r.mod))].sort((a,b)=>a-b);
+      d.append(h('p',{html:miss.length?`<b>Review:</b> ${miss.map(x=>`Module ${x}`).join(', ')}`:'<b>No modules to review.</b>'}));
+      chrome();
+    }});
+    qbox.scrollIntoView({behavior:'smooth'});
+  }
+  if(S.attempts.length){const a=S.attempts[S.attempts.length-1];main.append(h('p',{class:'muted',html:`Last attempt: <b>${a.sc}/${a.tot} (${a.pct}%)</b> \u00B7 Best: <b>${bestPct()}%</b>`}));}
+}
+function pageCert(){
+  const all=MODS.every(m=>S.done[m.id]),best=bestPct(),ok=all&&best>=70;
+  main.append(h('h2',{},'\uD83C\uDF93 Completion Certificate'));
+  if(!ok){
+    const p=h('div',{class:'panel'});
+    p.innerHTML=`<p>Complete the requirements below to unlock your certificate.</p><ul><li>${all?'\u2713':'\u2717'} All ${MODS.length} module quizzes completed (${MODS.filter(m=>S.done[m.id]).length}/${MODS.length})</li><li>${best>=70?'\u2713':'\u2717'} Final exam score \u2265 70% (best so far: ${S.attempts.length?best+'%':'\u2014'})</li></ul>`;
+    const b=h('button',{class:'btn pri'},'Go to final exam');b.onclick=()=>go('final');p.append(b);main.append(p);return;
+  }
+  const row=h('div',{class:'panel'});
+  const inp=h('input',{class:'txt',placeholder:'Enter your name for the certificate',value:S.name||'',style:'min-width:260px'});
+  const pr=h('button',{class:'btn pri',style:'margin-left:8px'},'\uD83D\uDDA8 Print / Save as PDF');pr.onclick=()=>window.print();
+  row.append(inp,pr);main.append(row);
+  const cert=h('div',{class:'cert'});main.append(cert);
+  function draw(){cert.innerHTML=`<div style="letter-spacing:.2em;font-size:13px">CERTIFICATE OF COMPLETION</div><h1>Schizophrenia Pathophysiology &amp; Pharmacology Simulator</h1><div style="font-size:15px;font-weight:600;margin:-4px 0 10px">Hafeez Faridi Ph.D.</div><p>This certifies that</p><div class="nm">${(S.name||'Learner').replace(/</g,'&lt;')}</div><p>has completed all ${MODS.length} interactive modules and passed the final assessment<br>with a best score of <b>${best}%</b>.</p><p style="margin-top:22px">${new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'})}</p><p style="font-size:11px;opacity:.7;margin-top:18px">Educational certificate of participation \u2014 not a professional credential.</p>`;}
+  inp.oninput=()=>{S.name=inp.value;save();draw();};draw();
+}
+
+/* ================= BOOT ================= */
+applyTheme();hh();go('home');
+</script>
+</body>
+</html>
