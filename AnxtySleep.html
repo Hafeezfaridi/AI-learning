@@ -1,0 +1,1281 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>NeuroSleep Pharm Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: left rail navigation + instrument-panel workspace; each module is a lab bench of linked live gauges. */
+:root{
+  --bg:#EDF1F5; --panel:#FFFFFF; --panel2:#E3E9F0; --ink:#13202E; --muted:#4B5B6C; --line:#C9D3DE;
+  --teal:#0B7A85; --teal-soft:#D3EEF0; --violet:#5A4A9E; --violet-soft:#E4DFF5;
+  --amber:#A8650A; --amber-soft:#F8E8CC; --red:#B3261E; --red-soft:#F8DAD6; --green:#2A7A3B; --green-soft:#D9EFDD;
+  --f-display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --f-body:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0D1620; --panel:#142130; --panel2:#1B2C3F; --ink:#E6EEF6; --muted:#9DB0C3; --line:#2A3D52;
+  --teal:#3CC4D0; --teal-soft:#123B42; --violet:#A99BEA; --violet-soft:#2A2550;
+  --amber:#F0B34E; --amber-soft:#41300F; --red:#FF8A80; --red-soft:#47201D; --green:#7FD28F; --green-soft:#183A20; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1620; --panel:#142130; --panel2:#1B2C3F; --ink:#E6EEF6; --muted:#9DB0C3; --line:#2A3D52;
+  --teal:#3CC4D0; --teal-soft:#123B42; --violet:#A99BEA; --violet-soft:#2A2550;
+  --amber:#F0B34E; --amber-soft:#41300F; --red:#FF8A80; --red-soft:#47201D; --green:#7FD28F; --green-soft:#183A20; color-scheme:dark}
+:root[data-theme="contrast"]{
+  --bg:#000; --panel:#000; --panel2:#111; --ink:#fff; --muted:#fff; --line:#fff;
+  --teal:#00FFFF; --teal-soft:#002b2b; --violet:#FFB3FF; --violet-soft:#2a002a;
+  --amber:#FFD400; --amber-soft:#2a2200; --red:#FF6B6B; --red-soft:#2a0000; --green:#5CFF7A; --green-soft:#002a0b; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.15;margin:0;text-wrap:balance}
+h1{font-size:1.9rem} h2{font-size:1.35rem} h3{font-size:1.05rem}
+p{margin:.4em 0 .8em;max-width:68ch}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.skip{position:absolute;left:-999px;top:0;background:var(--teal);color:#000;padding:8px 12px;z-index:50}
+.skip:focus{left:8px}
+.app{display:grid;grid-template-columns:230px minmax(0,1fr);gap:16px;max-width:1400px;margin:0 auto;min-height:calc(100% - 4px)}
+nav.rail{position:sticky;top:12px;align-self:start;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:2px;max-height:calc(100vh - 24px);overflow:auto}
+.brand{font-family:var(--f-display);font-weight:700;font-size:1.1rem;padding:6px 8px 10px;color:var(--teal);letter-spacing:.01em}
+.brand small{display:block;font:500 .68rem var(--f-mono);color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+nav.rail button{all:unset;box-sizing:border-box;cursor:pointer;padding:7px 10px;border-radius:6px;font-size:.88rem;color:var(--muted);display:block;width:100%}
+nav.rail button:hover{background:var(--panel2);color:var(--ink)}
+nav.rail button[aria-current="page"]{background:var(--teal-soft);color:var(--teal);font-weight:600}
+nav.rail button:focus-visible{outline:3px solid var(--teal)}
+.tools{display:flex;gap:6px;flex-wrap:wrap;padding:8px 6px 2px;border-top:1px solid var(--line);margin-top:6px}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:3px 10px;font-size:.78rem;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
+main{min-width:0;display:flex;flex-direction:column;gap:14px}
+.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.xp{display:flex;gap:10px;align-items:center;font:500 .8rem var(--f-mono)}
+.bar{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden;min-width:120px}
+.bar>i{display:block;height:100%;background:var(--teal);transition:width .5s}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+.panel h3{margin-bottom:6px}
+.lbl{font:500 .7rem var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.btn{background:var(--teal);color:#fff;border:0;border-radius:6px;padding:7px 14px;cursor:pointer;font-weight:600}
+:root[data-theme="dark"] .btn,:root[data-theme="contrast"] .btn{color:#000}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn{color:#001417}}
+.btn.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-block;font:500 .72rem var(--f-mono);padding:2px 8px;border-radius:99px;background:var(--panel2);color:var(--muted)}
+.pill.g{background:var(--green-soft);color:var(--green)} .pill.a{background:var(--amber-soft);color:var(--amber)} .pill.r{background:var(--red-soft);color:var(--red)} .pill.t{background:var(--teal-soft);color:var(--teal)} .pill.v{background:var(--violet-soft);color:var(--violet)}
+svg{max-width:100%;height:auto;display:block}
+svg text{fill:var(--ink);font-family:var(--f-body)}
+.scroll-x{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{font:500 .7rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);position:sticky;top:0;background:var(--panel)}
+.slider{display:grid;grid-template-columns:110px 1fr 40px;gap:8px;align-items:center;margin:4px 0}
+.slider input[type=range]{width:100%;accent-color:var(--teal)}
+.meter{display:grid;grid-template-columns:120px 1fr 44px;gap:8px;align-items:center;margin:5px 0;font-size:.85rem}
+.meter .bar{height:10px}
+.meter .bar>i.bad{background:var(--red)} .meter .bar>i.ok{background:var(--green)} .meter .bar>i.v{background:var(--violet)}
+.note{border-left:3px solid var(--teal);background:var(--teal-soft);padding:8px 12px;border-radius:0 6px 6px 0;font-size:.88rem;margin:8px 0}
+.note.warn{border-color:var(--amber);background:var(--amber-soft)}
+.note.bad{border-color:var(--red);background:var(--red-soft)}
+.opt{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:8px 12px;margin:6px 0;cursor:pointer}
+.opt:hover{border-color:var(--teal)}
+.opt[aria-checked="true"],.opt.sel{border-color:var(--teal);background:var(--teal-soft)}
+.opt.right{border-color:var(--green);background:var(--green-soft)} .opt.wrong{border-color:var(--red);background:var(--red-soft)}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:10px}
+.tabs button{border:0;background:none;padding:6px 12px;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent}
+.tabs button[aria-selected="true"]{color:var(--teal);border-color:var(--teal);font-weight:600}
+.region{cursor:pointer;transition:filter .2s}
+.region:hover,.region:focus-visible{filter:brightness(1.2)}
+.region.on{stroke:var(--ink);stroke-width:3}
+.mono{font-family:var(--f-mono)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes flow{to{stroke-dashoffset:-24}}
+.flow{stroke-dasharray:6 6;animation:flow 1s linear infinite}
+.pulse{animation:pulse 1.6s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.flow,.pulse{animation:none}*{transition:none!important}}
+@media (max-width:820px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  nav.rail{position:static;flex-direction:row;overflow-x:auto;max-height:none;align-items:center}
+  nav.rail button{white-space:nowrap;width:auto}
+  .brand,.tools{flex:none;border:0;margin:0}
+  .slider{grid-template-columns:90px 1fr 34px}
+  .meter{grid-template-columns:96px 1fr 40px}
+}
+</style>
+<a class="skip" href="#main">Skip to main content</a>
+<div class="app">
+  <nav class="rail" id="rail" aria-label="Main navigation">
+    <div class="brand">NeuroSleep Pharm Lab<small>Hafeez Faridi, Ph.D.</small></div>
+    <div class="tools" id="tools">
+      <button class="chip" id="t-theme" aria-pressed="false">Dark mode</button>
+      <button class="chip" id="t-contrast" aria-pressed="false">High contrast</button>
+    </div>
+  </nav>
+  <div style="min-width:0;display:flex;flex-direction:column;gap:12px">
+    <div class="panel top" role="region" aria-label="Progress">
+      <div><span class="lbl">Level</span> <strong id="lvl">Novice</strong> <span class="mono" id="xpval">0 XP</span></div>
+      <div class="bar" role="progressbar" aria-label="Progress to next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="flex:1;max-width:260px"><i id="xpbar" style="width:0"></i></div>
+      <div class="mono" id="prog" style="font-size:.78rem;color:var(--muted)"></div>
+    </div>
+    <main id="main" tabindex="-1"></main>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite" hidden style="position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;font-weight:600;z-index:60"></div>
+<script>
+/* Drug database. Educational summary of FDA labeling and standard references (Katzung, DiPiro, Goodman & Gilman). Verify against current labeling before clinical use. */
+const CLS = {
+  BZD:{name:'Benzodiazepine',color:'r',mech:'gaba'},
+  Z:{name:'Non-benzodiazepine (Z-drug)',color:'v',mech:'gaba'},
+  SSRI:{name:'SSRI',color:'t',mech:'sert'},
+  SNRI:{name:'SNRI',color:'t',mech:'sert'},
+  AZA:{name:'Azapirone',color:'g',mech:'5ht1a'},
+  H1:{name:'Antihistamine',color:'a',mech:'h1'},
+  MEL:{name:'Melatonin agonist',color:'v',mech:'mel'},
+  DORA:{name:'Dual orexin receptor antagonist',color:'v',mech:'orx'}
+};
+const BZD_BBW='Boxed warning (2020 update): concomitant opioid use (profound sedation, respiratory depression, coma, death); abuse, misuse and addiction; dependence and withdrawal reactions, including life-threatening seizures after abrupt discontinuation.';
+const Z_BBW='Boxed warning (2019): complex sleep behaviors (sleep-walking, sleep-driving) with possible injury or death. Stop immediately if one occurs. Contraindicated after a prior episode.';
+const SSRI_BBW='Boxed warning: increased risk of suicidal thoughts and behavior in children, adolescents and young adults (under 25) with antidepressant treatment. Monitor closely, especially in the first weeks and after dose changes.';
+const NOBBW='None.';
+const DRUGS = [
+ {id:'alprazolam',name:'Alprazolam',brand:'Xanax',cls:'BZD',sched:'C-IV',
+  moa:'Positive allosteric modulator at the benzodiazepine site of GABA-A (alpha/gamma2 interface). Increases frequency of chloride channel opening when GABA is bound.',
+  target:'GABA-A (alpha1 sedation; alpha2/3 anxiolysis)',bbb:'High (lipophilic, rapid CNS entry)',onset:'Oral: 30-60 min, peak 1-2 h',t12:'about 11 h (range 6-27)',t12h:11,
+  metab:'CYP3A4 to alpha-hydroxyalprazolam (weakly active)',
+  inter:'Contraindicated with ketoconazole and itraconazole; avoid strong CYP3A4 inhibitors (ritonavir, clarithromycin). Additive CNS depression with opioids, alcohol, gabapentinoids. Carbamazepine and St John\'s wort lower levels.',
+  pearls:'Short-acting with rapid onset and interdose rebound anxiety. Highest misuse liability among anxiolytic benzodiazepines. Panic disorder dosing often exceeds anxiety dosing and makes tapering harder. Taper gradually (about 5-10% every 1-2 weeks is a common approach, slower if withdrawal occurs).',
+  bbw:BZD_BBW,abuse:'High. Schedule IV.',sed:4,dep:5,
+  sleep:'Reduces sleep latency; suppresses N3 and REM; rebound insomnia on withdrawal.',
+  preg:'Avoid if possible. Third-trimester use risks neonatal sedation and withdrawal ("floppy infant"). Appears in breast milk.',
+  ger:'Beers Criteria: avoid. Falls, fractures, delirium, cognitive impairment.',
+  arch:{sl:-12,n3:-30,rem:-15,waso:-10,tol:1.0}},
+ {id:'lorazepam',name:'Lorazepam',brand:'Ativan',cls:'BZD',sched:'C-IV',
+  moa:'GABA-A positive allosteric modulator (benzodiazepine site).',
+  target:'GABA-A',bbb:'Moderate-high',onset:'Oral: 20-30 min; IV: 1-3 min',t12:'about 12 h (10-20)',t12h:12,
+  metab:'Hepatic glucuronidation to inactive metabolite (no CYP, no active metabolites)',
+  inter:'Valproate inhibits glucuronidation (raises lorazepam). Probenecid raises levels. Additive CNS depression with opioids and alcohol. Few CYP interactions.',
+  pearls:'Preferred benzodiazepine in hepatic impairment and in patients on many CYP-interacting drugs because glucuronidation is spared in liver disease. First-line for status epilepticus (IV) and acute agitation or catatonia.',
+  bbw:BZD_BBW,abuse:'Moderate-high. Schedule IV.',sed:4,dep:4,
+  sleep:'Shortens latency; suppresses N3 and REM modestly; rebound insomnia after stopping.',
+  preg:'Avoid if possible; neonatal sedation and withdrawal with late use.',
+  ger:'Beers Criteria: avoid, though glucuronidation makes it comparatively safer than long-acting agents.',
+  arch:{sl:-12,n3:-25,rem:-12,waso:-10,tol:1.0}},
+ {id:'clonazepam',name:'Clonazepam',brand:'Klonopin',cls:'BZD',sched:'C-IV',
+  moa:'GABA-A positive allosteric modulator.',
+  target:'GABA-A',bbb:'High',onset:'Oral: about 1 h; peak 1-4 h',t12:'30-40 h',t12h:35,
+  metab:'CYP3A4 (nitroreduction) to inactive metabolites',
+  inter:'CYP3A4 inducers (carbamazepine, phenytoin) lower levels. Additive CNS depression with opioids and alcohol.',
+  pearls:'FDA-approved for panic disorder and seizure disorders. Long half-life gives smoother levels and less interdose rebound, but accumulation and daytime sedation in older adults. Also used for REM sleep behavior disorder (off-label).',
+  bbw:BZD_BBW,abuse:'Moderate. Schedule IV.',sed:3,dep:4,
+  sleep:'Prolongs total sleep time; suppresses N3; residual daytime sedation.',
+  preg:'Avoid if possible; neonatal withdrawal and sedation.',
+  ger:'Beers Criteria: avoid. Accumulation, falls, cognitive impairment.',
+  arch:{sl:-10,n3:-20,rem:-8,waso:-15,tol:0.9}},
+ {id:'diazepam',name:'Diazepam',brand:'Valium',cls:'BZD',sched:'C-IV',
+  moa:'GABA-A positive allosteric modulator.',
+  target:'GABA-A',bbb:'Very high (fastest CNS entry of oral benzodiazepines)',onset:'Oral: 15-60 min',t12:'Parent 20-50 h; desmethyldiazepam up to 100 h',t12h:48,
+  metab:'CYP2C19 and CYP3A4 to active metabolites (desmethyldiazepam, oxazepam, temazepam)',
+  inter:'CYP2C19 inhibitors (omeprazole, fluvoxamine) and CYP3A4 inhibitors raise levels. Cimetidine raises levels. Additive CNS depression with opioids and alcohol.',
+  pearls:'Fast onset with a built-in slow taper because of active metabolites. Preferred agent for alcohol withdrawal and for benzodiazepine cross-taper. Accumulates in older adults and liver disease.',
+  bbw:BZD_BBW,abuse:'Moderate-high. Schedule IV.',sed:3,dep:4,
+  sleep:'Suppresses N3 and REM; prolonged next-day impairment.',
+  preg:'Avoid if possible; risk of neonatal sedation and withdrawal.',
+  ger:'Beers Criteria: avoid. Long half-life active metabolites.',
+  arch:{sl:-10,n3:-25,rem:-10,waso:-12,tol:0.9}},
+ {id:'temazepam',name:'Temazepam',brand:'Restoril',cls:'BZD',sched:'C-IV',
+  moa:'GABA-A positive allosteric modulator.',
+  target:'GABA-A',bbb:'High',onset:'Oral: 30-60 min (capsule absorption is slowish)',t12:'about 8-15 h',t12h:10,
+  metab:'Glucuronidation (inactive conjugate)',
+  inter:'Additive CNS depression with opioids and alcohol. Few CYP interactions.',
+  pearls:'Indicated for short-term insomnia (typically 7-10 days). Glucuronidation makes it a common benzodiazepine hypnotic in liver disease. Taking it at bedtime with an expected 7-8 h in bed reduces residual morning sedation.',
+  bbw:BZD_BBW,abuse:'Moderate. Schedule IV.',sed:4,dep:4,
+  sleep:'Shortens latency, increases N2, reduces N3 and REM.',
+  preg:'Contraindicated in pregnancy (FDA label).',
+  ger:'Beers Criteria: avoid. Falls and cognitive effects.',
+  arch:{sl:-15,n3:-25,rem:-12,waso:-20,tol:1.0}},
+ {id:'zolpidem',name:'Zolpidem',brand:'Ambien',cls:'Z',sched:'C-IV',
+  moa:'Selective positive allosteric modulator of GABA-A receptors containing the alpha1 subunit (omega-1 selectivity), which favors sedation over anxiolysis and muscle relaxation.',
+  target:'GABA-A alpha1',bbb:'High',onset:'IR: 15-30 min (food delays onset)',t12:'about 2.5 h (longer in elderly and hepatic impairment)',t12h:2.5,
+  metab:'CYP3A4 (major), CYP2C9, CYP1A2; inactive metabolites',
+  inter:'Rifampin lowers levels; ketoconazole raises them. Additive CNS depression with alcohol, opioids, other sedatives.',
+  pearls:'FDA lowered the recommended starting dose for women to 5 mg IR and 6.25 mg ER (2013) because of next-morning impairment. Take only with at least 7-8 h available for sleep. Not effective for anxiety.',
+  bbw:Z_BBW,abuse:'Moderate. Schedule IV.',sed:3,dep:3,
+  sleep:'Mainly shortens sleep latency; relatively preserves N3 compared with benzodiazepines; mild REM effects.',
+  preg:'Limited data; avoid unless benefit outweighs risk. Neonatal respiratory depression reported.',
+  ger:'Beers Criteria: avoid. Starting dose 5 mg IR in older adults.',
+  arch:{sl:-18,n3:-5,rem:-4,waso:-5,tol:0.6}},
+ {id:'eszopiclone',name:'Eszopiclone',brand:'Lunesta',cls:'Z',sched:'C-IV',
+  moa:'GABA-A positive allosteric modulator (S-enantiomer of zopiclone); binds the benzodiazepine site with broader alpha-subunit activity than zolpidem.',
+  target:'GABA-A (alpha1, alpha2, alpha3, alpha5)',bbb:'High',onset:'About 30 min (high-fat meal delays)',t12:'about 6 h (up to 9 h in elderly)',t12h:6,
+  metab:'CYP3A4 and CYP2E1',
+  inter:'Strong CYP3A4 inhibitors (ketoconazole, clarithromycin) raise exposure: limit to 2 mg. Rifampin lowers levels.',
+  pearls:'Start at 1 mg. Bitter or metallic taste is common. Covers both sleep onset and maintenance. Approved without a fixed short-term duration limit.',
+  bbw:Z_BBW,abuse:'Moderate. Schedule IV.',sed:3,dep:3,
+  sleep:'Shortens latency and reduces awakenings; relatively little N3 suppression.',
+  preg:'Limited data; use only if benefit exceeds risk.',
+  ger:'Beers Criteria: avoid. Max 2 mg in older adults.',
+  arch:{sl:-15,n3:-3,rem:-3,waso:-12,tol:0.6}},
+ {id:'zaleplon',name:'Zaleplon',brand:'Sonata',cls:'Z',sched:'C-IV',
+  moa:'Selective alpha1-preferring GABA-A positive allosteric modulator (pyrazolopyrimidine).',
+  target:'GABA-A alpha1',bbb:'High',onset:'About 15-30 min',t12:'about 1 h',t12h:1,
+  metab:'Aldehyde oxidase (major) and CYP3A4',
+  inter:'Cimetidine inhibits both pathways and raises levels. Rifampin lowers levels.',
+  pearls:'Shortest half-life: suited to sleep onset insomnia and to middle-of-the-night waking if at least 4 h of bed time remain. Minimal next-day impairment.',
+  bbw:Z_BBW,abuse:'Moderate. Schedule IV.',sed:2,dep:3,
+  sleep:'Shortens latency; little effect on sleep maintenance.',
+  preg:'Limited data; use only if benefit exceeds risk.',
+  ger:'Beers Criteria: avoid. Start at 5 mg.',
+  arch:{sl:-14,n3:-2,rem:-2,waso:0,tol:0.5}},
+ {id:'sertraline',name:'Sertraline',brand:'Zoloft',cls:'SSRI',sched:'None',
+  moa:'Blocks the serotonin transporter (SERT), raising synaptic 5-HT. Anxiolytic effect emerges over weeks through downstream receptor desensitization (5-HT1A autoreceptors) and adaptive plasticity.',
+  target:'SERT (also mild DAT)',bbb:'High',onset:'Anxiety/mood: 2-4 weeks; maximal 8-12 weeks',t12:'about 26 h (desmethylsertraline 62-104 h)',t12h:26,
+  metab:'Multiple CYPs (2B6, 2C19, 2C9, 3A4, 2D6); weak-moderate 2D6 inhibition at higher doses',
+  inter:'Serotonin syndrome risk with MAOIs (contraindicated within 14 days), linezolid, triptans, tramadol. Bleeding risk with NSAIDs, anticoagulants.',
+  pearls:'FDA-approved for panic disorder, PTSD, social anxiety disorder, OCD, MDD, PMDD (not labeled for GAD, but used). Start low (25 mg) in panic disorder to limit early jitteriness. Often first choice in pregnancy and lactation.',
+  bbw:SSRI_BBW,abuse:'None.',sed:1,dep:1,
+  sleep:'May initially disrupt sleep (insomnia, vivid dreams); suppresses REM; improves sleep as anxiety remits.',
+  preg:'Generally preferred SSRI in pregnancy and lactation; small risk of neonatal adaptation syndrome, possible persistent pulmonary hypertension.',
+  ger:'Generally well tolerated; monitor for hyponatremia (SIADH) and falls.',
+  arch:{sl:3,n3:0,rem:-20,waso:5,tol:0.2}},
+ {id:'escitalopram',name:'Escitalopram',brand:'Lexapro',cls:'SSRI',sched:'None',
+  moa:'Selective SERT inhibitor with allosteric binding that stabilizes its own binding (S-enantiomer of citalopram).',
+  target:'SERT',bbb:'High',onset:'1-2 weeks for early response; maximal 8-12 weeks',t12:'27-32 h',t12h:30,
+  metab:'CYP2C19 (primary), CYP3A4, CYP2D6',
+  inter:'Serotonin syndrome with MAOIs (contraindicated within 14 days), linezolid. Omeprazole raises levels. QT prolongation additive with other QT-prolonging drugs.',
+  pearls:'FDA-approved for GAD (adults and ages 7+) and MDD. Dose-dependent QT prolongation: max 20 mg/day; 10 mg/day in older adults and CYP2C19 poor metabolizers. Good tolerability and few interactions.',
+  bbw:SSRI_BBW,abuse:'None.',sed:1,dep:1,
+  sleep:'Can cause insomnia or somnolence; REM suppression.',
+  preg:'Use if benefit outweighs risk; neonatal adaptation syndrome possible.',
+  ger:'Use 10 mg/day maximum. Monitor sodium and QTc.',
+  arch:{sl:2,n3:0,rem:-18,waso:4,tol:0.2}},
+ {id:'fluoxetine',name:'Fluoxetine',brand:'Prozac',cls:'SSRI',sched:'None',
+  moa:'SERT inhibitor; norfluoxetine is an active metabolite. Weak 5-HT2C antagonism contributes to activation.',
+  target:'SERT, 5-HT2C',bbb:'High',onset:'2-6 weeks',t12:'Fluoxetine 4-6 days; norfluoxetine 4-16 days',t12h:120,
+  metab:'CYP2D6 substrate and strong 2D6 inhibitor; also inhibits 2C19',
+  inter:'Raises levels of TCAs, metoprolol, codeine (reduces conversion to morphine), tamoxifen (reduces activation), atomoxetine. Serotonin syndrome with MAOIs. Wait 5 weeks after stopping before starting an MAOI.',
+  pearls:'Long half-life gives a built-in taper and low discontinuation symptoms. Activating: may worsen insomnia and early anxiety, so dose in the morning. Not FDA-labeled for GAD; approved for panic disorder, OCD, MDD, bulimia.',
+  bbw:SSRI_BBW,abuse:'None.',sed:0,dep:1,
+  sleep:'Often worsens sleep initiation and maintenance early on; REM suppression.',
+  preg:'Data exist, but weigh benefit; neonatal adaptation syndrome possible. Appears in breast milk at higher levels.',
+  ger:'Long half-life; monitor sodium and drug interactions.',
+  arch:{sl:6,n3:0,rem:-22,waso:8,tol:0.2}},
+ {id:'paroxetine',name:'Paroxetine',brand:'Paxil',cls:'SSRI',sched:'None',
+  moa:'Most potent SERT inhibitor of the SSRIs, with clinically relevant anticholinergic (muscarinic) activity and weak NET inhibition.',
+  target:'SERT, muscarinic M1',bbb:'High',onset:'2-4 weeks',t12:'about 21 h',t12h:21,
+  metab:'CYP2D6 (saturable) and strong 2D6 inhibitor (mechanism-based)',
+  inter:'Strong CYP2D6 inhibition: tamoxifen (avoid), codeine, TCAs, metoprolol. Serotonin syndrome with MAOIs.',
+  pearls:'FDA-approved for GAD, panic disorder, social anxiety disorder, PTSD, OCD, MDD. Worst discontinuation syndrome among SSRIs because of short half-life and no active metabolite. More sedating, weight gain, sexual dysfunction, anticholinergic effects.',
+  bbw:SSRI_BBW,abuse:'None.',sed:2,dep:1,
+  sleep:'More sedating in many patients; REM suppression.',
+  preg:'Avoid if possible: first-trimester exposure linked to cardiac malformations.',
+  ger:'Beers Criteria: avoid (anticholinergic).',
+  arch:{sl:-2,n3:0,rem:-20,waso:0,tol:0.2}},
+ {id:'venlafaxine',name:'Venlafaxine',brand:'Effexor XR',cls:'SNRI',sched:'None',
+  moa:'Inhibits SERT at low doses and NET at higher doses (about 150 mg/day and above); weak DAT effect at high doses.',
+  target:'SERT, NET',bbb:'High',onset:'2-4 weeks',t12:'Parent about 5 h; O-desmethylvenlafaxine about 11 h',t12h:11,
+  metab:'CYP2D6 to O-desmethylvenlafaxine (active); also 3A4',
+  inter:'Serotonin syndrome with MAOIs. Additive bleeding risk with NSAIDs/anticoagulants. CYP2D6 inhibitors raise parent compound.',
+  pearls:'FDA-approved for GAD, social anxiety disorder, panic disorder, MDD (XR). Dose-dependent hypertension: monitor BP. Severe discontinuation syndrome: taper slowly.',
+  bbw:SSRI_BBW,abuse:'None.',sed:1,dep:1,
+  sleep:'Can cause insomnia; REM suppression; may worsen REM sleep behavior and periodic limb movements.',
+  preg:'Use if benefit outweighs risk; third-trimester exposure linked to neonatal adaptation syndrome and possibly hypertension.',
+  ger:'Monitor BP and sodium.',
+  arch:{sl:4,n3:0,rem:-25,waso:6,tol:0.2}},
+ {id:'duloxetine',name:'Duloxetine',brand:'Cymbalta',cls:'SNRI',sched:'None',
+  moa:'Balanced SERT and NET inhibition; augments descending inhibitory pain pathways.',
+  target:'SERT, NET',bbb:'High',onset:'1-4 weeks (pain relief may be earlier)',t12:'about 12 h',t12h:12,
+  metab:'CYP1A2 and CYP2D6; moderate 2D6 inhibitor',
+  inter:'Fluvoxamine and ciprofloxacin (CYP1A2 inhibitors) raise levels markedly. Serotonin syndrome with MAOIs. Smoking lowers levels.',
+  pearls:'FDA-approved for GAD, MDD, diabetic neuropathic pain, fibromyalgia, chronic musculoskeletal pain. Best SNRI choice when pain coexists with anxiety. Avoid in hepatic impairment, heavy alcohol use, severe renal impairment (CrCl under 30 mL/min).',
+  bbw:SSRI_BBW,abuse:'None.',sed:1,dep:1,
+  sleep:'Can cause insomnia or somnolence; REM suppression.',
+  preg:'Use if benefit outweighs risk; neonatal adaptation syndrome possible.',
+  ger:'Monitor falls, sodium, BP; avoid with hepatic impairment.',
+  arch:{sl:3,n3:0,rem:-22,waso:5,tol:0.2}},
+ {id:'buspirone',name:'Buspirone',brand:'BuSpar',cls:'AZA',sched:'None',
+  moa:'Partial agonist at postsynaptic 5-HT1A receptors and full agonist at presynaptic 5-HT1A autoreceptors (reducing serotonin firing); weak D2 antagonism. Does not act at GABA-A.',
+  target:'5-HT1A',bbb:'High',onset:'2-4 weeks; not effective as-needed',t12:'about 2-3 h',t12h:2.5,
+  metab:'CYP3A4 (extensive first pass) to 1-PP (active)',
+  inter:'MAOIs contraindicated (hypertensive crisis risk; wait 14 days). Strong CYP3A4 inhibitors (itraconazole, clarithromycin, grapefruit juice) raise levels several-fold. Serotonergic agents: monitor for serotonin syndrome.',
+  pearls:'Approved for GAD. No sedation, psychomotor impairment, abuse potential or withdrawal, and no cross-tolerance with benzodiazepines (so it cannot prevent benzodiazepine withdrawal). Slow onset makes it a poor PRN choice. Does not help panic disorder. Divided dosing (BID-TID).',
+  bbw:NOBBW,abuse:'None.',sed:0,dep:0,
+  sleep:'Little hypnotic effect; may cause vivid dreams.',
+  preg:'Limited human data.',
+  ger:'Generally well tolerated; dizziness possible.',
+  arch:{sl:0,n3:0,rem:0,waso:0,tol:0}},
+ {id:'hydroxyzine',name:'Hydroxyzine',brand:'Atarax / Vistaril',cls:'H1',sched:'None',
+  moa:'Inverse agonist at central histamine H1 receptors (sedation, anxiolysis); also antagonizes 5-HT2A, muscarinic and D2 receptors.',
+  target:'H1 (also 5-HT2A, M1)',bbb:'High',onset:'15-30 min',t12:'about 20 h (29 h in elderly)',t12h:20,
+  metab:'CYP3A4/5 to cetirizine (active)',
+  inter:'Additive CNS depression and anticholinergic burden. QT prolongation: avoid with other QT-prolonging drugs. CYP3A4 inhibitors raise levels.',
+  pearls:'Short-term symptomatic relief of anxiety; no dependence. Tolerance to sedation develops. Anticholinergic effects: dry mouth, urinary retention, constipation, confusion in older adults.',
+  bbw:NOBBW,abuse:'Low.',sed:3,dep:0,
+  sleep:'Shortens latency; does not significantly disrupt architecture; tolerance develops.',
+  preg:'Contraindicated in early pregnancy (labeling).',
+  ger:'Beers Criteria: avoid (strongly anticholinergic).',
+  arch:{sl:-8,n3:0,rem:-2,waso:-3,tol:0.4}},
+ {id:'melatonin',name:'Melatonin',brand:'Supplement',cls:'MEL',sched:'None (US dietary supplement; not FDA-approved)',
+  moa:'Agonist at MT1 (reduces SCN alerting; promotes sleep) and MT2 (phase-shifts circadian rhythm) receptors.',
+  target:'MT1, MT2',bbb:'High',onset:'30-60 min; phase-shifting over days',t12:'about 40-60 min',t12h:0.8,
+  metab:'CYP1A2',
+  inter:'Fluvoxamine (strong CYP1A2 inhibitor) markedly raises levels. Smoking and caffeine alter metabolism.',
+  pearls:'A chronobiotic more than a hypnotic. Timing matters more than dose: low doses (0.5-3 mg) several hours before desired sleep time help circadian rhythm disorders. AASM (2017) suggests against routine use for chronic insomnia in adults. Supplement content varies widely.',
+  bbw:NOBBW,abuse:'None.',sed:1,dep:0,
+  sleep:'Modest reduction in latency; shifts circadian phase; no change in architecture.',
+  preg:'Insufficient data.',
+  ger:'Lower endogenous melatonin with age; low doses are generally well tolerated.',
+  arch:{sl:-5,n3:0,rem:0,waso:0,tol:0}},
+ {id:'ramelteon',name:'Ramelteon',brand:'Rozerem',cls:'MEL',sched:'None',
+  moa:'High-affinity MT1/MT2 agonist; no GABA-A activity.',
+  target:'MT1, MT2',bbb:'High',onset:'About 30 min (peak 45 min)',t12:'1-2.6 h',t12h:1.5,
+  metab:'CYP1A2 (major), 2C and 3A4 minor',
+  inter:'Contraindicated with fluvoxamine. Caution with other CYP1A2 inhibitors (ciprofloxacin). Avoid taking with a high-fat meal.',
+  pearls:'8 mg within 30 min of bedtime. Non-scheduled; no withdrawal or rebound. Indicated for sleep onset insomnia. AASM (2017) suggests ramelteon for sleep onset insomnia (weak recommendation). Can raise prolactin.',
+  bbw:NOBBW,abuse:'None.',sed:1,dep:0,
+  sleep:'Modest reduction in latency; no change in architecture.',
+  preg:'Limited data.',
+  ger:'No dose adjustment; no Beers listing.',
+  arch:{sl:-8,n3:0,rem:0,waso:0,tol:0}},
+ {id:'suvorexant',name:'Suvorexant',brand:'Belsomra',cls:'DORA',sched:'C-IV',
+  moa:'Blocks both orexin receptors (OX1R and OX2R), reducing orexin-driven wake signaling to the VLPO-opposed arousal network.',
+  target:'OX1R, OX2R',bbb:'High',onset:'About 30 min (delayed by high-fat meal)',t12:'about 12 h',t12h:12,
+  metab:'CYP3A4 (major)',
+  inter:'Avoid with strong CYP3A4 inhibitors; limit to 5 mg with moderate inhibitors. Strong inducers (rifampin) reduce efficacy.',
+  pearls:'10 mg nightly (max 20 mg) with at least 7 h of sleep opportunity. Contraindicated in narcolepsy. Possible next-day somnolence, sleep paralysis, hypnagogic or hypnopompic hallucinations, and cataplexy-like symptoms. AASM (2017) suggests suvorexant for sleep maintenance insomnia (weak).',
+  bbw:NOBBW,abuse:'Lower than benzodiazepines but scheduled.',sed:2,dep:1,
+  sleep:'Increases total sleep time; REM and N2 increased; N3 largely preserved.',
+  preg:'No adequate human data.',
+  ger:'No dose adjustment required; monitor next-day impairment.',
+  arch:{sl:-10,n3:2,rem:6,waso:-14,tol:0.2}},
+ {id:'lemborexant',name:'Lemborexant',brand:'Dayvigo',cls:'DORA',sched:'C-IV',
+  moa:'Competitive dual orexin receptor antagonist with fast on/off kinetics at OX2R.',
+  target:'OX1R, OX2R',bbb:'High',onset:'About 1-2 h to peak',t12:'17-19 h',t12h:18,
+  metab:'CYP3A4 (major)',
+  inter:'Avoid with strong or moderate CYP3A4 inhibitors; avoid with CYP3A4 inducers.',
+  pearls:'5 mg or 10 mg nightly with at least 7 h of sleep opportunity. Contraindicated in narcolepsy. Efficacy on both onset and maintenance.',
+  bbw:NOBBW,abuse:'Lower than benzodiazepines but scheduled.',sed:2,dep:1,
+  sleep:'Reduces latency and wake after sleep onset; preserves slow-wave sleep.',
+  preg:'No adequate human data.',
+  ger:'No dose adjustment required.',
+  arch:{sl:-14,n3:2,rem:5,waso:-18,tol:0.2}},
+ {id:'daridorexant',name:'Daridorexant',brand:'Quviviq',cls:'DORA',sched:'C-IV',
+  moa:'Dual orexin receptor antagonist (OX1R and OX2R).',
+  target:'OX1R, OX2R',bbb:'High',onset:'About 1-2 h to peak',t12:'about 8 h',t12h:8,
+  metab:'CYP3A4 (major)',
+  inter:'Avoid with moderate or strong CYP3A4 inhibitors; avoid with inducers.',
+  pearls:'25 mg or 50 mg nightly. Shorter half-life may reduce next-day sedation. Contraindicated in narcolepsy.',
+  bbw:NOBBW,abuse:'Lower than benzodiazepines but scheduled.',sed:2,dep:1,
+  sleep:'Reduces latency and wake after sleep onset; preserves slow-wave sleep.',
+  preg:'No adequate human data.',
+  ger:'No dose adjustment required.',
+  arch:{sl:-12,n3:2,rem:4,waso:-16,tol:0.2}}
+];
+const DRUG_BY_ID = Object.fromEntries(DRUGS.map(d=>[d.id,d]));
+/* Brain regions, patients, and question bank. */
+const BRAIN = {
+ amygdala:{name:'Amygdala',fn:'Detects threat and salience; assigns emotional valence; drives fear responses via central nucleus projections to hypothalamus (HPA, sympathetic) and periaqueductal gray (freezing).',
+  patho:'Hyperreactive in GAD, panic disorder, social anxiety disorder and PTSD. Reduced top-down inhibition from the medial prefrontal cortex lowers the threshold for fear responses. Basolateral nucleus glutamate input is gated by local GABAergic interneurons.',
+  clin:'Exaggerated startle, anticipatory fear, hypervigilance, fear conditioning that resists extinction (PTSD).',
+  drugs:'Benzodiazepines (enhance GABA-A inhibition), SSRIs/SNRIs (long-term modulation of 5-HT and amygdala reactivity), buspirone (5-HT1A), hydroxyzine (H1).'},
+ hippocampus:{name:'Hippocampus',fn:'Contextual memory, memory consolidation, and negative feedback on the HPA axis through glucocorticoid receptors.',
+  patho:'Chronic stress and elevated cortisol reduce dendritic complexity and can reduce hippocampal volume (reported in PTSD and depression). Weakened feedback sustains HPA activation. Poor context discrimination contributes to fear generalization.',
+  clin:'Intrusive memories, impaired context processing, memory complaints under stress, sleep-dependent consolidation deficits.',
+  drugs:'SSRIs (support neuroplasticity over weeks); benzodiazepines cause anterograde amnesia via GABA-A at hippocampal circuits.'},
+ pfc:{name:'Prefrontal Cortex',fn:'Executive control: regulates amygdala output, extinguishes fear, supports worry control and attention. Ventromedial PFC inhibits the amygdala.',
+  patho:'Hypoactive or poorly connected medial PFC in anxiety and PTSD yields weak top-down control. Chronic stress impairs PFC function while strengthening amygdala circuits. Excess catecholamines at high levels impair PFC (alpha-1 stimulation), while moderate levels help.',
+  clin:'Excessive worry, poor concentration, impaired emotional regulation, ruminative thought at bedtime that delays sleep onset.',
+  drugs:'Cognitive behavioral therapy strengthens PFC regulation; prazosin (alpha-1 blocker) used off-label for PTSD nightmares; SSRIs.'},
+ thalamus:{name:'Thalamus',fn:'Relay for sensory information to cortex; generates sleep spindles and participates in the thalamocortical oscillations of NREM sleep; "low road" of sensory input directly to the amygdala.',
+  patho:'In insomnia, reduced thalamic sleep-gating and persistent sensory processing keep the cortex responsive to stimuli. Thalamic reticular nucleus GABAergic neurons generate spindles that protect sleep.',
+  clin:'Light, easily disturbed sleep and sensory hyperarousal; fewer spindles in some insomnia patients.',
+  drugs:'Benzodiazepines and Z-drugs (enhance thalamic reticular nucleus GABA, increasing spindle activity), DORAs (reduce orexin excitation of thalamus).'},
+ hypothalamus:{name:'Hypothalamus',fn:'Houses the paraventricular nucleus (CRH), suprachiasmatic nucleus (circadian clock), VLPO (sleep-promoting GABA/galanin neurons), and lateral hypothalamic orexin neurons (wake-promoting).',
+  patho:'PVN activation drives CRH release and the HPA axis. Overactive orexin neurons and weakened VLPO inhibition favor hyperarousal and insomnia (flip-flop switch model). SCN misalignment causes circadian rhythm disorders.',
+  clin:'Stress-related cortisol elevation, trouble initiating or maintaining sleep, early morning awakening, circadian misalignment.',
+  drugs:'DORAs (suvorexant, lemborexant, daridorexant) block orexin; melatonin agonists act on SCN MT1/MT2; hydroxyzine and other antihistamines reduce tuberomammillary histamine arousal.'},
+ brainstem:{name:'Brainstem',fn:'Contains the locus coeruleus (norepinephrine), dorsal raphe (serotonin), VTA (dopamine, midbrain) and respiratory/autonomic nuclei; the pons controls REM sleep (sublaterodorsal nucleus, with REM atonia).',
+  patho:'Locus coeruleus hyperactivity drives noradrenergic arousal in panic, PTSD and insomnia. Dysregulated raphe serotonin affects anxiety circuits. REM-off/REM-on balance is altered by SSRIs and by alcohol withdrawal.',
+  clin:'Palpitations, tremor, sweating, hyperventilation in panic; nightmares and REM fragmentation in PTSD.',
+  drugs:'SNRIs (NET), clonidine/prazosin (adrenergic modulation, off-label), SSRIs (dorsal raphe feedback), benzodiazepines (reduce LC firing).'}
+};
+const PATIENTS = [
+ {id:'A',title:'Patient A',sub:'25-year-old graduate student',
+  hx:'Reports 8 months of excessive worry about school and finances, muscle tension, irritability, and trouble falling asleep (sleep latency about 60-90 minutes). Drinks 3 coffees daily and uses a phone in bed. No suicidal ideation. No substance use disorder. Not pregnant; uses a copper IUD.',
+  dx:'Generalized anxiety disorder with sleep onset insomnia',
+  vitals:'BP 124/78, HR 92, RR 16',labs:'TSH normal, CBC normal, urine drug screen negative',
+  scores:{gad7:15,isi:17},
+  base:{anx:70,sleep:35,stress:70,cog:60},
+  traits:{age:25,liver:'normal',pregnant:false,opioid:false,history:'none',mdd:false},
+  goal:'Reduce GAD-7 to under 5 and sleep latency to under 30 minutes without dependence.'},
+ {id:'B',title:'Patient B',sub:'65-year-old retired teacher',
+  hx:'Chronic insomnia for 6 years with frequent awakenings and early morning waking. Takes metoprolol, amlodipine, omeprazole, diphenhydramine nightly (OTC), tramadol PRN for knee OA, and lorazepam 1 mg HS for 2 years. One fall last year. Mild cognitive complaints. Moderate anxiety about health.',
+  dx:'Chronic insomnia disorder with polypharmacy; possible benzodiazepine dependence',
+  vitals:'BP 138/82, HR 66, RR 14',labs:'eGFR 62, AST/ALT normal, Na 135, QTc 448 ms',
+  scores:{gad7:10,isi:19},
+  base:{anx:55,sleep:30,stress:50,cog:50},
+  traits:{age:65,liver:'normal',pregnant:false,opioid:true,history:'benzo',mdd:false},
+  goal:'Deprescribe hazardous sedatives safely, treat the insomnia, and avoid falls.'},
+ {id:'C',title:'Patient C',sub:'34-year-old military veteran',
+  hx:'PTSD after combat deployment. Nightmares 4-5 nights/week with nocturnal awakenings, hyperarousal, avoidance, and severe daytime anxiety. Drinks 3-4 beers nightly "to sleep." No suicidal ideation today. BP 142/90 at rest.',
+  dx:'PTSD with trauma-related nightmares and insomnia; alcohol use to self-medicate',
+  vitals:'BP 142/90, HR 98, RR 18',labs:'LFTs mildly elevated (AST 52, ALT 61), TSH normal',
+  scores:{gad7:17,isi:21},
+  base:{anx:80,sleep:25,stress:85,cog:50},
+  traits:{age:34,liver:'mild',pregnant:false,opioid:false,history:'alcohol',mdd:false},
+  goal:'Reduce nightmares and hyperarousal; stop reliance on alcohol; avoid benzodiazepines.'}
+];
+/* Question bank: type mcq|sata|case|naplex|board. bloom 1-6. */
+const QS = [
+ {t:'mcq',bloom:1,tag:'Benzodiazepines',q:'Benzodiazepines enhance GABA-A signaling by which mechanism?',o:['Directly opening the chloride channel without GABA','Increasing the frequency of chloride channel opening in the presence of GABA','Increasing the duration of channel opening','Blocking GABA reuptake via GAT-1'],a:[1],r:'Benzodiazepines are positive allosteric modulators that increase the frequency of channel opening when GABA is bound. Barbiturates increase duration and can open the channel directly at high doses, which explains their lower safety margin.',ref:'Katzung Basic & Clinical Pharmacology, Ch. 22'},
+ {t:'mcq',bloom:2,tag:'SSRI timeline',q:'A patient starts sertraline for panic disorder and reports more jitteriness in week 1. What is the best counseling?',o:['Stop the drug; it is not working','Early activation is common and usually fades; start low and expect benefit in 2-4 weeks','Add alprazolam long-term','Double the dose to speed response'],a:[1],r:'Early activation or increased anxiety can occur when SSRIs begin, especially in panic disorder. Starting at a low dose and counseling about the delay in benefit improves adherence. Short-term bridging with a benzodiazepine can be considered, but long-term co-prescription increases risk.',ref:'DiPiro Pharmacotherapy, Anxiety Disorders chapter'},
+ {t:'mcq',bloom:2,tag:'Z-drugs',q:'The FDA boxed warning on zolpidem, eszopiclone and zaleplon is for:',o:['Hepatotoxicity','Complex sleep behaviors such as sleep-driving','QT prolongation','Serotonin syndrome'],a:[1],r:'The 2019 boxed warning is for complex sleep behaviors. Patients who experience one should stop the drug immediately.',ref:'FDA Drug Safety Communication, April 2019'},
+ {t:'mcq',bloom:3,tag:'Pharmacokinetics',q:'Which benzodiazepine is metabolized mainly by glucuronidation without active metabolites and is preferred in hepatic impairment?',o:['Diazepam','Clonazepam','Lorazepam','Alprazolam'],a:[2],r:'The "LOT" drugs (lorazepam, oxazepam, temazepam) undergo glucuronidation and are less affected by liver disease or CYP inhibitors.',ref:'Goodman & Gilman, Ch. 19'},
+ {t:'mcq',bloom:3,tag:'Interactions',q:'Ramelteon is contraindicated with which drug?',o:['Fluvoxamine','Sertraline','Lorazepam','Omeprazole'],a:[0],r:'Fluvoxamine is a strong CYP1A2 inhibitor and raises ramelteon exposure many-fold.',ref:'Rozerem prescribing information'},
+ {t:'mcq',bloom:4,tag:'Orexin',q:'Which statement best explains why DORAs treat insomnia?',o:['They activate GABA-A alpha1 receptors','They block wake-promoting orexin signaling','They increase melatonin secretion','They inhibit histamine reuptake'],a:[1],r:'Orexin neurons in the lateral hypothalamus stabilize wakefulness. DORAs block OX1R and OX2R, reducing arousal drive without directly enhancing GABA.',ref:'Katzung, Ch. 22; AASM guideline 2017'},
+ {t:'mcq',bloom:2,tag:'HPA axis',q:'Which sequence is correct for the stress response?',o:['ACTH, then CRH, then cortisol','CRH, then ACTH, then cortisol','Cortisol, then ACTH, then CRH','CRH, then cortisol, then ACTH'],a:[1],r:'PVN releases CRH, the anterior pituitary releases ACTH, and the adrenal cortex releases cortisol, which then provides negative feedback at the hippocampus, hypothalamus and pituitary.',ref:'Guyton & Hall Textbook of Medical Physiology'},
+ {t:'mcq',bloom:3,tag:'Buspirone',q:'Which statement about buspirone is correct?',o:['It is effective as-needed for acute panic','It has abuse potential similar to benzodiazepines','It requires 2-4 weeks and does not prevent benzodiazepine withdrawal','It is a GABA-A modulator'],a:[2],r:'Buspirone is a 5-HT1A partial agonist with slow onset and no cross-tolerance with benzodiazepines.',ref:'BuSpar prescribing information'},
+ {t:'sata',bloom:3,tag:'Benzodiazepine risks',q:'Select ALL risks associated with long-term benzodiazepine therapy.',o:['Tolerance','Physical dependence','Falls and fractures in older adults','Increased REM sleep','Respiratory depression with opioids'],a:[0,1,2,4],r:'Long-term benzodiazepines cause tolerance, dependence, falls, cognitive impairment, and respiratory depression with opioids. They suppress REM and N3 sleep rather than increase REM.',ref:'AGS Beers Criteria 2023; FDA 2020 boxed warning'},
+ {t:'sata',bloom:3,tag:'First-line GAD',q:'Select ALL agents with FDA labeling for generalized anxiety disorder.',o:['Escitalopram','Duloxetine','Venlafaxine XR','Zolpidem','Buspirone'],a:[0,1,2,4],r:'Escitalopram, duloxetine, venlafaxine XR, paroxetine and buspirone are approved for GAD. Zolpidem is a hypnotic.',ref:'FDA labeling; DiPiro'},
+ {t:'sata',bloom:4,tag:'Orexin antagonists',q:'Select ALL true statements about dual orexin receptor antagonists.',o:['Contraindicated in narcolepsy','Primarily metabolized by CYP3A4','Cause next-day somnolence in some patients','Carry a boxed warning for complex sleep behaviors','Preserve slow-wave sleep'],a:[0,1,2,4],r:'DORAs are contraindicated in narcolepsy, are CYP3A4 substrates, and can cause residual somnolence. They do not carry the Z-drug boxed warning.',ref:'Belsomra, Dayvigo, Quviviq prescribing information'},
+ {t:'naplex',bloom:3,tag:'Dose adjustment',q:'A 62-year-old woman asks about zolpidem 10 mg IR. What is the FDA-recommended initial dose for women?',o:['2.5 mg','5 mg','10 mg','12.5 mg'],a:[1],r:'In 2013 the FDA recommended 5 mg IR (6.25 mg ER) as the starting dose for women because of slower clearance and next-morning impairment.',ref:'FDA Drug Safety Communication, Jan 2013'},
+ {t:'naplex',bloom:3,tag:'Interactions',q:'A patient taking fluoxetine is started on tamoxifen. What is the key concern?',o:['Reduced tamoxifen activation due to CYP2D6 inhibition','Increased tamoxifen clearance via CYP3A4 induction','QT prolongation only','No interaction'],a:[0],r:'Strong CYP2D6 inhibitors (fluoxetine, paroxetine) reduce formation of endoxifen, potentially reducing tamoxifen efficacy. Consider venlafaxine, citalopram or escitalopram.',ref:'Lexicomp; ASCO guidance'},
+ {t:'naplex',bloom:4,tag:'Deprescribing',q:'A patient has used alprazolam 1 mg TID for 18 months. Which approach is most appropriate for discontinuation?',o:['Stop abruptly and monitor','Gradual dose reduction (for example 5-10% every 1-2 weeks, slower if needed), with CBT-I or CBT','Replace with zolpidem long-term','Switch to buspirone and stop alprazolam the same day'],a:[1],r:'Abrupt discontinuation can cause seizures. Slow tapering, sometimes with cross-titration to a longer-acting agent, plus psychotherapy supports success. Buspirone does not prevent benzodiazepine withdrawal.',ref:'ASAM Joint Clinical Practice Guideline on Benzodiazepine Tapering, 2025'},
+ {t:'board',bloom:4,tag:'Sleep physiology',q:'Which finding best matches sleep after chronic benzodiazepine use?',o:['Increased N3 and REM','Reduced N3 and REM with increased N2 and spindle activity','Increased sleep latency','Increased REM latency only'],a:[1],r:'Benzodiazepines increase N2 and spindle density but reduce slow-wave sleep and REM, which can degrade restorative sleep quality.',ref:'Principles and Practice of Sleep Medicine'},
+ {t:'board',bloom:5,tag:'Insomnia model',q:'Spielman\'s 3P model of chronic insomnia says that perpetuating factors typically include:',o:['Genetic hyperarousal only','Conditioned arousal, extended time in bed and compensatory behaviors','Hypothalamic lesions','Melatonin deficiency only'],a:[1],r:'Predisposing, precipitating, and perpetuating factors interact. Perpetuating behaviors (long time in bed, napping, worry about sleep) maintain insomnia after the trigger passes, and CBT-I targets them.',ref:'Spielman 1987; AASM'},
+ {t:'board',bloom:4,tag:'Neurobiology',q:'Locus coeruleus hyperactivity most directly contributes to anxiety and insomnia through excess:',o:['GABA','Norepinephrine','Melatonin','Acetylcholine in the hippocampus'],a:[1],r:'The locus coeruleus provides widespread noradrenergic projections; elevated firing increases arousal, vigilance, and sympathetic outflow.',ref:'Sadock Kaplan & Sadock Synopsis of Psychiatry'},
+ {t:'case',bloom:5,tag:'Case: older adult',q:'A 78-year-old man with a prior fall reports insomnia and anxiety. He takes lorazepam 1 mg nightly. Which plan is MOST appropriate?',o:['Add zolpidem 10 mg','Start CBT-I and a gradual lorazepam taper; consider a DORA or low-dose option after review','Switch to diazepam for a smoother level','Add diphenhydramine'],a:[1],r:'Beers Criteria advise avoiding benzodiazepines, Z-drugs and first-generation antihistamines in older adults. CBT-I is first line, with gradual tapering. If pharmacotherapy is needed, a DORA or low-dose doxepin may be considered, weighing fall risk.',ref:'AGS Beers Criteria 2023; AASM 2017'},
+ {t:'case',bloom:5,tag:'Case: PTSD',q:'A veteran with PTSD has nightmares and drinks alcohol nightly. Which is the BEST initial pharmacologic choice?',o:['Alprazolam','Sertraline or paroxetine with consideration of prazosin for nightmares','Zolpidem','Diphenhydramine'],a:[1],r:'Sertraline and paroxetine are FDA-approved for PTSD. Benzodiazepines are not recommended and may worsen outcomes. Prazosin has evidence for nightmares in some trials (mixed results), and alcohol use should be addressed.',ref:'VA/DoD PTSD Guideline 2023'}
+];
+/* Simulation engine: neurotransmitter model, stress physiology, sleep architecture, clinical decision engine.
+   These are simplified teaching models, not predictive clinical tools. */
+const clamp=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+function rng(seed){let s=seed>>>0;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
+
+/* ---------- 1. Neurotransmitter control panel ---------- */
+const NT_KEYS=['GABA','Serotonin','Norepinephrine','Dopamine','Glutamate','Melatonin','Orexin'];
+const NT_DEFAULT={GABA:50,Serotonin:50,Norepinephrine:50,Dopamine:50,Glutamate:50,Melatonin:50,Orexin:50};
+function ntModel(n){
+  const d=k=>n[k]-50;
+  const anxiety=clamp(50+0.45*d('Norepinephrine')+0.28*d('Glutamate')-0.5*d('GABA')-0.3*d('Serotonin')+0.2*d('Orexin')+0.08*d('Dopamine'));
+  const sleep=clamp(50+0.4*d('GABA')+0.35*d('Melatonin')-0.5*d('Orexin')-0.3*d('Norepinephrine')-0.15*d('Glutamate')+0.1*d('Serotonin'));
+  const stress=clamp(50+0.5*d('Norepinephrine')+0.25*d('Glutamate')+0.15*d('Orexin')-0.3*d('GABA')-0.15*d('Serotonin'));
+  /* inverted-U: cognition peaks near moderate catecholamine tone (Yerkes-Dodson) and is impaired by excessive GABA (sedation) */
+  const cog=clamp(88-0.55*Math.abs(d('Norepinephrine'))-0.4*Math.abs(d('Dopamine'))-0.5*Math.max(0,d('GABA'))-0.2*Math.max(0,d('Melatonin'))-0.25*Math.max(0,-d('Serotonin'))+0.1*d('Glutamate')-0.2*Math.max(0,stress-60));
+  return{anxiety,sleep,stress,cog};
+}
+/* Drug presets shift neurotransmitter state for the control panel. */
+const NT_PRESETS={
+  none:{label:'Baseline',v:{}},
+  gad:{label:'Untreated GAD',v:{GABA:35,Norepinephrine:72,Glutamate:62,Serotonin:38,Orexin:62}},
+  insomnia:{label:'Chronic insomnia (hyperarousal)',v:{Orexin:72,Norepinephrine:66,GABA:42,Melatonin:38}},
+  benzo:{label:'Benzodiazepine (acute)',v:{GABA:80}},
+  ssri:{label:'SSRI (steady state)',v:{Serotonin:70}},
+  dora:{label:'DORA',v:{Orexin:22}},
+  ramelteon:{label:'Melatonin agonist',v:{Melatonin:75}}
+};
+
+/* ---------- 2. Stress physiology time series ---------- */
+function stressSeries(intensity,minutes=60,step=1,primed=false){
+  /* intensity 0-1. Sympathetic response in seconds-minutes; cortisol peaks about 20-30 min after stressor onset. */
+  const out=[];const k=primed?1.25:1;
+  for(let t=0;t<=minutes;t+=step){
+    const sym=intensity*k*(1-Math.exp(-t/1.2))*Math.exp(-Math.max(0,t-6)/(primed?45:18));
+    const crt=intensity*k*Math.pow(t/22,2)*Math.exp(2*(1-t/22))*(primed?1.15:1);
+    out.push({t,hr:72+48*sym,sbp:118+34*sym,rr:14+14*sym,cort:9+22*crt,ne:1+3.2*sym,crh:1+2.2*Math.min(1,intensity*k*(1-Math.exp(-t/4)))*Math.exp(-Math.max(0,t-15)/30)});
+  }
+  return out;
+}
+
+/* ---------- 3. Sleep architecture ---------- */
+const STAGES=['W','REM','N1','N2','N3'];
+function sleepNight(opts={}){
+  const o=Object.assign({caffeine:0,alcohol:0,stress:0,drug:'none',seed:7,hours:8},opts);
+  const D=DRUG_BY_ID[o.drug]; const A=D?D.arch:{sl:0,n3:0,rem:0,waso:0};
+  const r=rng(o.seed);
+  const N=Math.round(o.hours*12); /* 5-minute epochs */
+  const lat=Math.max(5,15+o.caffeine*0.08+o.stress*0.35+A.sl+(o.alcohol>0?-5:0)); /* minutes */
+  const f3=clamp(1-o.caffeine/600-o.stress/320+A.n3/100-(o.alcohol>0?0.1:0),0.1,1.4);
+  let fR=clamp(1-o.stress/450+A.rem/100,0.1,1.5);
+  const waso0=0.8+o.stress/40+o.caffeine/200+o.alcohol*0.5; /* wake epochs per hour late */
+  const L3=[6,5,3,1,0,0,0],R=[2,3,5,6,7,7,7];
+  const stages=[];
+  const latE=Math.round(lat/5); for(let i=0;i<latE&&stages.length<N;i++)stages.push('W');
+  let c=0;
+  while(stages.length<N&&c<7){
+    const first=stages.length<N/2;
+    let l3=Math.round(L3[c]*f3);
+    let rr=Math.round(R[c]*fR*(o.alcohol>0?(first?0.45:1.3):1));
+    rr=Math.max(c===0?1:0,rr);
+    const rest=Math.max(0,18-1-4-l3-rr);
+    const seq=[['N1',1],['N2',4],['N3',l3],['N2',rest],['REM',rr]];
+    seq.forEach(([s,n])=>{for(let i=0;i<n&&stages.length<N;i++)stages.push(s);});
+    c++;
+  }
+  while(stages.length<N)stages.push('N2');
+  /* awakenings in second half, scaled by waso modifier (negative = fewer) */
+  const wf=clamp(1+A.waso/40,0.2,1.6);
+  for(let i=Math.floor(N*0.3);i<N;i++){
+    const p=waso0*wf/12*(i>N*0.6?1.4:0.8)*0.35;
+    if(stages[i]!=='W'&&r()<p&&(stages[i-1]!=='W'))stages[i]='W';
+  }
+  let cnt={W:0,REM:0,N1:0,N2:0,N3:0};stages.forEach(s=>cnt[s]++);
+  const asleepE=N-cnt.W;
+  const first=stages.findIndex(s=>s!=='W');
+  const wasoE=stages.slice(Math.max(0,first)).filter(s=>s==='W').length;
+  const pct=s=>asleepE?+(100*cnt[s]/asleepE).toFixed(1):0;
+  return{stages,latency:Math.round(lat),tst:Math.round(asleepE*5),efficiency:Math.round(100*asleepE/N),
+    waso:wasoE*5,n1:pct('N1'),n2:pct('N2'),n3:pct('N3'),rem:pct('REM'),n3min:cnt.N3*5,remMin:cnt.REM*5};
+}
+
+/* ---------- 4. Clinical decision engine ---------- */
+const DOSES={low:{m:0.8,ae:0.6,label:'Low'},std:{m:1,ae:1,label:'Standard'},high:{m:1.1,ae:1.6,label:'High'}};
+function ramp(w,start,full){return clamp((w-start)/(full-start),0,1);} /* 0..1 */
+/* drugAnxEff / drugSleepEff return 0..1 fractions of baseline severity removed */
+function anxEff(d,w){
+  if(!d||w<=0)return 0;
+  switch(d.cls){
+    case'BZD':{const base=['clonazepam','diazepam'].includes(d.id)?0.5:0.55;const imm=base*(1-Math.exp(-w/0.4));const tol=w>3?Math.exp(-0.1*(w-3)):1;return imm*tol;}
+    case'SSRI':case'SNRI':{const max=d.id==='escitalopram'||d.id==='venlafaxine'||d.id==='duloxetine'?0.62:0.55;const sp={escitalopram:[1,8],sertraline:[1.5,10],paroxetine:[1.5,10],fluoxetine:[2,12],venlafaxine:[1.5,8],duloxetine:[1.5,8]}[d.id];return max*ramp(w,sp[0],sp[1])*(0.2+0.8*ramp(w,0,4));}
+    case'AZA':return 0.5*ramp(w,1,6);
+    case'H1':{const tol=w>2?Math.exp(-0.12*(w-2)):1;return 0.28*tol;}
+    default:return 0;}
+}
+function sleepEff(d,w){
+  if(!d||w<=0)return 0;
+  switch(d.cls){
+    case'BZD':{const tol=w>2?Math.exp(-0.14*(w-2)):1;return 0.55*tol;}
+    case'Z':{const tol=w>3?Math.exp(-0.06*(w-3)):1;return 0.6*tol;}
+    case'SSRI':case'SNRI':return 0.25*ramp(w,3,10)*(d.id==='paroxetine'?1.2:1);
+    case'AZA':return 0.05*ramp(w,2,6);
+    case'H1':{const tol=w>1?Math.exp(-0.2*(w-1)):1;return 0.3*tol;}
+    case'MEL':return(d.id==='ramelteon'?0.28:0.2)*(w>0?1:0);
+    case'DORA':return 0.55;
+    default:return 0;}
+}
+function earlyActivation(d,w){ /* transient worsening of anxiety / insomnia */
+  if(!d)return{a:0,s:0};
+  if(d.cls==='SSRI'||d.cls==='SNRI'){const f=d.id==='fluoxetine'?1.0:d.id==='sertraline'?0.85:d.id==='venlafaxine'?0.8:d.id==='escitalopram'?0.5:d.id==='duloxetine'?0.55:0.35;
+    const k=w<=1?1:w<=2?0.6:w<=3?0.2:0; return{a:k*f*0.14,s:k*f*0.1+(d.id==='fluoxetine'&&w<=4?0.05:0)};}
+  return{a:0,s:0};
+}
+function newSim(patient){
+  return{p:patient,week:0,hist:[],plan:{drug:'none',dose:'std',cbt:false,hygiene:false,alcoholStop:false,loraz:patient.id==='B'?'continue':'na',diphen:patient.id==='B'?'continue':'na'},
+    drugWeeks:{},depend:0,cbtWeeks:0,hygWeeks:0,lorTaperWeeks:0,events:[],flags:{},score:100,seen:{}};
+}
+function checkSafety(sim){
+  const p=sim.p,pl=sim.plan,d=DRUG_BY_ID[pl.drug];const alerts=[];
+  const add=(sev,code,msg)=>alerts.push({sev,code,msg});
+  if(!d)return alerts;
+  const sed=['BZD','Z','H1'].includes(d.cls)||d.cls==='DORA';
+  if(p.id==='B'){
+    if(d.cls==='BZD'||d.cls==='Z')add('crit','beers-b','Beers Criteria: avoid benzodiazepines and Z-drugs in older adults (falls, delirium). This patient has already fallen once.');
+    if((d.cls==='BZD'||d.cls==='Z')&&p.traits.opioid)add('crit','opioid-b','Boxed warning: concurrent opioid (tramadol) with a benzodiazepine or Z-drug increases risk of respiratory depression and death.');
+    if(pl.loraz==='continue'&&(d.cls==='BZD'||d.cls==='Z'||d.cls==='H1'||d.cls==='DORA'))add('warn','stack-b','Layering another sedative on top of nightly lorazepam and diphenhydramine multiplies CNS depression and falls risk.');
+    if(d.id==='paroxetine')add('crit','parox-b','Paroxetine is strongly anticholinergic (Beers: avoid) and a strong CYP2D6 inhibitor: raises metoprolol (bradycardia) and reduces tramadol activation.');
+    if(d.id==='fluoxetine')add('warn','fluox-b','Fluoxetine inhibits CYP2D6: raises metoprolol (bradycardia, hypotension) and blunts tramadol analgesia; serotonin syndrome and seizure risk with tramadol.');
+    if(d.id==='duloxetine'||d.id==='venlafaxine')add('warn','snri-b','SNRI plus tramadol: serotonin syndrome and seizure risk. SNRI raises BP in a patient already at 138/82.');
+    if(d.id==='hydroxyzine')add('crit','hydrox-b','Hydroxyzine: strongly anticholinergic (Beers: avoid), QT prolongation with baseline QTc 448 ms.');
+    if(d.id==='escitalopram'&&pl.dose==='high')add('warn','escit-b','Escitalopram above 10 mg/day is not recommended in patients over 60 (QT prolongation).');
+    if(d.id==='sertraline'||d.id==='escitalopram')add('info','ssri-b','SSRIs in older adults: check sodium at baseline and 2-4 weeks (SIADH). Fall risk persists.');
+    if(pl.diphen==='continue')add('warn','diph-b','Diphenhydramine nightly is a Beers "avoid" drug (anticholinergic burden, confusion).');
+  }
+  if(p.id==='C'){
+    if(d.cls==='BZD'||d.cls==='Z')add('crit','benzo-c','VA/DoD guidance: benzodiazepines are not recommended for PTSD and may worsen outcomes. Combined with nightly alcohol, respiratory depression and misuse risk are high.');
+    if(!pl.alcoholStop&&sed)add('crit','alc-c','Sedative plus alcohol: additive CNS and respiratory depression.');
+    if(d.id==='duloxetine'&&(p.traits.liver!=='normal'||!pl.alcoholStop))add('crit','dulox-c','Duloxetine: avoid in heavy alcohol use or chronic liver disease (hepatotoxicity).');
+    if(d.id==='buspirone'||d.id==='melatonin'||d.id==='ramelteon')add('info','nofit-c','This agent has limited evidence for PTSD core symptoms or nightmares.');
+    if(['sertraline','paroxetine','venlafaxine'].includes(d.id))add('good','first-c','Evidence-based first-line choice for PTSD (VA/DoD, FDA-labeled for sertraline and paroxetine).');
+    if(d.id==='escitalopram'||d.id==='fluoxetine')add('info','ssri-c','Reasonable SSRI, but sertraline, paroxetine or venlafaxine have stronger PTSD guideline support.');
+  }
+  if(p.id==='A'){
+    if(d.cls==='BZD')add('warn','benzo-a','Benzodiazepines relieve symptoms quickly but add dependence and tolerance risk. Guidelines favor SSRI/SNRI plus CBT first-line for GAD; benzodiazepines only short-term if at all.');
+    if(d.id==='paroxetine')add('info','parox-a','Paroxetine works for GAD but is more sedating, causes weight gain, and has the worst discontinuation syndrome among SSRIs.');
+    if(d.id==='escitalopram'||d.id==='sertraline'||d.id==='duloxetine'||d.id==='venlafaxine')add('good','first-a','Guideline-concordant first-line option for GAD. Counsel on delayed benefit and early activation.');
+    if(d.cls==='MEL'||d.cls==='DORA'||d.cls==='Z')add('info','sleeponly-a','Addresses sleep only; GAD itself remains untreated and will perpetuate insomnia.');
+  }
+  if(d.cls==='Z'&&pl.dose==='high')add('warn','z-dose','High-dose Z-drug: increased risk of complex sleep behaviors and next-day impairment.');
+  if(d.cls==='DORA'&&p.id==='B')add('info','dora-b','DORAs are a reasonable evidence-based option over benzodiazepines in older adults; monitor next-day somnolence and falls.');
+  return alerts;
+}
+function stepWeek(sim){
+  const p=sim.p,pl=sim.plan,d=DRUG_BY_ID[pl.drug],dose=DOSES[pl.dose];
+  sim.week++;
+  const w=sim.week;
+  if(d)sim.drugWeeks[d.id]=(sim.drugWeeks[d.id]||0)+1;
+  if(pl.cbt)sim.cbtWeeks++;
+  if(pl.hygiene)sim.hygWeeks++;
+  const dw=d?sim.drugWeeks[d.id]:0;
+  let aE=anxEff(d,dw)*dose.m, sE=sleepEff(d,dw)*dose.m;
+  /* non-drug effects */
+  const cbtA=pl.cbt?0.22*ramp(sim.cbtWeeks,1,8):0, cbtS=pl.cbt?0.42*ramp(sim.cbtWeeks,1,6):0;
+  const hygS=pl.hygiene?0.12*ramp(sim.hygWeeks,0,2):0;
+  const comb=(a,b,c=0)=>1-(1-a)*(1-b)*(1-c);
+  let aTot=comb(aE,cbtA), sTot=comb(sE,cbtS,hygS);
+  const act=earlyActivation(d,dw);
+  let gad=p.scores.gad7*(1-aTot)*(1+act.a);
+  let isi=p.scores.isi*(1-sTot)*(1+act.s);
+  /* alcohol (patient C) */
+  const events=[];
+  if(p.id==='C'){
+    if(!pl.alcoholStop){isi+=1.5;gad+=1;}
+    else{isi-=1.2;gad-=0.5; if(sim.seen.alc!==1){sim.seen.alc=1;events.push({w,k:'info',m:'Alcohol cessation: sleep fragmentation improves after 1-2 weeks; REM rebound can briefly intensify nightmares.'});}}
+  }
+  /* benzodiazepine dependence build-up and withdrawal on stopping (patient B baseline lorazepam) */
+  let withdr=0;
+  const onBz=d&&d.cls==='BZD';
+  if(onBz)sim.depend=Math.min(1,sim.depend+0.08);
+  if(!onBz&&sim.lastDrugWasBz){withdr=sim.depend*(1.0-0.25*(w-sim.bzStopWeek));}
+  if(withdr>0){gad+=withdr*6;isi+=withdr*7; if(sim.seen.wd!==w-1&&!sim.seen.wdlog){sim.seen.wdlog=1;events.push({w,k:'bad',m:'Withdrawal after stopping a benzodiazepine: rebound anxiety, insomnia, tremor. Abrupt cessation after long use risks seizures. A taper would have been safer.'});}}
+  if(p.id==='B'){
+    if(pl.loraz==='stop'&&!sim.seen.lorStop){sim.seen.lorStop=1;sim.lorStopWeek=w;events.push({w,k:'bad',m:'Lorazepam stopped abruptly after 2 years of nightly use: high risk of rebound insomnia, anxiety and withdrawal seizures.'});sim.score-=15;}
+    if(pl.loraz==='stop'&&sim.lorStopWeek){const k=Math.max(0,1-0.2*(w-sim.lorStopWeek));gad+=6*k;isi+=7*k;}
+    if(pl.loraz==='taper'){sim.lorTaperWeeks++;const f=Math.min(1,sim.lorTaperWeeks/8);
+      /* partial loss of lorazepam effect, tapering gently */
+      gad+=3.5*f*(sim.lorTaperWeeks<8?0.6:0.3);isi+=3.5*f*(sim.lorTaperWeeks<8?0.7:0.3);
+      if(sim.lorTaperWeeks===8)events.push({w,k:'good',m:'Lorazepam taper completed over 8 weeks. Residual sleep symptoms respond to CBT-I.'});}
+    if(pl.loraz==='continue'){/* patient remains on lorazepam; baseline scores already reflect it */}
+    if(pl.diphen==='stop'){isi+=0.4;}
+  }
+  /* tolerance rebound for BZD/Z at long durations */
+  if(d&&(d.cls==='BZD'||d.cls==='Z')&&dw>=4&&!sim.seen['tol'+d.id]){sim.seen['tol'+d.id]=1;events.push({w,k:'warn',m:`Tolerance developing to ${d.name}: efficacy is waning even at the same dose. Dependence risk rises beyond 2-4 weeks.`});}
+  if(d&&dw===1&&(d.cls==='SSRI'||d.cls==='SNRI')&&act.a>0.04)events.push({w,k:'warn',m:`Week 1 on ${d.name}: transient activation (jitteriness, anxiety, insomnia) is common and usually settles.`});
+  if(d&&dw===4&&(d.cls==='SSRI'||d.cls==='SNRI'))events.push({w,k:'good',m:`Week 4: meaningful improvement expected with ${d.name}. Reassess dose.`});
+  if(d&&dw===8&&(d.cls==='SSRI'||d.cls==='SNRI'))events.push({w,k:'good',m:`Week 8: near-maximal effect of ${d.name}. If response is under 20% by week 4-6, adjust.`});
+  /* adverse effects by drug/week */
+  if(d&&dw===2){
+    if(d.id==='paroxetine'||d.id==='sertraline'||d.id==='escitalopram'||d.id==='fluoxetine')events.push({w,k:'info',m:'GI upset, headache or sexual side effects may emerge. Counsel before they occur to protect adherence.'});
+    if(d.id==='duloxetine'||d.id==='venlafaxine')events.push({w,k:'info',m:'Nausea, sweating, raised BP. Check blood pressure.'});
+    if(d.cls==='BZD'||d.cls==='Z'||d.cls==='DORA'||d.id==='hydroxyzine')if(p.traits.age>60)events.push({w,k:'warn',m:'Next-day sedation, unsteadiness. Screen for falls.'});
+  }
+  if(d&&dw===3&&p.id==='B'&&['sertraline','escitalopram','duloxetine','venlafaxine','paroxetine','fluoxetine'].includes(d.id))events.push({w,k:'warn',m:'Check serum sodium: SSRI/SNRI hyponatremia (SIADH) risk in older adults (baseline Na 135).'});
+  if(d&&d.cls==='Z'&&dw===2&&dose.ae>1)events.push({w,k:'bad',m:'Report of sleep-driving/complex sleep behavior at high dose. Stop the drug (boxed warning).'});
+  const alerts=checkSafety(sim);
+  gad=clamp(gad,0,21);isi=clamp(isi,0,28);
+  const lat0={A:75,B:45,C:60}[p.id];
+  const latency=Math.round(clamp(lat0*(gad+isi*0.6)/(p.scores.gad7+p.scores.isi*0.6),8,120));
+  const nightmares=p.id==='C'?+(clamp(4.6*(isi/p.scores.isi)*(pl.drug==='none'?1:(['sertraline','paroxetine','venlafaxine'].includes(pl.drug)?0.7+0.3*(1-ramp(dw,2,10)):1)),0,7)).toFixed(1):null;
+  const rec={week:w,gad:+gad.toFixed(1),isi:+isi.toFixed(1),latency,nightmares,drug:pl.drug,dep:+sim.depend.toFixed(2),withdr:+Math.max(0,withdr).toFixed(2)};
+  sim.hist.push(rec);
+  events.forEach(e=>sim.events.push(e));
+  sim.lastDrugWasBz=onBz;
+  if(!onBz&&sim.bzTracked)sim.bzTracked=false;
+  if(onBz){sim.bzTracked=true;sim.bzStopWeek=w+1;}
+  /* scoring */
+  alerts.forEach(a=>{const key=a.code+'|'+pl.drug;if(!sim.seen[key]){sim.seen[key]=1;if(a.sev==='crit')sim.score-=12;else if(a.sev==='warn')sim.score-=5;else if(a.sev==='good')sim.score+=3;}});
+  sim.score=clamp(sim.score,0,100);
+  return{rec,alerts,events};
+}
+function goalMet(sim){
+  const h=sim.hist[sim.hist.length-1];if(!h)return false;
+  return h.gad<=7&&h.isi<=10;
+}
+/* UI core: DOM helpers, state, gamification, analytics tracking, charts, router. */
+const $=(s,r=document)=>r.querySelector(s);
+function h(tag,attrs,...kids){const e=document.createElement(tag);
+  for(const k in attrs||{}){const v=attrs[k];
+    if(k==='class')e.className=v;else if(k==='html')e.innerHTML=v;else if(k.startsWith('on'))e.addEventListener(k.slice(2),v);
+    else if(v!==false&&v!=null)e.setAttribute(k,v===true?'':v);}
+  kids.flat(9).forEach(c=>{if(c==null||c===false)return;e.append(c.nodeType?c:document.createTextNode(String(c)));});return e;}
+const NS='http://www.w3.org/2000/svg';
+function sv(tag,attrs,...kids){const e=document.createElementNS(NS,tag);
+  for(const k in attrs||{}){const v=attrs[k];if(k.startsWith('on'))e.addEventListener(k.slice(2),v);else if(v!=null&&v!==false)e.setAttribute(k,v===true?'':v);}
+  kids.flat(9).forEach(c=>{if(c==null||c===false)return;e.append(c.nodeType?c:document.createTextNode(String(c)));});return e;}
+
+/* ---- state ---- */
+const LEVELS=[['Novice',0],['Learner',100],['Practitioner',300],['Specialist',600],['Master',1000]];
+const BADGES={
+  first:['First Steps','Visited three modules'],
+  brain:['Neuro Navigator','Opened all six brain regions'],
+  path:['Pathway Pilot','Ran the stress pathway simulation'],
+  sleep:['Sleep Architect','Built three different sleep scenarios'],
+  recept:['Receptor Whisperer','Watched all four receptor mechanisms'],
+  safe:['Safe Prescriber','Reached the goal in a case with no critical safety alerts'],
+  quiz:['Quiz Ace','Scored 80% or higher on a quiz'],
+  taper:['Taper Master','Tapered lorazepam over 8 weeks for Patient B']
+};
+const MODS=[['home','Home'],['neuro','Normal Neurobiology'],['anx','Anxiety Pathophysiology'],['ins','Insomnia Pathophysiology'],['lab','Pharmacology Lab'],['vp','Virtual Patient'],['cases','Case Simulations'],['cmp','Drug Comparison Tool'],['sleep','Sleep Cycle Builder'],['quiz','Knowledge Check'],['inst','Instructor Analytics']];
+let S={xp:0,badges:{},time:{},done:{},visited:{},regions:{},recepts:{},sleepRuns:{},quiz:[],missed:{},reasoning:[],cases:{},name:'You'};
+try{const j=localStorage.getItem('nspl.v1');if(j)S=Object.assign(S,JSON.parse(j));}catch(e){}
+function save(){try{localStorage.setItem('nspl.v1',JSON.stringify(S));}catch(e){}}
+function level(){let l=LEVELS[0],n=LEVELS[1];for(let i=0;i<LEVELS.length;i++){if(S.xp>=LEVELS[i][1]){l=LEVELS[i];n=LEVELS[i+1]||null;}}return{name:l[0],floor:l[1],next:n};}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,3200);}
+function gain(xp,key){ /* one-time XP per key */
+  if(key){if(S.done[key])return;S.done[key]=1;}
+  S.xp+=xp;save();paintTop();toast('+'+xp+' XP');}
+function award(id){if(S.badges[id])return;S.badges[id]=Date.now();S.xp+=25;save();paintTop();toast('Badge earned: '+BADGES[id][0]+' (+25 XP)');}
+function paintTop(){const l=level();const span=l.next?l.next[1]-l.floor:1;const pct=l.next?100*(S.xp-l.floor)/span:100;
+  $('#xpval').textContent=S.xp+' XP';$('#lvl').textContent=l.name;$('#xpbar').style.width=pct+'%';
+  $('#xpbar').parentNode.setAttribute('aria-valuenow',Math.round(pct));
+  const done=Object.keys(S.visited).length;$('#prog').textContent=done+' / '+MODS.length+' modules opened';}
+
+/* ---- router ---- */
+let cur=null,curStart=0;
+function go(id){
+  const now=Date.now();if(cur)S.time[cur]=(S.time[cur]||0)+Math.round((now-curStart)/1000);
+  cur=id;curStart=now;S.visited[id]=1;
+  if(Object.keys(S.visited).length>=3)award('first');
+  save();
+  document.querySelectorAll('nav.rail button[data-v]').forEach(b=>b.toggleAttribute('aria-current',b.dataset.v===id)||0);
+  document.querySelectorAll('nav.rail button[data-v]').forEach(b=>{if(b.dataset.v===id)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+  const m=$('#main');m.innerHTML='';const el=VIEWS[id]();m.append(el);
+  try{history.replaceState(null,'','#'+id);}catch(e){}
+  m.focus({preventScroll:true});window.scrollTo(0,0);paintTop();
+}
+window.addEventListener('beforeunload',()=>{if(cur){S.time[cur]=(S.time[cur]||0)+Math.round((Date.now()-curStart)/1000);save();}});
+setInterval(()=>{if(cur&&!document.hidden){S.time[cur]=(S.time[cur]||0)+10;curStart=Date.now();save();}},10000);
+
+/* ---- shared widgets ---- */
+function meter(label,val,cls){const i=h('i',{class:cls||''});i.style.width=clamp(val)+'%';
+  const num=h('span',{class:'mono'},Math.round(val));
+  const b=h('div',{class:'bar',role:'progressbar','aria-valuemin':0,'aria-valuemax':100,'aria-valuenow':Math.round(val),'aria-label':label},i);
+  return{el:h('div',{class:'meter'},h('span',{},label),b,num),set(v,c){i.style.width=clamp(v)+'%';i.className=c||'';num.textContent=Math.round(v);b.setAttribute('aria-valuenow',Math.round(v));}};}
+function pill(t,c){return h('span',{class:'pill '+(c||'')},t);}
+function tabs(items,onSel,start=0){const wrap=h('div',{class:'tabs',role:'tablist'});const btns=items.map((it,i)=>h('button',{role:'tab','aria-selected':i===start?'true':'false',onclick:()=>sel(i)},it));
+  function sel(i){btns.forEach((b,j)=>b.setAttribute('aria-selected',j===i?'true':'false'));onSel(i);}
+  btns.forEach(b=>wrap.append(b));wrap.addEventListener('keydown',e=>{const i=btns.findIndex(b=>b.getAttribute('aria-selected')==='true');
+    if(e.key==='ArrowRight'){e.preventDefault();sel((i+1)%btns.length);btns[(i+1)%btns.length].focus();}
+    if(e.key==='ArrowLeft'){e.preventDefault();sel((i+btns.length-1)%btns.length);btns[(i+btns.length-1)%btns.length].focus();}});
+  return wrap;}
+function head(title,sub){return h('div',{},h('h1',{},title),h('p',{style:'color:var(--muted)'},sub));}
+
+/* Line chart: series [{name,cls,pts:[[x,y]]}]. Colors come from CSS variables. Returns {el,update(series,opts)} */
+const PALETTE=['--teal','--violet','--amber','--red','--green'];
+function lineChart(opts){
+  const W=opts.w||520,H=opts.h||220,m={l:42,r:14,t:14,b:34};
+  const svg=sv('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':opts.label||'Line chart'});
+  const g=sv('g');svg.append(g);
+  const legend=h('div',{class:'row',style:'font-size:.78rem;gap:12px'});
+  function draw(series,o2){
+    const o=Object.assign({},opts,o2||{});g.innerHTML='';legend.innerHTML='';
+    const xs=series.flatMap(s=>s.pts.map(p=>p[0])),ys=series.flatMap(s=>s.pts.map(p=>p[1]));
+    const x0=o.xmin!=null?o.xmin:Math.min(...xs),x1=o.xmax!=null?o.xmax:Math.max(...xs);
+    let y0=o.ymin!=null?o.ymin:Math.min(...ys,0),y1=o.ymax!=null?o.ymax:Math.max(...ys)*1.1;if(y1===y0)y1=y0+1;
+    const X=x=>m.l+(x-x0)/(x1-x0||1)*(W-m.l-m.r),Y=y=>H-m.b-(y-y0)/(y1-y0)*(H-m.t-m.b);
+    for(let i=0;i<=4;i++){const yv=y0+(y1-y0)*i/4,yy=Y(yv);
+      g.append(sv('line',{x1:m.l,x2:W-m.r,y1:yy,y2:yy,style:'stroke:var(--line);stroke-width:1'}));
+      g.append(sv('text',{x:m.l-6,y:yy+4,'text-anchor':'end','font-size':10,class:'mono'},(Math.round(yv*10)/10)));}
+    const xt=o.xticks||5;for(let i=0;i<=xt;i++){const xv=x0+(x1-x0)*i/xt;
+      g.append(sv('text',{x:X(xv),y:H-m.b+16,'text-anchor':'middle','font-size':10,class:'mono'},o.xfmt?o.xfmt(xv):Math.round(xv*10)/10));}
+    g.append(sv('text',{x:W/2,y:H-4,'text-anchor':'middle','font-size':10,style:'fill:var(--muted)'},o.xlabel||''));
+    g.append(sv('text',{x:10,y:H/2,'text-anchor':'middle','font-size':10,style:'fill:var(--muted)',transform:`rotate(-90 10 ${H/2})`},o.ylabel||''));
+    series.forEach((s,i)=>{const col=`var(${s.col||PALETTE[i%5]})`;
+      const d=s.pts.map((p,j)=>(j?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1)).join('');
+      g.append(sv('path',{d,fill:'none',style:`stroke:${col};stroke-width:2.2`}));
+      const last=s.pts[s.pts.length-1];g.append(sv('circle',{cx:X(last[0]),cy:Y(last[1]),r:4,style:`fill:${col}`}));
+      legend.append(h('span',{},h('span',{style:`display:inline-block;width:10px;height:10px;border-radius:2px;background:${col};margin-right:5px`}),s.name));});
+    if(o.marker!=null){g.append(sv('line',{x1:X(o.marker),x2:X(o.marker),y1:m.t,y2:H-m.b,style:'stroke:var(--ink);stroke-dasharray:4 3;opacity:.6'}));}
+  }
+  return{el:h('div',{},svg,legend),update:draw};
+}
+/* Views A: Home, Normal Neurobiology (brain map + neurotransmitter panel), Anxiety Pathophysiology. */
+const VIEWS={};
+VIEWS.home=()=>{
+  const cards=MODS.slice(1).map(([id,name])=>h('button',{class:'panel',style:'text-align:left;cursor:pointer;border:1px solid var(--line)',onclick:()=>go(id)},
+    h('div',{class:'lbl'},S.visited[id]?'Opened':'New'),h('h3',{},name),h('p',{style:'color:var(--muted);font-size:.85rem;margin:0'},HOME_BLURB[id])));
+  return h('div',{style:'display:flex;flex-direction:column;gap:14px'},
+    h('div',{class:'panel',style:'padding:22px'},h('div',{class:'lbl'},'Anxiety and insomnia, one system'),
+      h('h1',{style:'margin:6px 0 2px;font-size:2.3rem'},'NeuroSleep Pharm Lab'),
+      h('div',{style:'font:500 1.05rem var(--f-display);color:var(--teal);margin-bottom:10px'},'Hafeez Faridi, Ph.D.'),
+      h('p',{},'An integrated simulator for the neurobiology, pathophysiology and pharmacology of anxiety disorders and insomnia. Move sliders, run stressors, treat virtual patients, and watch receptors, hormones, vitals and sleep stages respond.'),
+      h('div',{class:'row'},h('button',{class:'btn',onclick:()=>go('neuro')},'Start with the brain'),h('button',{class:'btn alt',onclick:()=>go('vp')},'Treat a virtual patient'))),
+    h('div',{class:'grid'},cards),
+    h('div',{class:'panel'},h('h3',{},'Learning objectives'),h('ul',{style:'margin:6px 0;padding-left:20px'},
+      ['Locate and explain amygdala, hippocampus, prefrontal cortex, HPA axis and locus coeruleus roles in anxiety.',
+       'Explain sleep regulation: circadian clock, sleep homeostasis, VLPO flip-flop, melatonin and orexin.',
+       'Compare benzodiazepines, Z-drugs, SSRIs/SNRIs, buspirone, hydroxyzine, melatonin agonists and orexin antagonists by mechanism, kinetics, risks and use.',
+       'Choose and adjust therapy for virtual patients while monitoring efficacy, adverse effects, tolerance and withdrawal.'].map(t=>h('li',{},t)))),
+    h('div',{class:'note warn'},'Educational use only. Content summarizes FDA labeling, DSM-5-TR, AASM guidelines and standard texts (Katzung, Goodman & Gilman, DiPiro). Simulation models are simplified teaching tools, not predictions for real patients. Verify doses and interactions in current references before clinical use.'));
+};
+const HOME_BLURB={neuro:'Clickable brain map and a neurotransmitter control panel.',anx:'Animated stress pathway with live vitals and hormones.',ins:'Normal sleep system beside hyperarousal insomnia.',lab:'21 drugs with receptor animations and full profiles.',vp:'Three virtual patients, weekly follow-up, dynamic outcomes.',cases:'Branching clinical cases with decision feedback.',cmp:'Side-by-side comparison across 10 parameters.',sleep:'Edit caffeine, alcohol, stress and drugs; see the hypnogram.',quiz:'MCQ, SATA, NAPLEX, board and case questions with rationales.',inst:'Time, completion, quiz and reasoning analytics.'};
+
+/* ---------- Normal Neurobiology ---------- */
+VIEWS.neuro=()=>{
+  const info=h('div',{class:'panel',style:'min-height:260px'},h('h3',{},'Select a region'),h('p',{},'Click or press Enter on a structure to see function, pathophysiology, clinical relevance and drug targets.'));
+  const defs={pfc:{el:'ellipse',a:{cx:118,cy:128,rx:58,ry:66},c:'--teal'},thalamus:{el:'ellipse',a:{cx:232,cy:132,rx:32,ry:22},c:'--violet'},
+    hypothalamus:{el:'ellipse',a:{cx:232,cy:180,rx:24,ry:15},c:'--amber'},amygdala:{el:'circle',a:{cx:188,cy:212,r:15},c:'--red'},
+    hippocampus:{el:'ellipse',a:{cx:272,cy:210,rx:44,ry:13,transform:'rotate(14 272 210)'},c:'--green'},brainstem:{el:'rect',a:{x:256,y:236,width:34,height:92,rx:10},c:'--violet'}};
+  const svg=sv('svg',{viewBox:'0 0 460 340',role:'group','aria-label':'Schematic sagittal brain with six selectable regions'});
+  svg.append(sv('path',{d:'M58 190C38 100 118 30 230 30C342 30 424 92 412 182C406 228 362 250 322 250L292 246L290 330L252 330L250 244C176 270 78 262 58 190Z',style:'fill:var(--panel2);stroke:var(--line);stroke-width:2'}));
+  svg.append(sv('ellipse',{cx:338,cy:226,rx:56,ry:28,style:'fill:var(--line);opacity:.55'}));
+  svg.append(sv('text',{x:338,y:230,'text-anchor':'middle','font-size':10,style:'fill:var(--muted)'},'cerebellum'));
+  svg.append(sv('text',{x:20,y:24,'font-size':11,style:'fill:var(--muted)'},'Anterior'));svg.append(sv('text',{x:440,y:24,'text-anchor':'end','font-size':11,style:'fill:var(--muted)'},'Posterior'));
+  const els={};
+  Object.keys(defs).forEach(k=>{const d=defs[k];
+    const e=sv(d.el,Object.assign({class:'region',tabindex:0,role:'button','aria-label':BRAIN[k].name,style:`fill:var(${d.c});fill-opacity:.55;stroke:var(${d.c});stroke-width:2`},d.a));
+    const pick=()=>{Object.values(els).forEach(x=>x.classList.remove('on'));e.classList.add('on');show(k);};
+    e.addEventListener('click',pick);e.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();pick();}});
+    els[k]=e;svg.append(e);});
+  const labels={pfc:[118,128],thalamus:[232,136],hypothalamus:[232,184],amygdala:[188,236],hippocampus:[285,196],brainstem:[273,288]};
+  Object.keys(labels).forEach(k=>svg.append(sv('text',{x:labels[k][0],y:labels[k][1],'text-anchor':'middle','font-size':10,'font-weight':600,'pointer-events':'none',style:'fill:var(--ink)'},k==='pfc'?'PFC':BRAIN[k].name)));
+  function show(k){const b=BRAIN[k];S.regions[k]=1;save();if(Object.keys(S.regions).length>=6)award('brain');gain(5,'region-'+k);
+    info.innerHTML='';info.append(h('h3',{},b.name),
+      h('div',{class:'lbl'},'Function'),h('p',{},b.fn),h('div',{class:'lbl'},'Pathophysiologic role'),h('p',{},b.patho),
+      h('div',{class:'lbl'},'Clinical relevance'),h('p',{},b.clin),h('div',{class:'lbl'},'Drug targets'),h('p',{},b.drugs));}
+  const sr=h('p',{class:'sr'},'Use Tab to move between brain regions and Enter to select one.');
+  return h('div',{style:'display:flex;flex-direction:column;gap:14px'},head('Normal Neurobiology','Circuits for threat, stress and sleep. Select a structure, then use the control panel below to see how neurotransmitter balance shifts anxiety and sleep.'),
+    h('div',{class:'grid'},h('div',{class:'panel'},svg,sr),info),ntPanel());
+};
+function ntPanel(){
+  const st=Object.assign({},NT_DEFAULT);
+  const mAnx=meter('Anxiety score',50),mSl=meter('Sleep quality',50,'v'),mSt=meter('Stress level',50),mCg=meter('Cognitive function',50,'ok');
+  const sliders={};
+  const rows=NT_KEYS.map(k=>{const out=h('span',{class:'mono'},'50');
+    const inp=h('input',{type:'range',min:0,max:100,value:50,id:'nt-'+k,'aria-label':k+' level',oninput:()=>{st[k]=+inp.value;out.textContent=inp.value;upd();}});
+    sliders[k]={inp,out};return h('div',{class:'slider'},h('label',{for:'nt-'+k},k),inp,out);});
+  let touched=0;
+  function upd(){const m=ntModel(st);
+    mAnx.set(m.anxiety,m.anxiety>65?'bad':m.anxiety<40?'ok':'');
+    mSl.set(m.sleep,'v');mSt.set(m.stress,m.stress>65?'bad':'');mCg.set(m.cog,'ok');
+    if(++touched===12)gain(10,'ntpanel');}
+  function preset(key){const p=NT_PRESETS[key];NT_KEYS.forEach(k=>{st[k]=p.v[k]!=null?p.v[k]:50;sliders[k].inp.value=st[k];sliders[k].out.textContent=st[k];});upd();}
+  const sel=h('select',{id:'nt-preset','aria-label':'Load preset',onchange:()=>preset(sel.value)},Object.keys(NT_PRESETS).map(k=>h('option',{value:k},NT_PRESETS[k].label)));
+  const why=h('div',{class:'note'},'Teaching model: GABA and serotonin lower anxiety; norepinephrine, glutamate and orexin raise arousal. Melatonin and GABA promote sleep, orexin and norepinephrine oppose it. Cognition follows an inverted-U with catecholamine tone.');
+  upd();
+  return h('div',{class:'panel'},h('h2',{},'Neurotransmitter control panel'),h('p',{style:'color:var(--muted)'},'Adjust each system from 0 (very low) to 100 (very high); 50 is normal. Outputs update live.'),
+    h('div',{class:'grid'},h('div',{},h('div',{class:'row'},h('label',{for:'nt-preset',class:'lbl'},'Preset'),sel),rows),h('div',{},mAnx.el,mSl.el,mSt.el,mCg.el,why)));
+}
+
+/* ---------- Anxiety Pathophysiology ---------- */
+VIEWS.anx=()=>{
+  const steps=['Stress trigger','Amygdala activation','HPA axis activation','CRH release (PVN)','ACTH release (pituitary)','Cortisol release (adrenal cortex)','Sympathetic activation','Clinical symptoms'];
+  const at=[0,0.3,1,2,5,12,0.6,4]; /* simulated minutes when each node lights */
+  const sub=['Perceived threat or unpredictable stressor','Central nucleus drives hypothalamus and brainstem','PVN of hypothalamus engaged','CRH to anterior pituitary','ACTH enters circulation','Peaks about 20-30 min; slow feedback','LC norepinephrine, adrenal epinephrine','Palpitations, tremor, dyspnea, worry'];
+  const W=300,H=steps.length*52+10;
+  const svg=sv('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':'Stress pathway from trigger to symptoms'});
+  const nodes=steps.map((s,i)=>{const y=6+i*52;
+    if(i<steps.length-1)svg.append(sv('line',{x1:W/2,x2:W/2,y1:y+38,y2:y+52,class:'flow',style:'stroke:var(--muted);stroke-width:2'}));
+    const r=sv('rect',{x:10,y,width:W-20,height:38,rx:8,style:'fill:var(--panel2);stroke:var(--line);stroke-width:1.5'});
+    const t1=sv('text',{x:20,y:y+16,'font-size':12,'font-weight':600},s),t2=sv('text',{x:20,y:y+31,'font-size':9.5,style:'fill:var(--muted)'},sub[i]);
+    svg.append(r,t1,t2);return r;});
+  const inten=h('input',{type:'range',min:10,max:100,value:70,id:'anx-int','aria-label':'Stressor intensity'});
+  const prime=h('input',{type:'checkbox',id:'anx-prime'}),drug=h('select',{id:'anx-drug','aria-label':'Medication on board'},
+    [['none','No medication'],['benzo','Alprazolam / benzodiazepine (acute dose)'],['ssri','SSRI (steady state, 8+ weeks)'],['buspirone','Buspirone (steady state)'],['hydroxyzine','Hydroxyzine (acute dose)']].map(([v,l])=>h('option',{value:v},l)));
+  const cA=lineChart({w:520,h:200,label:'Heart rate and systolic blood pressure over time',xlabel:'Minutes after stressor',ylabel:'bpm / mmHg',ymin:60}),
+        cB=lineChart({w:520,h:200,label:'Cortisol and CRH over time',xlabel:'Minutes after stressor',ylabel:'ug/dL / rel. CRH',ymin:0}),
+        cC=lineChart({w:520,h:170,label:'Respiratory rate over time',xlabel:'Minutes after stressor',ylabel:'breaths/min',ymin:10});
+  const mA=meter('Amygdala activity',0,'bad'),mP=meter('PFC control',60,'ok'),mH=meter('HPA drive',0,'bad');
+  const nt={NE:meter('Norepinephrine',50),GLU:meter('Glutamate',50),GABA:meter('GABA tone',50,'ok'),SER:meter('Serotonin',50,'ok'),COR:meter('Cortisol',20)};
+  const vit=h('div',{class:'row mono',style:'font-size:.85rem'});
+  const play=h('button',{class:'btn',id:'anx-run'},'Run stressor');
+  let raf=null,tPlay=0,series=null;
+  function params(){const f={none:1,benzo:0.55,ssri:0.7,buspirone:0.8,hydroxyzine:0.75}[drug.value];return{I:+inten.value/100*f,primed:prime.checked};}
+  function draw(upTo){const s=series.slice(0,Math.max(2,upTo+1));
+    cA.update([{name:'HR (bpm)',pts:s.map(p=>[p.t,p.hr]),col:'--red'},{name:'SBP (mmHg)',pts:s.map(p=>[p.t,p.sbp]),col:'--violet'}],{xmin:0,xmax:60,ymin:60,ymax:175});
+    cB.update([{name:'Cortisol (ug/dL)',pts:s.map(p=>[p.t,p.cort]),col:'--amber'},{name:'CRH (relative)',pts:s.map(p=>[p.t,p.crh*4]),col:'--teal'}],{xmin:0,xmax:60,ymin:0,ymax:45});
+    cC.update([{name:'Resp. rate',pts:s.map(p=>[p.t,p.rr]),col:'--green'}],{xmin:0,xmax:60,ymin:10,ymax:32});
+    const c=s[s.length-1],t=c.t,pr=params();
+    nodes.forEach((n,i)=>{const on=t>=at[i]&&pr.I>0.05;n.style.fill=on?'var(--teal-soft)':'var(--panel2)';n.style.stroke=on?'var(--teal)':'var(--line)';});
+    const sym=(c.hr-72)/48/Math.max(pr.I*(pr.primed?1.25:1),0.01);
+    mA.set(clamp(100*pr.I*Math.min(1,t/1.5+.15)*(pr.primed?1.2:1)*Math.max(0.35,1-Math.max(0,t-10)/80)));
+    mP.set(clamp(60-45*pr.I*Math.min(1,t/3)+Math.max(0,t-15)*0.5));mH.set(clamp(100*pr.I*(c.crh-1)/2.2/(pr.primed?1.25:1)));
+    nt.NE.set(clamp(30+17*c.ne),c.ne>3?'bad':'');nt.GLU.set(clamp(40+30*pr.I*Math.min(1,t/2)));nt.GABA.set(clamp(60-28*pr.I*Math.min(1,t/3)),'ok');nt.SER.set(clamp(55-18*pr.I*Math.min(1,t/6)),'ok');nt.COR.set(clamp((c.cort-9)/22*100+8),c.cort>20?'bad':'');
+    vit.innerHTML='';vit.append(pill('HR '+Math.round(c.hr)+' bpm','r'),pill('BP '+Math.round(c.sbp)+'/'+Math.round(c.sbp*0.63)+' mmHg','v'),pill('RR '+Math.round(c.rr)+'/min','g'),pill('Cortisol '+c.cort.toFixed(1)+' ug/dL','a'),pill('t = '+t+' min','t'));}
+  function run(){cancelAnimationFrame(raf);const p=params();series=stressSeries(p.I,60,1,p.primed);tPlay=0;let last=performance.now();
+    gain(10,'anxrun');award('path');
+    const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduce){draw(60);return;}
+    (function tick(now){tPlay+=(now-last)/110;last=now;const i=Math.min(60,Math.floor(tPlay));draw(i);if(i<60)raf=requestAnimationFrame(tick);})(last);}
+  play.addEventListener('click',run);
+  [inten,prime,drug].forEach(e=>e.addEventListener('change',()=>{if(series)run();}));
+  series=stressSeries(0.7,60,1,false);draw(0);
+  const tabsEl=tabs(['GAD','Panic disorder','Social anxiety','Acute stress response','PTSD'],i=>{box.innerHTML='';box.append(DX[i]);});
+  const DX=[
+   dxCard('Generalized Anxiety Disorder (DSM-5-TR)','Excessive, difficult-to-control worry on most days for at least 6 months, with 3 or more of: restlessness, fatigue, poor concentration, irritability, muscle tension, sleep disturbance (6 months, adults). Sustained low-grade amygdala and LC activation with reduced prefrontal control; GABA-A and serotonergic tone are reduced. First-line: SSRI/SNRI, CBT; buspirone, hydroxyzine and short-term benzodiazepines are alternatives.'),
+   dxCard('Panic Disorder','Recurrent unexpected panic attacks (abrupt surge of fear peaking within minutes) followed by at least 1 month of persistent worry or behavior change. Hypersensitive brainstem and amygdala fear network, locus coeruleus surge, CO2 sensitivity. First-line: SSRIs (start low), SNRIs, CBT; benzodiazepines are used briefly as bridges.'),
+   dxCard('Social Anxiety Disorder','Marked fear of social scrutiny for 6 months or more, with avoidance. Amygdala hyperreactivity to social threat; reduced prefrontal regulation. First-line: SSRIs (paroxetine, sertraline), venlafaxine XR, CBT. Beta-blockers help performance-only anxiety.'),
+   dxCard('Acute Stress Response','Normal, adaptive fight-or-flight: fast sympathetic surge (seconds) plus slower HPA cortisol response (peaks at 20-30 min) with negative feedback via hippocampal and pituitary glucocorticoid receptors. Acute stress disorder (3 days to 1 month after trauma) is a distinct diagnosis. Use the simulation above.'),
+   dxCard('PTSD (overview)','Intrusion, avoidance, negative mood/cognition and hyperarousal for over 1 month after trauma exposure. Amygdala hyperreactivity, reduced vmPFC and hippocampal function, impaired fear extinction, heightened noradrenergic tone (nightmares), often with low basal cortisol and enhanced feedback sensitivity. First-line: trauma-focused psychotherapy; sertraline, paroxetine, venlafaxine; prazosin may help nightmares in some patients. Avoid benzodiazepines.')];
+  const box=h('div',{},DX[0]);
+  return h('div',{style:'display:flex;flex-direction:column;gap:14px'},head('Anxiety Pathophysiology','From threat detection to symptoms. Run a stressor, change intensity, prime the system as in chronic stress or PTSD, or add a medication and watch the pathway respond.'),
+    h('div',{class:'grid'},h('div',{class:'panel'},h('h3',{},'Stress pathway'),svg,h('div',{class:'note'},'The sympathetic arm acts in seconds, the HPA arm in minutes. Both are driven in parallel by the amygdala.')),
+      h('div',{class:'panel'},h('h3',{},'Controls'),h('div',{class:'slider',style:'grid-template-columns:100px 1fr 40px'},h('label',{for:'anx-int'},'Intensity'),inten,h('span',{class:'mono'},'')),
+        h('div',{class:'row'},prime,h('label',{for:'anx-prime'},'Primed system (chronic stress / PTSD)')),h('div',{class:'row',style:'margin:8px 0'},h('label',{for:'anx-drug',class:'lbl'},'Drug'),drug),h('div',{class:'row'},play),
+        h('div',{style:'margin-top:10px'},vit),h('h3',{style:'margin-top:12px'},'Brain activity'),mA.el,mP.el,mH.el,h('h3',{style:'margin-top:12px'},'Neurochemistry'),nt.NE.el,nt.GLU.el,nt.GABA.el,nt.SER.el,nt.COR.el)),
+    h('div',{class:'grid'},h('div',{class:'panel'},cA.el),h('div',{class:'panel'},cB.el),h('div',{class:'panel'},cC.el)),
+    h('div',{class:'panel'},h('h2',{},'Disorder profiles'),tabsEl,box));
+};
+function dxCard(t,b){return h('div',{},h('h3',{},t),h('p',{},b));}
+/* Views B1: Insomnia Pathophysiology (normal vs hyperarousal, side by side). */
+const sig=x=>1/(1+Math.exp(-x));
+function clockLabel(t){const hh=(18+t)%24;const h24=Math.floor(hh),m=Math.round((hh-h24)*60);return String(h24).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+/* t: hours since 18:00 (0-14). hyper 0-1. tx: {dora,mel,gaba} 0/1 */
+function insSignals(t,hyper,tx){
+  tx=tx||{};
+  const bed=5+hyper*2.2;                      /* sleep onset: 23:00 normally, later with hyperarousal */
+  const s=sig((t-bed)*3);                     /* sleep state 0-1 */
+  const wakeUp=sig((t-12.8)*2.2);             /* morning arousal rise */
+  let mel=sig((t-3-hyper*1.4)*1.4)*(1-sig((t-12.2)*1.3))*(1-0.4*hyper);
+  if(tx.mel)mel=Math.min(1,mel+0.35*sig((t-2.5)*2)*(1-sig((t-11)*1.5)));
+  const S=t<bed?0.22+0.74*(t/bed):0.96*Math.exp(-(t-bed)/(4.5+hyper*3.5));
+  let orx=0.9-0.78*s*(1-0.6*hyper)+0.55*wakeUp*(1-s*0.2);
+  if(tx.dora)orx*=0.42;
+  let ne=0.85-0.64*s*(1-0.65*hyper)+0.3*wakeUp;
+  if(tx.gaba)ne*=0.85;
+  const cort=0.14+0.86*sig((t-11)*1.3)+0.3*hyper*(1-sig((t-10)*1.2));
+  let vlpo=(0.15+0.8*s*(1-0.4*hyper))*(1-0.5*wakeUp);
+  if(tx.gaba)vlpo=Math.min(1,vlpo+0.18*s+0.1);
+  if(tx.mel)vlpo=Math.min(1,vlpo+0.05);
+  const arousal=clamp(0.5*orx+0.5*ne,0,1.2);
+  return{mel:clamp(mel,0,1),S:clamp(S,0,1),orx:clamp(orx,0,1),ne:clamp(ne,0,1),cort:clamp(cort,0,1),vlpo:clamp(vlpo,0,1),arousal:Math.min(1,arousal)};
+}
+function flipflop(){
+  const W=320,H=150,svg=sv('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':'VLPO and arousal network flip-flop switch'});
+  const v=sv('circle',{cx:85,cy:62,r:30,style:'fill:var(--violet);fill-opacity:.7;stroke:var(--violet);stroke-width:2'}),
+        a=sv('circle',{cx:235,cy:62,r:30,style:'fill:var(--amber);fill-opacity:.7;stroke:var(--amber);stroke-width:2'});
+  svg.append(sv('line',{x1:120,x2:200,y1:52,y2:52,class:'flow',style:'stroke:var(--muted);stroke-width:2'}),sv('line',{x1:200,x2:120,y1:72,y2:72,class:'flow',style:'stroke:var(--muted);stroke-width:2'}),
+    sv('text',{x:160,y:46,'text-anchor':'middle','font-size':9,style:'fill:var(--muted)'},'mutual inhibition'),v,a,
+    sv('text',{x:85,y:112,'text-anchor':'middle','font-size':10,'font-weight':600},'VLPO (GABA, galanin)'),sv('text',{x:235,y:112,'text-anchor':'middle','font-size':10,'font-weight':600},'Orexin, LC, raphe, TMN'));
+  const st=sv('text',{x:160,y:138,'text-anchor':'middle','font-size':13,'font-weight':700});svg.append(st);
+  return{el:svg,set(vl,ar){v.setAttribute('r',10+34*vl);a.setAttribute('r',10+34*ar);const asleep=vl>ar;st.textContent=asleep?'State: ASLEEP':'State: AWAKE';st.style.fill=asleep?'var(--violet)':'var(--amber)';}};
+}
+VIEWS.ins=()=>{
+  let t=0,playing=false,raf=null;
+  const tm=h('input',{type:'range',min:0,max:14,step:0.05,value:0,id:'ins-t','aria-label':'Clock time'}),clk=h('span',{class:'mono',style:'font-size:1.3rem;font-weight:500'},'18:00'),
+        hyp=h('input',{type:'range',min:0,max:100,value:80,id:'ins-h','aria-label':'Hyperarousal level'}),
+        txSel=h('select',{id:'ins-tx','aria-label':'Treatment'},[['none','No treatment'],['dora','DORA (orexin antagonist)'],['mel','Melatonin agonist'],['gaba','Benzodiazepine / Z-drug (GABA-A)']].map(([v,l])=>h('option',{value:v},l))),
+        play=h('button',{class:'btn',id:'ins-play'},'Play night');
+  const names=[['mel','Melatonin','--violet'],['S','Sleep pressure (adenosine)','--teal'],['orx','Orexin signaling','--amber'],['ne','Norepinephrine (LC)','--red'],['cort','Cortisol','--green']];
+  function panel(title,sub,isIns){
+    const ff=flipflop(),ch=lineChart({w:520,h:230,label:title+' signals across the night',xmin:0,xmax:14,ymin:0,ymax:1,xticks:7,xfmt:clockLabel,xlabel:'Clock time',ylabel:'Relative level'});
+    const pm=meter('Sleep drive',50,'v'),pa=meter('Arousal drive',50,'bad');
+    function upd(){const hy=isIns?+hyp.value/100:0,tx=isIns?{dora:txSel.value==='dora',mel:txSel.value==='mel',gaba:txSel.value==='gaba'}:{};
+      const pts=k=>{const a=[];for(let x=0;x<=t+0.001;x+=0.2)a.push([x,insSignals(x,hy,tx)[k]]);return a;};
+      ch.update(names.map(([k,n,c])=>({name:n,col:c,pts:pts(k)})),{marker:t});
+      const c=insSignals(t,hy,tx);ff.set(c.vlpo,c.arousal);pm.set(100*(0.5*c.vlpo+0.3*c.S+0.2*c.mel),'v');pa.set(100*c.arousal,'bad');}
+    return{el:h('div',{class:'panel'},h('h2',{},title),h('p',{style:'color:var(--muted);margin:2px 0 8px'},sub),ff.el,ch.el,pm.el,pa.el),upd};
+  }
+  const nrm=panel('Normal sleep system','Melatonin rises about 2 h before habitual sleep, adenosine builds across the day, orexin and norepinephrine fall as VLPO takes over.',false);
+  const ins=panel('Insomnia: hyperarousal','Delayed, blunted melatonin; orexin and LC norepinephrine stay high; cortisol elevated at night; VLPO fails to dominate.',true);
+  function update(){clk.textContent=clockLabel(t);tm.value=t;nrm.upd();ins.upd();}
+  tm.addEventListener('input',()=>{t=+tm.value;update();});[hyp,txSel].forEach(e=>e.addEventListener('input',update));
+  play.addEventListener('click',()=>{if(playing){playing=false;cancelAnimationFrame(raf);play.textContent='Play night';return;}
+    if(t>=14)t=0;playing=true;play.textContent='Pause';gain(10,'insplay');let last=performance.now();
+    const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    (function tick(now){if(!playing)return;t=Math.min(14,t+(now-last)/1000*(reduce?14:1.4));last=now;update();if(t<14)raf=requestAnimationFrame(tick);else{playing=false;play.textContent='Play night';}})(last);});
+  update();
+  const sub=[['Acute (short-term) insomnia','Difficulty with sleep for under 3 months, usually tied to a stressor. Transient hyperarousal. Treat the trigger, use sleep hygiene and short-term pharmacotherapy only if needed (days to 2-4 weeks).'],
+   ['Chronic insomnia','Sleep difficulty at least 3 nights per week for at least 3 months with daytime impairment (DSM-5-TR / ICSD-3). Maintained by conditioned arousal, worry about sleep and extended time in bed (Spielman 3P model). First-line: CBT-I; drugs are adjuncts.'],
+   ['Sleep onset insomnia','Long sleep latency (typically over 30 min). Delayed circadian phase, cognitive arousal at bedtime, caffeine. Options: CBT-I, ramelteon, zaleplon, zolpidem, eszopiclone, DORAs.'],
+   ['Sleep maintenance insomnia','Frequent awakenings or early morning waking with trouble returning to sleep. Associated with depression, pain, sleep apnea, nocturia, alcohol. Options: CBT-I, suvorexant, lemborexant, daridorexant, low-dose doxepin, eszopiclone. Screen for sleep apnea.']];
+  const box=h('div',{},h('h3',{},sub[0][0]),h('p',{},sub[0][1]));
+  const stab=tabs(sub.map(s=>s[0]),i=>{box.innerHTML='';box.append(h('h3',{},sub[i][0]),h('p',{},sub[i][1]));});
+  const bodyKnow=h('div',{class:'grid'},
+    h('div',{class:'panel'},h('h3',{},'Two-process model'),h('p',{},'Process S (sleep homeostasis) accumulates adenosine with time awake and dissipates in sleep. Process C (circadian, suprachiasmatic nucleus) times melatonin from the pineal gland (dim-light melatonin onset about 2 h before habitual sleep) and the cortisol awakening rise.')),
+    h('div',{class:'panel'},h('h3',{},'Flip-flop switch'),h('p',{},'Sleep-active GABA/galanin neurons in the ventrolateral preoptic nucleus (VLPO) and wake-promoting monoaminergic nuclei inhibit each other. Orexin neurons of the lateral hypothalamus stabilize the wake state. Hyperarousal tips the balance toward wake.')),
+    h('div',{class:'panel'},h('h3',{},'Sleep stages'),h('p',{},'N1 (transition, 2-5%), N2 (spindles and K-complexes, 45-55%), N3 (slow-wave, 13-23%, early night), REM (20-25%, later night, with atonia). Cycles last about 90 minutes.')));
+  return h('div',{style:'display:flex;flex-direction:column;gap:14px'},head('Insomnia Pathophysiology','Scrub or play the night from 18:00 to 08:00. The left column shows a healthy sleep system; the right shows hyperarousal insomnia. Add a treatment on the right to see where it acts.'),
+    h('div',{class:'panel'},h('div',{class:'row'},clk,play,h('label',{for:'ins-t',class:'lbl'},'Time'),h('div',{style:'flex:1;min-width:160px'},tm)),
+      h('div',{class:'row',style:'margin-top:8px'},h('label',{for:'ins-h',class:'lbl'},'Hyperarousal'),h('div',{style:'min-width:160px'},hyp),h('label',{for:'ins-tx',class:'lbl'},'Treatment'),txSel)),
+    h('div',{class:'grid'},nrm.el,ins.el),bodyKnow,h('div',{class:'panel'},h('h2',{},'Insomnia types'),stab,box));
+};
+/* Views B2: Pharmacology Lab with receptor animation engine. */
+const MECH_TITLES={
+ gaba:['GABA-A receptor','Benzodiazepine / Z-drug binding site','Chloride influx','Neuronal hyperpolarization (inhibition)','Anxiolysis / sedation'],
+ sert:['Serotonin transporter (SERT)','Reuptake blocked','Synaptic 5-HT rises','5-HT1A autoreceptor desensitizes (weeks)','Delayed anxiolysis and plasticity'],
+ '5ht1a':['Presynaptic 5-HT1A autoreceptor','Partial agonist binds','Raphe firing reduced, postsynaptic partial agonism','Network tone shifts over weeks','Anxiolysis without sedation'],
+ h1:['Histamine H1 receptor (Gq)','Inverse agonist binds','Wake-promoting histamine signaling falls','Cortical and limbic arousal reduced','Sedation and short-term anxiolysis'],
+ mel:['MT1 / MT2 receptors (SCN)','Agonist binds','MT1 lowers SCN alerting; MT2 shifts phase','VLPO disinhibited','Sleep onset facilitated'],
+ orx:['Orexin receptors OX1R / OX2R','Antagonist blocks orexin binding','Wake-promoting excitation of LC, raphe, TMN falls','Arousal network quiets','Sleep onset and maintenance']
+};
+const MECH_STEPS={gaba:1};
+function recepAnim(kind,color){
+  const W=420,H=300,svg=sv('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':'Animated receptor interaction: '+MECH_TITLES[kind].join(', then ')});
+  const g=sv('g');svg.append(g);
+  const stepLab=sv('text',{x:W/2,y:20,'text-anchor':'middle','font-size':13,'font-weight':700});svg.append(stepLab);
+  let step=0,timer=null,ions=[],raf=null;
+  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function memb(){g.append(sv('rect',{x:0,y:130,width:W,height:46,style:'fill:var(--panel2)'}),sv('text',{x:10,y:122,'font-size':10,style:'fill:var(--muted)'},kind==='sert'?'Presynaptic terminal (below) / synaptic cleft (above)':'Synaptic cleft / extracellular'),sv('text',{x:10,y:192,'font-size':10,style:'fill:var(--muted)'},'Intracellular'));}
+  const drugC=`var(--${color==='r'?'red':color==='v'?'violet':color==='t'?'teal':color==='g'?'green':'amber'})`;
+  function render(){
+    g.innerHTML='';ions=[];memb();
+    if(kind==='gaba'){
+      /* GABA-A pentamer pore */
+      [[165,130],[255,130]].forEach(([x,y])=>g.append(sv('rect',{x:x-20,y:y-20,width:40,height:86,rx:12,style:'fill:var(--violet);fill-opacity:.55;stroke:var(--violet);stroke-width:2'})));
+      const open=step>=2;
+      g.append(sv('rect',{x:195,y:122,width:30,height:62,rx:6,style:`fill:${open?'var(--teal-soft)':'var(--panel)'};stroke:var(--line)`}));
+      g.append(sv('text',{x:210,y:156,'text-anchor':'middle','font-size':9,style:'fill:var(--muted)'},open?'open':'pore'));
+      g.append(sv('circle',{cx:210,cy:92,r:12,style:'fill:var(--green)'}),sv('text',{x:210,y:96,'text-anchor':'middle','font-size':10,'font-weight':700,style:'fill:#fff'},'GABA'));
+      g.append(sv('text',{x:210,y:70,'text-anchor':'middle','font-size':10,style:'fill:var(--muted)'},'GABA bound at alpha/beta interface'));
+      if(step>=1){g.append(sv('circle',{cx:118,cy:150,r:14,class:step===1?'pulse':'',style:`fill:${drugC}`}),sv('text',{x:118,y:154,'text-anchor':'middle','font-size':10,'font-weight':700,style:'fill:#fff'},'BZD'),
+        sv('text',{x:118,y:182,'text-anchor':'middle','font-size':9,style:'fill:var(--muted)'},'alpha/gamma2 site'));}
+      if(step>=2){for(let i=0;i<9;i++)ions.push({x:200+Math.random()*20,y:40+Math.random()*80,vy:1.2+Math.random()*1.2});}
+      g.append(sv('text',{x:20,y:260,'font-size':11,'font-weight':600,style:`fill:${step>=3?'var(--violet)':'var(--muted)'}`},step>=3?'Cl- inside: membrane potential more negative, firing less likely':'Cl- channel closed'));
+      if(step>=4)g.append(sv('text',{x:20,y:280,'font-size':11,style:'fill:var(--teal)'},'Net effect: anxiolysis, sedation, anticonvulsant, muscle relaxation'));
+    }
+    if(kind==='sert'){
+      g.append(sv('rect',{x:150,y:122,width:56,height:68,rx:12,style:'fill:var(--teal);fill-opacity:.55;stroke:var(--teal);stroke-width:2'}),sv('text',{x:178,y:160,'text-anchor':'middle','font-size':10,'font-weight':700},'SERT'));
+      if(step>=1)g.append(sv('circle',{cx:178,cy:114,r:14,style:`fill:${drugC}`}),sv('text',{x:178,y:118,'text-anchor':'middle','font-size':9,'font-weight':700,style:'fill:#fff'},'SSRI'),sv('path',{d:'M158 110L198 120M198 110L158 120',style:'stroke:var(--red);stroke-width:3'}));
+      const n=step>=2?14:5;for(let i=0;i<n;i++)g.append(sv('circle',{cx:30+((i*83)%360),cy:40+((i*47)%72),r:5,style:'fill:var(--amber)',class:step>=2?'pulse':''}));
+      g.append(sv('text',{x:20,y:226,'font-size':10,style:'fill:var(--muted)'},'amber dots = serotonin (5-HT)'));
+      g.append(sv('text',{x:20,y:250,'font-size':11,'font-weight':600,style:`fill:${step>=3?'var(--violet)':'var(--muted)'}`},step>=3?'Weeks later: autoreceptors desensitize, firing recovers':'Acute: autoreceptor feedback limits benefit'));
+      if(step>=4)g.append(sv('text',{x:20,y:272,'font-size':11,style:'fill:var(--teal)'},'Net effect: anxiolysis and neuroplasticity at 2-8 weeks'));
+    }
+    if(kind==='5ht1a'){
+      g.append(sv('rect',{x:150,y:122,width:56,height:68,rx:26,style:'fill:var(--green);fill-opacity:.55;stroke:var(--green);stroke-width:2'}),sv('text',{x:178,y:160,'text-anchor':'middle','font-size':10,'font-weight':700},'5-HT1A'));
+      if(step>=1)g.append(sv('circle',{cx:178,cy:106,r:14,class:step===1?'pulse':'',style:`fill:${drugC}`}),sv('text',{x:178,y:110,'text-anchor':'middle','font-size':8,'font-weight':700,style:'fill:#fff'},'BUSP'));
+      const n=step>=2?3:8;for(let i=0;i<n;i++)g.append(sv('circle',{cx:40+i*45,cy:60+(i%3)*14,r:5,style:'fill:var(--amber)'}));
+      g.append(sv('text',{x:20,y:230,'font-size':11,'font-weight':600,style:`fill:${step>=2?'var(--violet)':'var(--muted)'}`},step>=2?'Presynaptic 5-HT release falls first, then adapts':'Baseline serotonin firing'));
+      if(step>=4)g.append(sv('text',{x:20,y:252,'font-size':11,style:'fill:var(--teal)'},'Net effect: anxiolysis without sedation or dependence'));
+    }
+    if(kind==='h1'||kind==='orx'||kind==='mel'){
+      const lab={h1:'H1',orx:'OX1R/OX2R',mel:'MT1/MT2'}[kind],lig={h1:'histamine',orx:'orexin-A/B',mel:'melatonin'}[kind];
+      g.append(sv('rect',{x:150,y:122,width:56,height:68,rx:16,style:'fill:var(--violet);fill-opacity:.55;stroke:var(--violet);stroke-width:2'}),sv('text',{x:178,y:160,'text-anchor':'middle','font-size':9,'font-weight':700},lab));
+      const blocked=(kind==='h1'||kind==='orx')&&step>=1;
+      g.append(sv('circle',{cx:240,cy:90,r:11,style:`fill:var(--amber);opacity:${blocked?.6:1}`}),sv('text',{x:240,y:70,'text-anchor':'middle','font-size':9,style:'fill:var(--muted)'},lig));
+      if(step>=1)g.append(sv('circle',{cx:178,cy:104,r:14,class:step===1?'pulse':'',style:`fill:${drugC}`}),sv('text',{x:178,y:108,'text-anchor':'middle','font-size':8,'font-weight':700,style:'fill:#fff'},'DRUG'));
+      if(blocked)g.append(sv('path',{d:'M222 80L250 100M250 80L222 100',style:'stroke:var(--red);stroke-width:3'}));
+      g.append(sv('text',{x:20,y:230,'font-size':11,'font-weight':600,style:`fill:${step>=2?'var(--violet)':'var(--muted)'}`},step>=2?MECH_TITLES[kind][2]:'Baseline signaling'));
+      if(step>=4)g.append(sv('text',{x:20,y:252,'font-size':11,style:'fill:var(--teal)'},'Net effect: '+MECH_TITLES[kind][4].toLowerCase()));
+    }
+    stepLab.textContent=(step+1)+' / 5  '+MECH_TITLES[kind][step];
+    ions.forEach(i=>i.el=sv('circle',{r:4,style:'fill:var(--green)'}));ions.forEach(i=>g.append(i.el));
+  }
+  function loop(){ions.forEach(i=>{i.y+=i.vy;if(i.y>180){i.y=40;i.x=200+Math.random()*20;}i.el.setAttribute('cx',i.x);i.el.setAttribute('cy',i.y);});raf=requestAnimationFrame(loop);}
+  function set(n){step=n;render();cancelAnimationFrame(raf);if(ions.length&&!reduce)raf=requestAnimationFrame(loop);else ions.forEach(i=>{i.el.setAttribute('cx',i.x);i.el.setAttribute('cy',60+Math.random()*100);});}
+  function auto(){clearInterval(timer);let n=0;set(0);timer=setInterval(()=>{if(!svg.isConnected){clearInterval(timer);cancelAnimationFrame(raf);return;}n++;if(n>4){clearInterval(timer);return;}set(n);},1700);}
+  set(0);
+  return{el:svg,set,auto,get step(){return step;},stop(){clearInterval(timer);cancelAnimationFrame(raf);}};
+}
+function profileTable(d){
+  const rows=[['Class',CLS[d.cls].name+(d.sched&&d.sched!=='None'?' ('+d.sched+')':'')],['Mechanism of action',d.moa],['Receptor targets',d.target],['BBB penetration',d.bbb],['Onset',d.onset],['Half-life',d.t12],['Metabolism',d.metab],['Drug interactions',d.inter],['Clinical pearls',d.pearls],['Black box warning',d.bbw],['Abuse potential',d.abuse]];
+  return h('table',{},h('tbody',{},rows.map(([k,v])=>h('tr',{},h('th',{scope:'row',style:'width:150px;position:static;background:none'},k),h('td',{},k==='Black box warning'&&v!=='None.'?h('span',{},pill('BOXED','r'),' ',v):v)))));
+}
+VIEWS.lab=()=>{
+  const sel=h('select',{id:'lab-drug','aria-label':'Choose medication'},DRUGS.map(d=>h('option',{value:d.id},d.name+' ('+d.brand+')')));
+  const box=h('div',{});let anim=null;
+  const mechView=h('div',{class:'panel'});
+  function show(id){
+    const d=DRUG_BY_ID[id];if(anim)anim.stop();
+    const kind=CLS[d.cls].mech;anim=recepAnim(kind,CLS[d.cls].color);
+    S.recepts[kind]=1;save();if(Object.keys(S.recepts).length>=4)award('recept');gain(3,'lab-'+id);
+    const steps=h('div',{class:'row'},[0,1,2,3,4].map(i=>h('button',{class:'chip',onclick:()=>{anim.stop();anim.set(i);}},'Step '+(i+1))));
+    const rb=h('button',{class:'btn',onclick:()=>anim.auto()},'Animate mechanism');
+    mechView.innerHTML='';mechView.append(h('h3',{},'Drug visualization engine'),anim.el,h('div',{class:'row',style:'margin-top:8px'},rb,steps),
+      h('ol',{style:'padding-left:20px;margin:8px 0 0;font-size:.85rem;color:var(--muted)'},MECH_TITLES[kind].map(t=>h('li',{},t))));
+    box.innerHTML='';box.append(h('div',{class:'row',style:'margin-bottom:6px'},h('h2',{},d.name),pill(d.brand),pill(CLS[d.cls].name,CLS[d.cls].color),d.bbw!=='None.'?pill('Boxed warning','r'):pill('No boxed warning','g')),profileTable(d),
+      h('div',{class:'row',style:'margin-top:10px'},h('span',{class:'lbl'},'Sedation'),dots(d.sed,'a'),h('span',{class:'lbl'},'Dependence risk'),dots(d.dep,'r')));
+  }
+  sel.addEventListener('change',()=>show(sel.value));show('alprazolam');
+  return h('div',{style:'display:flex;flex-direction:column;gap:14px'},head('Pharmacology Lab','Choose any of 21 drugs for a full profile and an animated receptor mechanism. Use Animate mechanism to run the sequence, or step through manually.'),
+    h('div',{class:'row'},h('label',{for:'lab-drug',class:'lbl'},'Medication'),sel),
+    h('div',{class:'grid'},h('div',{class:'panel',style:'min-width:0'},box),mechView));
+};
+function dots(n,c){return h('span',{role:'img','aria-label':n+' out of 5',style:'display:inline-flex;gap:3px'},[1,2,3,4,5].map(i=>h('span',{style:`width:12px;height:12px;border-radius:50%;background:${i<=n?`var(--${c==='r'?'red':'amber'})`:'var(--panel2)'};border:1px solid var(--line)`})));}
+/* Views C: Virtual Patient, Case Simulations, Drug Comparison, Sleep Cycle Builder. */
+const OPTIONS=[['none','No medication']].concat(DRUGS.map(d=>[d.id,d.name+' ('+CLS[d.cls].name+')']));
+function vpView(P,compact){
+  const sim=newSim(P);let lastAlerts=[];
+  const chartA=lineChart({w:520,h:210,label:'GAD-7 and ISI scores by week',xlabel:'Week',ylabel:'Score',ymin:0,ymax:28,xmin:0,xmax:12,xticks:6});
+  const chartB=lineChart({w:520,h:170,label:'Sleep latency by week',xlabel:'Week',ylabel:'Minutes',ymin:0,ymax:120,xmin:0,xmax:12,xticks:6});
+  const drugSel=h('select',{id:'vp-drug-'+P.id,'aria-label':'Medication'},OPTIONS.map(([v,l])=>h('option',{value:v},l)));
+  const doseSel=h('select',{id:'vp-dose-'+P.id,'aria-label':'Dose level'},Object.keys(DOSES).map(k=>h('option',{value:k,selected:k==='std'},DOSES[k].label+' dose')));
+  const cbt=h('input',{type:'checkbox',id:'vp-cbt-'+P.id}),hyg=h('input',{type:'checkbox',id:'vp-hyg-'+P.id}),alc=h('input',{type:'checkbox',id:'vp-alc-'+P.id});
+  const lorSel=h('select',{id:'vp-lor-'+P.id,'aria-label':'Existing lorazepam plan'},[['continue','Continue lorazepam 1 mg HS'],['taper','Taper lorazepam over 8 weeks'],['stop','Stop lorazepam abruptly']].map(([v,l])=>h('option',{value:v},l)));
+  const dipSel=h('select',{id:'vp-dip-'+P.id,'aria-label':'Diphenhydramine plan'},[['continue','Continue diphenhydramine'],['stop','Stop diphenhydramine']].map(([v,l])=>h('option',{value:v},l)));
+  const alertBox=h('div',{'aria-live':'polite'}),log=h('div',{style:'max-height:220px;overflow:auto'},h('p',{style:'color:var(--muted)'},'Week 0. Choose a plan and advance time.'));
+  const mG=meter('GAD-7 (0-21)',P.scores.gad7/21*100,'bad'),mI=meter('ISI (0-28)',P.scores.isi/28*100,'bad'),mD=meter('Dependence',0),mS=meter('Safety score',100,'ok');
+  const wk=h('span',{class:'mono',id:'vp-wk-'+P.id},'Week 0');
+  const result=h('div',{});
+  function apply(){const pl=sim.plan;pl.drug=drugSel.value;pl.dose=doseSel.value;pl.cbt=cbt.checked;pl.hygiene=hyg.checked;pl.alcoholStop=alc.checked;if(P.id==='B'){pl.loraz=lorSel.value;pl.diphen=dipSel.value;}}
+  function paint(r){
+    chartA.update([{name:'GAD-7',col:'--red',pts:[[0,P.scores.gad7]].concat(sim.hist.map(x=>[x.week,x.gad]))},{name:'ISI',col:'--violet',pts:[[0,P.scores.isi]].concat(sim.hist.map(x=>[x.week,x.isi]))}]);
+    chartB.update([{name:'Sleep latency',col:'--teal',pts:[[0,{A:75,B:45,C:60}[P.id]]].concat(sim.hist.map(x=>[x.week,x.latency]))}]);
+    wk.textContent='Week '+sim.week;
+    if(r){mG.set(r.rec.gad/21*100,'bad');mI.set(r.rec.isi/28*100,'bad');mD.set(sim.depend*100,sim.depend>0.5?'bad':'');mS.set(sim.score,sim.score<60?'bad':'ok');}
+    alertBox.innerHTML='';lastAlerts.forEach(a=>alertBox.append(h('div',{class:'note '+(a.sev==='crit'?'bad':a.sev==='warn'?'warn':'')},h('strong',{},({crit:'Critical: ',warn:'Caution: ',info:'Note: ',good:'Good: '})[a.sev]),a.msg)));
+  }
+  function advance(n){apply();for(let i=0;i<n;i++){const r=stepWeek(sim);lastAlerts=r.alerts;
+      if(log.querySelector('p'))log.innerHTML='';
+      const rec=r.rec;log.prepend(h('div',{style:'border-bottom:1px solid var(--line);padding:4px 0;font-size:.85rem'},h('strong',{class:'mono'},'Wk '+rec.week),' GAD-7 '+rec.gad+', ISI '+rec.isi+', latency '+rec.latency+' min'+(rec.nightmares!=null?', nightmares '+rec.nightmares+'/wk':'')+(rec.withdr>0.05?' (withdrawal)':'')));
+      r.events.forEach(e=>log.prepend(h('div',{class:'note '+(e.k==='bad'?'bad':e.k==='warn'?'warn':'')},h('strong',{},'Wk '+e.w+': '),e.m)));
+      paint(r);if(sim.week>=12)break;}
+    gain(2*n,null);
+    if(sim.week>=12||goalMet(sim)&&sim.week>=6)finish();}
+  function finish(){const h12=sim.hist[sim.hist.length-1];const met=goalMet(sim);
+    const critHit=Object.keys(sim.seen).some(k=>/^[a-z0-9-]+\|/.test(k)&&false);
+    const reasoning=Math.round(clamp(sim.score*0.6+(met?30:10)+(sim.plan.cbt?5:0)+(sim.plan.hygiene?5:0)));
+    result.innerHTML='';
+    result.append(h('div',{class:'note '+(met?'':'warn')},h('h3',{},met?'Treatment goal met':'Goal not yet met'),
+      h('p',{},'Final week '+h12.week+': GAD-7 '+h12.gad+', ISI '+h12.isi+', latency '+h12.latency+' min. Safety score '+sim.score+'/100. Clinical reasoning score '+reasoning+'/100.'),
+      h('p',{style:'color:var(--muted)'},'Goal: '+P.goal)));
+    if(!sim.seen.recorded){sim.seen.recorded=1;S.reasoning.push({id:P.id,score:reasoning,met,week:sim.week,drug:sim.plan.drug,t:Date.now()});S.cases[P.id]=reasoning;save();gain(met?40:15,'vpfin-'+P.id);
+      if(met&&sim.score>=88)award('safe');if(P.id==='B'&&sim.plan.loraz==='taper'&&sim.lorTaperWeeks>=8)award('taper');}
+  }
+  function reset(){Object.assign(sim,newSim(P));lastAlerts=[];log.innerHTML='';log.append(h('p',{style:'color:var(--muted)'},'Reset to week 0.'));result.innerHTML='';
+    chartA.update([{name:'GAD-7',col:'--red',pts:[[0,P.scores.gad7]]},{name:'ISI',col:'--violet',pts:[[0,P.scores.isi]]}]);chartB.update([{name:'Sleep latency',col:'--teal',pts:[[0,{A:75,B:45,C:60}[P.id]]]}]);wk.textContent='Week 0';mG.set(P.scores.gad7/21*100,'bad');mI.set(P.scores.isi/28*100,'bad');mD.set(0);mS.set(100,'ok');alertBox.innerHTML='';}
+  [drugSel,doseSel,cbt,hyg,alc,lorSel,dipSel].forEach(e=>e.addEventListener('change',()=>{apply();lastAlerts=checkSafety(sim);paint();}));
+  chartA.update([{name:'GAD-7',col:'--red',pts:[[0,P.scores.gad7]]},{name:'ISI',col:'--violet',pts:[[0,P.scores.isi]]}]);
+  chartB.update([{name:'Sleep latency',col:'--teal',pts:[[0,{A:75,B:45,C:60}[P.id]]]}]);
+  const chk=(i,l)=>h('div',{class:'row'},i,h('label',{for:i.id},l));
+  return h('div',{style:'display:flex;flex-direction:column;gap:14px'},
+    h('div',{class:'panel'},h('div',{class:'row'},h('h2',{},P.title+': '+P.sub),pill(P.dx,'t')),
+      h('p',{},P.hx),h('div',{class:'row mono',style:'font-size:.82rem'},pill(P.vitals),pill(P.labs),pill('GAD-7 '+P.scores.gad7,'r'),pill('ISI '+P.scores.isi,'v')),h('p',{style:'color:var(--muted);margin-top:8px'},'Goal: '+P.goal)),
+    h('div',{class:'grid'},h('div',{class:'panel'},h('h3',{},'Treatment plan'),
+        h('div',{class:'row',style:'margin:6px 0'},h('label',{for:drugSel.id,class:'lbl'},'Drug'),drugSel,doseSel),
+        chk(cbt,'CBT / CBT-I referral'),chk(hyg,'Sleep hygiene and caffeine reduction'),P.id==='C'?chk(alc,'Alcohol cessation program'):null,
+        P.id==='B'?h('div',{class:'row',style:'margin:6px 0'},h('label',{for:lorSel.id,class:'lbl'},'Lorazepam'),lorSel):null,P.id==='B'?h('div',{class:'row',style:'margin:6px 0'},h('label',{for:dipSel.id,class:'lbl'},'Diphenhydramine'),dipSel):null,
+        h('div',{class:'row',style:'margin-top:10px'},h('button',{class:'btn',onclick:()=>advance(1)},'Advance 1 week'),h('button',{class:'btn alt',onclick:()=>advance(4)},'Advance 4 weeks'),h('button',{class:'btn alt',onclick:reset},'Reset'),wk),
+        h('div',{style:'margin-top:10px'},alertBox)),
+      h('div',{class:'panel'},h('h3',{},'Monitoring'),mG.el,mI.el,mD.el,mS.el,h('h3',{style:'margin-top:10px'},'Follow-up notes'),log)),
+    h('div',{class:'grid'},h('div',{class:'panel'},chartA.el),h('div',{class:'panel'},chartB.el)),result);
+}
+VIEWS.vp=()=>{
+  const box=h('div',{});let i=0;
+  const t=tabs(PATIENTS.map(p=>p.title+' ('+p.dx.split(' ')[0]+')'),k=>{box.innerHTML='';box.append(vpView(PATIENTS[k]));});
+  box.append(vpView(PATIENTS[0]));
+  return h('div',{style:'display:flex;flex-direction:column;gap:14px'},head('Virtual Patient','Assess the patient, select treatment, monitor weekly response, and adjust. Outcomes follow the clinical decision engine: SSRI onset and early activation, benzodiazepine tolerance and withdrawal, and safety rules for age, interactions and comorbidity.'),
+    h('div',{class:'panel'},t),box);
+};
+
+/* ---------- Case Simulations (branching) ---------- */
+const CASES=[
+ {title:'Panic attack in the ED',start:'p1',nodes:{
+  p1:{t:'A 29-year-old woman arrives with palpitations, chest tightness, tingling and fear of dying. ECG, troponin and TSH are normal. This is her third episode this month. What is the best next step?',
+   c:[['Reassure, explain panic physiology, and arrange SSRI plus CBT follow-up','p2',2,'Correct framing: panic disorder is diagnosed after ruling out medical causes; SSRIs and CBT are first-line.'],['Start alprazolam 1 mg TID and discharge','p3',0,'Rapid relief but dependence risk; guidelines prefer SSRI/SNRI with CBT first-line.'],['Admit for cardiac catheterization','p3',0,'Not indicated after a normal workup; unnecessary testing reinforces illness beliefs.']]},
+  p2:{t:'You start sertraline 25 mg daily. At week 1 she calls: more jittery and not sleeping. What do you advise?',
+   c:[['Reassure it is a common early effect; continue, consider brief temporary bridging only if needed','end1',2,'Early activation is common in panic disorder; slow titration and counseling help adherence.'],['Stop sertraline and switch to a different class immediately','end2',0,'Premature; benefit needs 2-4 weeks.']]},
+  p3:{t:'Two weeks later she returns after a repeat episode. She has used the alprazolam daily and runs short. What is the concern?',
+   c:[['Tolerance and early dependence; transition to SSRI/CBT with gradual benzodiazepine taper','end1',1,'Right direction: start SSRI, taper gradually.'],['Increase alprazolam dose','end2',0,'Escalation worsens dependence risk.']]},
+  end1:{end:true,t:'Good outcome: attacks decline over 4-8 weeks and the benzodiazepine exposure is minimal. Takeaway: SSRIs for panic start low, counsel on delayed benefit and early jitteriness.'},
+  end2:{end:true,t:'Suboptimal outcome: dependence or premature discontinuation delays recovery. Review SSRI timelines and benzodiazepine risks.'}}},
+ {title:'The older adult who cannot sleep',start:'o1',nodes:{
+  o1:{t:'A 74-year-old woman with osteoporosis reports waking at 3 AM almost nightly for 8 months. She takes zolpidem 10 mg and diphenhydramine nightly and had a recent wrist fracture after a fall. What first?',
+   c:[['Review sleep history and screen for apnea, pain, depression, nocturia; start CBT-I; plan deprescribing','o2',2,'Correct: treat contributors, use CBT-I, and deprescribe hazardous sedatives (Beers).'],['Increase zolpidem to 15 mg','o3',0,'Higher dose increases falls and complex sleep behaviors.'],['Add lorazepam','o3',0,'Compounding sedatives is dangerous in this patient.']]},
+  o2:{t:'She still has maintenance insomnia after 4 weeks of CBT-I and a taper of diphenhydramine and zolpidem. Which medication is the most reasonable adjunct?',
+   c:[['A dual orexin receptor antagonist, with fall precautions','end1',2,'DORAs target maintenance insomnia and have a better safety profile than benzodiazepines/Z-drugs in older adults; monitor next-day somnolence.'],['Eszopiclone 3 mg','end2',0,'Z-drug in a patient with a fracture; dose too high for older adults (max 2 mg).']]},
+  o3:{t:'She falls again overnight and presents with confusion. What is the key lesson?',
+   c:[['Sedative-hypnotics and anticholinergics raise delirium and fall risk in older adults; deprescribe and use CBT-I','end2',1,'Yes. Beers Criteria apply.']]},
+  end1:{end:true,t:'Good outcome: sleep consolidates, falls are avoided. Takeaway: CBT-I first, deprescribe, use DORA or low-dose doxepin if needed.'},
+  end2:{end:true,t:'Poor outcome: harm from sedatives. Review Beers Criteria and non-drug therapy.'}}},
+ {title:'Nightmares and alcohol',start:'n1',nodes:{
+  n1:{t:'A 34-year-old veteran with PTSD drinks 4 beers nightly for sleep and has nightmares 5 nights a week. He asks for "something strong" like alprazolam. What do you do?',
+   c:[['Start sertraline, address alcohol use, offer trauma-focused therapy; discuss prazosin for nightmares','n2',2,'Aligned with VA/DoD guidance. Benzodiazepines are not recommended in PTSD.'],['Prescribe alprazolam and zolpidem','n3',0,'Benzodiazepines may worsen PTSD outcomes and combined with alcohol are dangerous.']]},
+  n2:{t:'He starts prazosin at bedtime and is told about first-dose orthostasis. Which counseling point is most important?',
+   c:[['Start low at bedtime and rise slowly; first-dose syncope risk','end1',2,'Prazosin causes first-dose hypotension; titrate gradually and counsel on rising slowly.'],['Take it only as needed after a nightmare','end2',0,'It must be taken regularly and titrated.']]},
+  n3:{t:'He combines the medications with alcohol and is found sedated. What failed?',
+   c:[['Prescribing sedatives with ongoing alcohol use and ignoring guideline-recommended alternatives','end2',1,'Exactly: avoid sedative-hypnotics plus alcohol.']]},
+  end1:{end:true,t:'Good outcome: nightmares ease as alcohol is reduced and treatment takes hold.'},
+  end2:{end:true,t:'Poor outcome: harm from benzodiazepine or Z-drug plus alcohol. Review the PTSD guideline.'}}}
+];
+VIEWS.cases=()=>{
+  const box=h('div',{});
+  function menu(){box.innerHTML='';box.append(h('div',{class:'grid'},CASES.map((c,i)=>h('button',{class:'panel',style:'text-align:left;cursor:pointer;border:1px solid var(--line)',onclick:()=>play(i)},h('div',{class:'lbl'},S.cases['case'+i]!=null?'Completed '+S.cases['case'+i]+'/'+c.max:'New'),h('h3',{},c.title)))));}
+  CASES.forEach(c=>{let best=0;(function walk(id,s,seen){const n=c.nodes[id];if(n.end){best=Math.max(best,s);return;}n.c.forEach(ch=>{if(!seen.has(ch[1]))walk(ch[1],s+ch[2],new Set([...seen,id]));});})(c.start,0,new Set());c.max=best;});
+  function play(i){const c=CASES[i];let id=c.start,score=0;const trail=[];
+    function render(){box.innerHTML='';const n=c.nodes[id];
+      box.append(h('div',{class:'panel'},h('div',{class:'row'},h('h2',{},c.title),h('button',{class:'btn alt',onclick:menu},'All cases')),trail.map(tr=>h('div',{class:'note '+(tr.p===0?'bad':tr.p>=2?'':'warn'),style:'margin:6px 0'},h('strong',{},tr.label+': '),tr.fb)),
+        h('p',{style:'margin-top:10px'},n.t),
+        n.end?h('div',{},h('h3',{},'Case score: '+score+' / '+c.max),h('button',{class:'btn',onclick:()=>{S.cases['case'+i]=score;S.reasoning.push({id:'case'+i,score:Math.round(100*score/c.max),met:score>=c.max-1,t:Date.now()});gain(20,'case'+i);save();paintTop();menu();}},'Save result')):
+        n.c.map(ch=>h('button',{class:'opt',onclick:()=>{score+=ch[2];trail.push({label:ch[0],fb:ch[3],p:ch[2]});id=ch[1];render();}},ch[0]))));}
+    render();}
+  menu();
+  return h('div',{style:'display:flex;flex-direction:column;gap:14px'},head('Case Simulations','Branching clinical scenarios. Each choice returns feedback and changes the path.'),box);
+};
+
+/* ---------- Drug Comparison ---------- */
+VIEWS.cmp=()=>{
+  const cols=[['Parameter/MOA','moa'],['Onset','onset'],['Half-life','t12'],['Sedation','sed'],['Dependence risk','dep'],['Sleep effect','sleep'],['Pregnancy','preg'],['Geriatric issues','ger'],['Abuse potential','abuse']];
+  const picks={};const filter=h('select',{id:'cmp-class','aria-label':'Filter by class'},[['all','All classes']].concat(Object.keys(CLS).map(k=>[k,CLS[k].name])).map(([v,l])=>h('option',{value:v},l)));
+  const sortSel=h('select',{id:'cmp-sort','aria-label':'Sort'},[['name','Name'],['sed','Sedation (high first)'],['dep','Dependence risk (high first)'],['t12h','Half-life (long first)']].map(([v,l])=>h('option',{value:v},l)));
+  const tbl=h('div',{class:'scroll-x panel'});
+  function draw(){let list=DRUGS.filter(d=>filter.value==='all'||d.cls===filter.value);
+    if(sortSel.value==='name')list=[...list].sort((a,b)=>a.name.localeCompare(b.name));else list=[...list].sort((a,b)=>b[sortSel.value]-a[sortSel.value]);
+    tbl.innerHTML='';
+    tbl.append(h('table',{style:'min-width:1400px'},h('thead',{},h('tr',{},h('th',{scope:'col'},'Drug'),cols.map(c=>h('th',{scope:'col'},c[0])))),
+      h('tbody',{},list.map(d=>h('tr',{},h('th',{scope:'row',style:'position:static;background:none'},d.name,h('div',{},pill(CLS[d.cls].name,CLS[d.cls].color))),
+        cols.map(([n,k])=>h('td',{style:k==='moa'?'min-width:260px':''},k==='sed'||k==='dep'?h('span',{},dots(d[k],k==='sed'?'a':'r')):d[k])))))));}
+  [filter,sortSel].forEach(e=>e.addEventListener('change',()=>{draw();gain(5,'cmp');}));draw();
+  return h('div',{style:'display:flex;flex-direction:column;gap:14px'},head('Drug Comparison Tool','All 21 medications side by side. Filter by class and sort to compare risk profiles. Scroll horizontally for all parameters.'),
+    h('div',{class:'row'},h('label',{for:'cmp-class',class:'lbl'},'Class'),filter,h('label',{for:'cmp-sort',class:'lbl'},'Sort by'),sortSel),tbl);
+};
+
+/* ---------- Sleep Cycle Builder ---------- */
+VIEWS.sleep=()=>{
+  const st={caffeine:0,alcohol:0,stress:20,drug:'none'};
+  const colors={W:'--red',REM:'--violet',N1:'--amber',N2:'--teal',N3:'--green'};
+  const yv={W:0,REM:1,N1:2,N2:3,N3:4};
+  const svg=sv('svg',{viewBox:'0 0 600 200',role:'img','aria-label':'Hypnogram'});
+  const base=h('div',{}),summary=h('div',{});let baseline=sleepNight({seed:7});
+  function draw(){const n=sleepNight({caffeine:st.caffeine,alcohol:st.alcohol,stress:st.stress,drug:st.drug,seed:7});svg.innerHTML='';
+    const w=600/n.stages.length;
+    ['W','REM','N1','N2','N3'].forEach((s,i)=>{svg.append(sv('line',{x1:44,x2:600,y1:20+i*36,y2:20+i*36,style:'stroke:var(--line);stroke-width:1'}),sv('text',{x:4,y:24+i*36,'font-size':10,class:'mono'},s));});
+    n.stages.forEach((s,i)=>svg.append(sv('rect',{x:44+i*(556/n.stages.length),y:14+yv[s]*36,width:556/n.stages.length+0.5,height:12,style:`fill:var(${colors[s]})`})));
+    [0,2,4,6,8].forEach(hh=>svg.append(sv('text',{x:44+hh/8*556,y:196,'text-anchor':'middle','font-size':10,class:'mono'},hh+'h')));
+    const row=(l,v,b,u,good)=>h('tr',{},h('th',{scope:'row',style:'position:static;background:none'},l),h('td',{class:'mono'},v+u),h('td',{class:'mono',style:'color:var(--muted)'},b+u),h('td',{class:'mono',style:`color:var(--${(v-b)*(good||1)>0.4?'green':(v-b)*(good||1)<-0.4?'red':'muted'})`},(v-b>0?'+':'')+(Math.round((v-b)*10)/10)+u));
+    summary.innerHTML='';summary.append(h('div',{class:'scroll-x'},h('table',{},h('thead',{},h('tr',{},['Measure','Now','Normal baseline','Change'].map(x=>h('th',{scope:'col'},x)))),h('tbody',{},
+      row('Sleep latency',n.latency,baseline.latency,' min',-1),row('Total sleep time',n.tst,baseline.tst,' min'),row('Efficiency',n.efficiency,baseline.efficiency,'%'),row('Wake after onset',n.waso,baseline.waso,' min',-1),
+      row('N1',n.n1,baseline.n1,'%',-1),row('N2',n.n2,baseline.n2,'%',0.001),row('N3 (deep)',n.n3,baseline.n3,'%'),row('N3 duration',n.n3min,baseline.n3min,' min'),row('REM',n.rem,baseline.rem,'%'),row('REM duration',n.remMin,baseline.remMin,' min')))));
+    if(JSON.stringify(st)!==JSON.stringify({caffeine:0,alcohol:0,stress:20,drug:'none'})){S.sleepRuns[JSON.stringify(st)]=1;save();if(Object.keys(S.sleepRuns).length>=3)award('sleep');gain(2,'sl'+Object.keys(S.sleepRuns).length);}}
+  const sl=(k,l,max,step,unit)=>{const o=h('span',{class:'mono'},st[k]+unit),i=h('input',{type:'range',min:0,max,step,value:st[k],id:'sl-'+k,'aria-label':l,oninput:()=>{st[k]=+i.value;o.textContent=st[k]+unit;draw();}});return h('div',{class:'slider'},h('label',{for:'sl-'+k},l),i,o);};
+  const dsel=h('select',{id:'sl-drug','aria-label':'Medication taken at bedtime'},OPTIONS.map(([v,l])=>h('option',{value:v},l)));dsel.addEventListener('change',()=>{st.drug=dsel.value;draw();});
+  baseline=sleepNight({seed:7});draw();
+  return h('div',{style:'display:flex;flex-direction:column;gap:14px'},head('Sleep Cycle Builder','Modify caffeine, alcohol, stress and bedtime medication and see the hypnogram, sleep architecture, REM percentage and deep-sleep duration change against a healthy 8-hour baseline.'),
+    h('div',{class:'grid'},h('div',{class:'panel'},h('h3',{},'Inputs'),sl('caffeine','Caffeine (mg, afternoon)',600,25,' mg'),sl('alcohol','Alcohol (drinks)',4,1,''),sl('stress','Stress (0-100)',100,5,''),h('div',{class:'row',style:'margin-top:8px'},h('label',{for:'sl-drug',class:'lbl'},'Bedtime drug'),dsel),
+        h('div',{class:'note'},'Alcohol sedates early but suppresses REM in the first half and fragments sleep later (rebound). Benzodiazepines cut N3 and REM. Z-drugs and DORAs preserve more slow-wave sleep.')),
+      h('div',{class:'panel'},h('h3',{},'Hypnogram (8 h)'),svg,h('div',{class:'row',style:'font-size:.78rem'},Object.keys(colors).map(k=>h('span',{},h('span',{style:`display:inline-block;width:10px;height:10px;background:var(${colors[k]});margin-right:4px`}),k))))),
+    h('div',{class:'panel'},summary));
+};
+/* Views D: Knowledge Check, Instructor Analytics, app shell. */
+const BLOOM=['','Remember','Understand','Apply','Analyze','Evaluate','Create'];
+const QTYPES=[['all','All types'],['mcq','MCQ'],['sata','Select all that apply'],['case','Clinical case'],['naplex','NAPLEX-style'],['board','Board-style']];
+VIEWS.quiz=()=>{
+  const typeSel=h('select',{id:'q-type','aria-label':'Question type'},QTYPES.map(([v,l])=>h('option',{value:v},l)));
+  const box=h('div',{});
+  function start(){const pool=QS.filter(q=>typeSel.value==='all'||q.t===typeSel.value);
+    const order=[...pool].sort(()=>Math.random()-.5).slice(0,8);let i=0,correct=0;
+    function show(){box.innerHTML='';if(i>=order.length){const pct=Math.round(100*correct/order.length);S.quiz.push({pct,n:order.length,t:Date.now()});save();gain(10+correct*3,null);if(pct>=80)award('quiz');
+      box.append(h('div',{class:'panel'},h('h2',{},'Score: '+correct+' / '+order.length+' ('+pct+'%)'),h('p',{},pct>=80?'Strong mastery.':'Review the rationales and the Pharmacology Lab, then retry.'),h('button',{class:'btn',onclick:start},'New round')));return;}
+      const q=order[i];const multi=q.t==='sata';const chosen=new Set();let done=false;
+      const opts=q.o.map((t,k)=>h('button',{class:'opt',role:multi?'checkbox':'radio','aria-checked':'false',onclick:()=>{if(done)return;if(multi){if(chosen.has(k))chosen.delete(k);else chosen.add(k);opts[k].setAttribute('aria-checked',chosen.has(k));opts[k].classList.toggle('sel',chosen.has(k));}else{chosen.clear();chosen.add(k);submit();}}},String.fromCharCode(65+k)+'. '+t));
+      const fb=h('div',{'aria-live':'polite'});
+      function submit(){done=true;const ok=chosen.size===q.a.length&&q.a.every(a=>chosen.has(a));if(ok)correct++;else S.missed[q.tag]=(S.missed[q.tag]||0)+1;
+        opts.forEach((o,k)=>{o.classList.remove('sel');if(q.a.includes(k))o.classList.add('right');else if(chosen.has(k))o.classList.add('wrong');});
+        fb.append(h('div',{class:'note '+(ok?'':'bad')},h('strong',{},ok?'Correct. ':'Not quite. '),q.r,h('div',{style:'margin-top:6px;font-size:.8rem;color:var(--muted)'},'Reference: '+q.ref)),
+          h('button',{class:'btn',onclick:()=>{i++;show();}},i+1<order.length?'Next question':'See score'));save();}
+      box.append(h('div',{class:'panel'},h('div',{class:'row'},pill('Question '+(i+1)+' of '+order.length),pill(QTYPES.find(x=>x[0]===q.t)[1],'t'),pill("Bloom: "+BLOOM[q.bloom]+' (L'+q.bloom+')','v'),pill(q.tag)),
+        h('h3',{style:'margin:10px 0'},q.q),multi?h('p',{style:'color:var(--muted)'},'Select all that apply, then submit.'):null,h('div',{role:multi?'group':'radiogroup','aria-label':'Answer choices'},opts),
+        multi?h('button',{class:'btn',onclick:()=>{if(!done&&chosen.size)submit();}},'Submit answer'):null,fb));}
+    show();}
+  start();typeSel.addEventListener('change',start);
+  return h('div',{style:'display:flex;flex-direction:column;gap:14px'},head('Knowledge Check','Question bank with rationales, references and Bloom\'s taxonomy levels. Choose a type, answer, and read the explanation.'),h('div',{class:'row'},h('label',{for:'q-type',class:'lbl'},'Type'),typeSel),box);
+};
+
+/* ---------- Instructor Analytics ---------- */
+const COHORT=[['Amara O.',840,92,88],['Diego R.',720,85,81],['Priya S.',650,78,76],['Jordan T.',510,70,64],['Lena K.',430,66,70],['Marcus W.',260,52,55],['Sofia B.',180,48,50]];
+VIEWS.inst=()=>{
+  const fmt=s=>s>=3600?(s/3600).toFixed(1)+' h':s>=60?Math.round(s/60)+' min':s+' s';
+  const total=Object.values(S.time).reduce((a,b)=>a+b,0)+(cur?Math.round((Date.now()-curStart)/1000):0);
+  const done=Object.keys(S.visited).length,avgQ=S.quiz.length?Math.round(S.quiz.reduce((a,b)=>a+b.pct,0)/S.quiz.length):null;
+  const avgR=S.reasoning.length?Math.round(S.reasoning.reduce((a,b)=>a+b.score,0)/S.reasoning.length):null;
+  const stat=(l,v,s)=>h('div',{class:'panel'},h('div',{class:'lbl'},l),h('div',{style:'font:700 1.8rem var(--f-display)'},v),h('div',{style:'color:var(--muted);font-size:.8rem'},s));
+  const timeRows=MODS.slice(1).map(([id,n])=>[n,S.time[id]||0]);const maxT=Math.max(60,...timeRows.map(r=>r[1]));
+  const missed=Object.entries(S.missed).sort((a,b)=>b[1]-a[1]).slice(0,6);const maxM=Math.max(1,...missed.map(m=>m[1]));
+  const you=[S.name+' (you)',S.xp,avgQ||0,avgR||0];const board=[...COHORT,you].sort((a,b)=>b[1]-a[1]);
+  return h('div',{style:'display:flex;flex-direction:column;gap:14px'},head('Instructor Analytics','Your own activity is tracked live in this browser. The cohort leaderboard uses sample classmates for demonstration; connect the optional backend (see README) to collect real cohort data.'),
+    h('div',{class:'grid'},stat('Time spent',fmt(total),'across modules'),stat('Modules opened',done+' / '+(MODS.length),'completion '+Math.round(100*done/MODS.length)+'%'),stat('Quiz performance',avgQ!=null?avgQ+'%':'No quiz yet',S.quiz.length+' rounds'),stat('Clinical reasoning',avgR!=null?avgR+'/100':'No case yet',S.reasoning.length+' cases/patients')),
+    h('div',{class:'grid'},
+      h('div',{class:'panel'},h('h3',{},'Time by module'),timeRows.map(([n,s])=>{const i=h('i',{});i.style.width=(100*s/maxT)+'%';return h('div',{class:'meter',style:'grid-template-columns:150px 1fr 56px'},h('span',{},n),h('div',{class:'bar'},i),h('span',{class:'mono'},fmt(s)));})),
+      h('div',{class:'panel'},h('h3',{},'Most missed concepts'),missed.length?missed.map(([n,c])=>{const i=h('i',{class:'bad'});i.style.width=(100*c/maxM)+'%';return h('div',{class:'meter',style:'grid-template-columns:150px 1fr 30px'},h('span',{},n),h('div',{class:'bar'},i),h('span',{class:'mono'},c));}):h('p',{style:'color:var(--muted)'},'Answer some questions in Knowledge Check to see missed concepts.'))),
+    h('div',{class:'grid'},
+      h('div',{class:'panel'},h('h3',{},'Leaderboard'),h('div',{class:'scroll-x'},h('table',{},h('thead',{},h('tr',{},['#','Learner','XP','Quiz %','Reasoning'].map(x=>h('th',{scope:'col'},x)))),h('tbody',{},board.map((r,i)=>h('tr',{style:r===you?'background:var(--teal-soft)':''},h('td',{},i+1),h('td',{},r[0]),h('td',{class:'mono'},r[1]),h('td',{class:'mono'},r[2]||'-'),h('td',{class:'mono'},r[3]||'-'))))))),
+      h('div',{class:'panel'},h('h3',{},'Badges'),h('div',{class:'row'},Object.keys(BADGES).map(k=>h('div',{class:'panel',style:'width:150px;opacity:'+(S.badges[k]?1:.5)},h('div',{class:'lbl'},S.badges[k]?'Earned':'Locked'),h('strong',{},BADGES[k][0]),h('div',{style:'font-size:.78rem;color:var(--muted)'},BADGES[k][1])))),
+        h('h3',{style:'margin-top:12px'},'Mastery'),h('p',{},'Level: '+level().name+' ('+S.xp+' XP)'),h('button',{class:'btn alt',onclick:()=>{S={xp:0,badges:{},time:{},done:{},visited:{},regions:{},recepts:{},sleepRuns:{},quiz:[],missed:{},reasoning:[],cases:{},name:'You'};save();go('inst');}},'Reset my progress'))));
+};
+
+/* ---------- Shell ---------- */
+function boot(){
+  const rail=$('#rail');
+  MODS.forEach(([id,name])=>rail.insertBefore(h('button',{'data-v':id,onclick:()=>go(id)},name),$('#tools')));
+  const th=$('#t-theme'),hc=$('#t-contrast');
+  const setTheme=t=>{if(t)document.documentElement.setAttribute('data-theme',t);else document.documentElement.removeAttribute('data-theme');try{localStorage.setItem('nspl.theme',t||'');}catch(e){}th.setAttribute('aria-pressed',t==='dark');hc.setAttribute('aria-pressed',t==='contrast');};
+  th.addEventListener('click',()=>setTheme(th.getAttribute('aria-pressed')==='true'?'light':'dark'));
+  hc.addEventListener('click',()=>setTheme(hc.getAttribute('aria-pressed')==='true'?'light':'contrast'));
+  try{const t=localStorage.getItem('nspl.theme');if(t)setTheme(t);}catch(e){}
+  const first=(location.hash||'').slice(1);go(VIEWS[first]?first:'home');
+  window.addEventListener('hashchange',()=>{const id=location.hash.slice(1);if(VIEWS[id]&&id!==cur)go(id);});
+}
+boot();
+</script>
+
+</body></html>
