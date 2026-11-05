@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Parkinson's Disease Pathophysiology &amp; Pharmacology Simulator</title>
+<meta name="description" content="Interactive simulator of basal ganglia circuitry, dopaminergic degeneration, alpha-synuclein, mitochondrial dysfunction, neuroinflammation, symptoms and anti-parkinsonian pharmacology.">
+<style>
+:root{--bg:#0a1020;--panel:#111a30;--panel2:#16223c;--ink:#e9effc;--mute:#9fb2d6;--line:#25345a;--acc:#5eead4;--glu:#34d399;--gaba:#f87171;--da:#fbbf24;--blue:#60a5fa;--vio:#a78bfa;--warn:#fb923c;--shadow:0 8px 30px rgba(0,0,0,.35)}
+[data-theme=light]{--bg:#eef3fb;--panel:#fff;--panel2:#f1f5fc;--ink:#12203a;--mute:#4b5f86;--line:#d3ddef;--acc:#0d9488;--shadow:0 6px 20px rgba(30,50,100,.12)}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:radial-gradient(1100px 520px at 8% -10%,rgba(60,90,180,.28),transparent 60%),var(--bg);color:var(--ink);min-height:100vh}
+h1,h2,h3,h4{margin:0 0 .4em;line-height:1.25}h1{font-size:1.15rem}h2{font-size:1.4rem}h3{font-size:1.05rem}h4{font-size:.95rem}
+p{margin:.45em 0}a{color:var(--acc)}
+.skip{position:absolute;left:-999px}.skip:focus{left:8px;top:8px;background:#fff;color:#000;padding:6px;z-index:99}
+header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{display:flex;gap:10px;align-items:center;min-width:0}.brand p{margin:0;color:var(--mute);font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logo{width:38px;height:38px;flex:none}
+.by{font-size:.82rem;font-weight:500;color:var(--mute);white-space:nowrap}
+.hctl{display:flex;gap:8px;align-items:center;flex:none}
+button,.btn{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:10px;padding:7px 12px;transition:.15s}
+button:hover{border-color:var(--acc)}button:focus-visible,input:focus-visible,summary:focus-visible,.st:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.btn.pri{background:linear-gradient(135deg,#0d9488,#2563eb);border:0;color:#fff;font-weight:600}
+button.sm{padding:4px 9px;font-size:.82rem}button[aria-pressed=true]{border-color:var(--acc);color:var(--acc)}
+#prog{font-size:.8rem;color:var(--mute);border:1px solid var(--line);border-radius:20px;padding:4px 10px}
+nav#tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 16px;scrollbar-width:thin;border-bottom:1px solid var(--line)}
+nav#tabs button{white-space:nowrap;border-radius:20px;padding:6px 13px;font-size:.88rem}
+nav#tabs button[aria-selected=true]{background:linear-gradient(135deg,#0d9488,#2563eb);color:#fff;border-color:transparent}
+nav#tabs button.vis::after{content:" ✓";color:var(--glu)}nav#tabs button[aria-selected=true].vis::after{color:#fff}
+main{max-width:1280px;margin:0 auto;padding:16px}
+.mod{display:none}.mod.active{display:block;animation:fade .3s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}header .brand p{display:none}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow);margin-bottom:16px;min-width:0}
+.card>h3:first-child,.card>h2:first-child{margin-top:0}
+.note{font-size:.84rem;color:var(--mute)}.tag{display:inline-block;font-size:.72rem;padding:1px 8px;border-radius:12px;border:1px solid var(--line);color:var(--mute);margin-right:4px}
+.pearl{border-left:4px solid var(--da);background:color-mix(in srgb,var(--da) 10%,transparent);padding:8px 12px;border-radius:8px;margin:10px 0;font-size:.9rem}
+.warn{border-left-color:var(--gaba);background:color-mix(in srgb,var(--gaba) 10%,transparent)}
+svg.viz,canvas.viz{width:100%;height:auto;display:block;border-radius:12px;background:var(--panel2);border:1px solid var(--line)}
+.row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;margin:10px 0}.row label{font-size:.85rem;color:var(--mute)}.row output{font-weight:700;font-variant-numeric:tabular-nums}
+.row input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--acc)}
+.chk{display:flex;gap:8px;align-items:center;margin:7px 0;font-size:.9rem}.chk input{accent-color:var(--acc);width:17px;height:17px}
+.btns{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.mt{margin:9px 0}.mtl{display:flex;justify-content:space-between;font-size:.8rem;color:var(--mute)}.mtl b{color:var(--ink)}
+.mtb{height:9px;background:var(--panel2);border-radius:9px;overflow:hidden;border:1px solid var(--line)}.mtb i{display:block;height:100%;width:0;transition:width .25s}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:7px;vertical-align:middle}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.legend button{font-size:.8rem;padding:4px 9px;border-radius:16px}
+.hero{background:linear-gradient(135deg,rgba(13,148,136,.22),rgba(37,99,235,.2)),var(--panel)}
+.cta{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+ol.obj{padding-left:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:8px}
+ol.obj li{border:1px solid var(--line);border-radius:12px;padding:9px 12px;background:var(--panel2);cursor:pointer;display:flex;gap:10px;align-items:center}
+ol.obj li:hover{border-color:var(--acc)}ol.obj b{background:var(--acc);color:#04201d;border-radius:50%;width:26px;height:26px;display:grid;place-items:center;flex:none;font-size:.82rem}
+ol.obj li.done b::after{content:"✓"}ol.obj li.done b{font-size:0}ol.obj li.done b::after{font-size:.9rem}
+.st{cursor:pointer;transition:filter .15s,stroke-width .15s}.st:hover,.st.hov{filter:brightness(1.35) drop-shadow(0 0 6px #fff8)}.st.sel{stroke:#fff;stroke-width:3.5;filter:drop-shadow(0 0 9px #fff)}
+.st.right{animation:blink .5s 2}@keyframes blink{50%{filter:brightness(2)}}
+.t{fill:var(--ink);font:600 13px system-ui;pointer-events:none}.ts{fill:var(--mute);font:11px system-ui;pointer-events:none}
+.lbl{fill:#fff;font:700 15px system-ui;paint-order:stroke;stroke:#000b;stroke-width:3px;pointer-events:none}
+.flow{stroke-dasharray:7 7;animation:dash 1s linear infinite}@keyframes dash{to{stroke-dashoffset:-14}}
+.reduce .flow,.reduce .dap,.reduce .pulse{animation:none}
+.pulse{animation:pul 1.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}@keyframes pul{50%{transform:scale(1.25)}}
+#cirSvg[data-mode=direct] .n:not(.direct),#cirSvg[data-mode=direct] .e:not(.direct),#cirSvg[data-mode=indirect] .n:not(.indirect),#cirSvg[data-mode=indirect] .e:not(.indirect),#cirSvg[data-mode=hyper] .n:not(.hyper),#cirSvg[data-mode=hyper] .e:not(.hyper){opacity:.13}
+.dap{animation:drift 3s ease-in-out infinite alternate}@keyframes drift{to{transform:translate(9px,-7px)}}
+.sx{display:grid;grid-template-columns:150px 1fr 44px;gap:8px;align-items:center;padding:5px 8px;border-radius:8px;cursor:pointer;font-size:.88rem}
+.sx:hover,.sx.sel{background:var(--panel2)}.sx .b{height:10px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}.sx .b i{display:block;height:100%;transition:width .3s}
+.sxg{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:10px 0 2px}
+details{border:1px solid var(--line);border-radius:12px;margin:8px 0;background:var(--panel2)}summary{cursor:pointer;padding:10px 14px;font-weight:600}details>div{padding:0 14px 12px}
+.sub{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}.sub button[aria-pressed=true]{background:var(--acc);color:#04201d}
+.qopt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px}.qopt.ok{border-color:var(--glu);background:color-mix(in srgb,var(--glu) 18%,transparent)}.qopt.bad{border-color:var(--gaba);background:color-mix(in srgb,var(--gaba) 16%,transparent)}
+.big{font-size:2.2rem;font-weight:800}
+footer{max-width:1280px;margin:0 auto;padding:10px 16px 40px;color:var(--mute);font-size:.8rem}
+@media(prefers-reduced-motion:reduce){.flow,.dap,.pulse{animation:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header>
+ <div class="brand">
+  <svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0d9488"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs><rect width="40" height="40" rx="11" fill="url(#lg)"/><path d="M8 24c3-9 7-12 12-12s9 3 12 12" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="14" cy="26" r="3" fill="#fbbf24"/><circle cx="26" cy="26" r="3" fill="#fff"/><path d="M14 26h12" stroke="#fff" stroke-width="1.5" stroke-dasharray="2 2"/></svg>
+  <div><h1>Parkinson's Disease Simulator <span class="by">· Hafeez Faridi, Ph.D.</span></h1><p>Pathophysiology &amp; Pharmacology · PharmD · MD · PA · NP · Neuroscience</p></div>
+ </div>
+ <div class="hctl"><span id="prog" title="Modules explored">0/12</span><button id="btnAnim" aria-pressed="false" title="Pause animations">⏸</button><button id="btnTheme" title="Toggle light/dark">◐</button></div>
+</header>
+<nav id="tabs" role="tablist" aria-label="Simulator modules"></nav>
+<main id="main">
+
+<!-- HOME -->
+<section class="mod active" id="m-home">
+ <div class="card hero"><h2>Parkinson's disease: from synapse to symptom to drug</h2>
+ <p>Ten linked, hands-on modules take you from basal ganglia anatomy through circuit dysfunction, dopaminergic degeneration, α-synuclein pathology, mitochondrial and oxidative injury and neuroinflammation, to the clinical picture and its pharmacologic management. A shared <b>"SNc neuron loss"</b> slider carries your patient's disease stage across modules.</p>
+ <div class="cta"><button class="btn pri" data-go="anatomy">Start: basal ganglia anatomy →</button><button class="btn" data-go="pharm">Jump to pharmacology</button><button class="btn" data-go="quiz">Assessment</button></div></div>
+ <div class="card"><h3>Learning objectives <span class="note">(click to open the module)</span></h3><ol class="obj" id="objList"></ol></div>
+ <div class="grid">
+  <div class="card"><h3>How to use</h3><ul><li>Drag sliders; every visual responds in real time.</li><li>Visit all 12 modules, then take the 18-question assessment (80% to pass).</li><li>Works offline on phones, tablets and desktops. Progress is saved locally and reported to an LMS when launched as SCORM.</li></ul></div>
+  <div class="card"><h3>Scientific scope</h3><p class="note">Models are deliberately <b>semi-quantitative teaching tools</b>: firing rates, kinetics and thresholds are illustrative, scaled to reproduce well-established qualitative relationships (e.g., symptoms emerging at ~50–60% nigral neuron loss and ~70–80% striatal dopamine loss). Not for clinical decision-making or dosing.</p></div>
+ </div>
+</section>
+
+<!-- 1 ANATOMY -->
+<section class="mod" id="m-anatomy">
+ <div class="grid">
+  <div class="card"><h3>1 · Basal ganglia anatomy <span class="note">(schematic composite coronal view)</span></h3>
+   <svg class="viz" id="anatSvg" viewBox="0 0 800 520" role="img" aria-label="Schematic coronal section showing basal ganglia nuclei"></svg>
+   <div class="legend" id="anatLegend"></div>
+   <div class="btns"><label class="chk"><input type="checkbox" id="anatLabels" checked> Labels</label><label class="chk"><input type="checkbox" id="anatDA" checked> Nigrostriatal dopamine</label><button id="anatQuiz" class="sm">🎯 Find-the-structure game</button></div>
+   <p id="anatPrompt" class="note" aria-live="polite"></p>
+  </div>
+  <div><div class="card" id="anatInfo"><p class="note">Tap any structure to learn its function and its fate in Parkinson disease.</p></div>
+  <div class="card"><h4>Anatomy pearls</h4><p class="note"><b>Striatum</b> = caudate + putamen (input). <b>Lentiform nucleus</b> = putamen + globus pallidus. <b>Output nuclei</b> = GPi + SNr (tonic GABAergic inhibition of thalamus). <b>STN</b> is the only glutamatergic nucleus. <b>SNc</b> is dopaminergic (neuromelanin → dark pigment; pallor at autopsy in PD).</p><p class="note" id="anatScore"></p></div></div>
+ </div>
+</section>
+
+<!-- 2 CIRCUITS -->
+<section class="mod" id="m-circuit">
+ <div class="grid">
+  <div class="card"><h3>2 · Direct, indirect &amp; hyperdirect pathways</h3>
+   <svg class="viz" id="cirSvg" viewBox="0 0 800 470" data-mode="all" role="img" aria-label="Basal ganglia circuit diagram"></svg>
+   <p class="note">Line thickness and node colour scale with relative firing. <span style="color:var(--glu)">■ glutamate (excites)</span> <span style="color:var(--gaba)">■ GABA (inhibits)</span> <span style="color:var(--da)">■ dopamine (D1 excites / D2 inhibits)</span></p></div>
+  <div>
+   <div class="card"><h3>Controls</h3>
+    <div class="row"><label for="cirD">Striatal dopaminergic stimulation</label><output id="cirDv">100%</output><input type="range" id="cirD" min="0" max="120" value="100"></div>
+    <div class="btns"><button class="sm" data-cp="100">Normal</button><button class="sm" data-cp="60">Compensated</button><button class="sm" data-cp="30">Early PD</button><button class="sm" data-cp="10">Advanced PD</button><button class="sm" data-cp="95">Levodopa peak ON</button></div>
+    <label class="chk"><input type="checkbox" id="cirStn"> STN deep-brain stimulation / lesion (functional block)</label>
+    <p class="note" style="margin-bottom:2px">Highlight pathway</p>
+    <div class="btns" id="cirModes"><button class="sm" data-m="all" aria-pressed="true">All</button><button class="sm" data-m="direct" aria-pressed="false">Direct</button><button class="sm" data-m="indirect" aria-pressed="false">Indirect</button><button class="sm" data-m="hyper" aria-pressed="false">Hyperdirect</button></div>
+   </div>
+   <div class="card"><h3>Readout</h3><div id="cirMeters"></div><p id="cirText" aria-live="polite"></p></div>
+  </div>
+ </div>
+</section>
+
+<!-- 3 DOPAMINE -->
+<section class="mod" id="m-synapse">
+ <div class="grid">
+  <div class="card"><h3>3 · Dopamine synapse &amp; receptor modulation</h3>
+   <svg class="viz" id="sySvg" viewBox="0 0 800 470" role="img" aria-label="Nigrostriatal dopamine synapse"></svg>
+   <p class="note"><b>D1 (Gαolf → AC↑ → cAMP/PKA↑)</b> excites direct-pathway MSNs; <b>D2 (Gαi/o → AC↓)</b> inhibits indirect-pathway MSNs. Dopamine therefore pushes <i>both</i> pathways toward <b>more movement</b>.</p></div>
+  <div>
+   <div class="card"><h3>Patient &amp; drugs</h3>
+    <div class="row"><label for="syLoss">SNc neuron loss</label><output id="syLossV">0%</output><input type="range" id="syLoss" min="0" max="100" value="0"></div>
+    <label class="chk"><input type="checkbox" id="syLev"> Levodopa/carbidopa (more substrate for AADC)</label>
+    <label class="chk"><input type="checkbox" id="syAg"> Dopamine agonist (direct D2/D3 ≫ D1)</label>
+    <label class="chk"><input type="checkbox" id="syMao"> MAO-B inhibitor (↓ DA breakdown)</label>
+    <label class="chk"><input type="checkbox" id="syComt"> COMT inhibitor (↓ levodopa/DA O-methylation)</label>
+    <div class="btns"><button id="sySend" class="btn pri">Send to circuit model →</button></div></div>
+   <div class="card"><h3>Readout</h3><div id="syMeters"></div><p id="syText" aria-live="polite"></p></div>
+  </div>
+ </div>
+</section>
+
+<!-- 4 DEGENERATION -->
+<section class="mod" id="m-degen">
+ <div class="grid">
+  <div class="card"><h3>4 · Degeneration of SNc dopaminergic neurons</h3>
+   <canvas class="viz" id="dgCv" aria-label="Animated substantia nigra neuron field"></canvas>
+   <div class="row"><label for="dgLoss">Nigral neuron loss (shared patient state)</label><output id="dgLossV">0%</output><input type="range" id="dgLoss" min="0" max="100" value="0"></div>
+   <div class="btns"><button id="dgPlay" class="btn pri">▶ Simulate disease course</button><button id="dgReset" class="sm">Reset</button></div>
+   <canvas class="viz" id="dgCurve" aria-label="Striatal dopamine loss versus nigral neuron loss"></canvas></div>
+  <div>
+   <div class="card"><h3>Status</h3><div id="dgStats"></div></div>
+   <div class="card"><h3>DaTscan-style striatal binding</h3><svg class="viz" id="dgDat" viewBox="0 0 240 130" role="img" aria-label="Schematic DAT scan"></svg><p class="note">Normal = two bright “commas” (caudate head + putamen tail). PD = “periods”: putamen is affected first (posterior &gt; anterior), asymmetrically.</p></div>
+   <div class="card"><p class="note"><b>Selective vulnerability:</b> ventrolateral-tier SNc neurons die first. They are pacemaking, use Cav1.3 L-type Ca²⁺ channels, have huge unmyelinated axonal arbors (~10⁵ synapses each), high mitochondrial load and oxidant-prone dopamine metabolism.</p></div>
+  </div>
+ </div>
+</section>
+
+<!-- 5 ASYN -->
+<section class="mod" id="m-asyn">
+ <div class="grid">
+  <div class="card"><h3>5 · α-Synuclein misfolding &amp; aggregation</h3>
+   <canvas class="viz" id="asCv" aria-label="Particle simulation of alpha-synuclein aggregation"></canvas>
+   <div id="asStages" class="btns"></div>
+   <canvas class="viz" id="asChart" style="margin-top:8px"></canvas></div>
+  <div>
+   <div class="card"><h3>Cell biology controls</h3>
+    <div class="row"><label for="asProd">α-syn production (SNCA dosage)</label><output id="asProdV">1×</output><input type="range" id="asProd" min="1" max="3" step="0.5" value="1"></div>
+    <div class="row"><label for="asClr">Proteostasis: proteasome / autophagy-lysosome (GBA1, LRRK2, Parkin)</label><output id="asClrV">80%</output><input type="range" id="asClr" min="5" max="100" value="80"></div>
+    <div class="row"><label for="asOx">Oxidative / nitrative stress</label><output id="asOxV">20%</output><input type="range" id="asOx" min="0" max="100" value="20"></div>
+    <div class="btns"><button class="sm" data-as="age">Healthy ageing</button><button class="sm" data-as="snca">SNCA triplication</button><button class="sm" data-as="lyso">Lysosomal failure</button><button class="sm" data-as="ox">High oxidative stress</button></div>
+    <div class="btns"><button id="asSeed" class="btn pri">+ Add pathogenic seed</button><button id="asPause" class="sm">Pause</button><button id="asReset" class="sm">Reset</button></div></div>
+   <div class="card"><h3>Counts</h3><div id="asStats"></div><p class="note">Schematic: native monomer (blue, disordered/α-helix) → misfolded β-sheet-rich (orange) → toxic oligomers (red) → fibrils (magenta; phospho-Ser129, ubiquitinated) → Lewy body (core + halo). Real timescales are years; seeding is prion-like and templated.</p></div>
+  </div>
+ </div>
+</section>
+
+<!-- 6 LEWY -->
+<section class="mod" id="m-lewy">
+ <div class="grid">
+  <div class="card"><h3>6 · Lewy bodies &amp; Braak spread</h3>
+   <svg class="viz" id="lwSvg" viewBox="0 0 640 470" role="img" aria-label="Sagittal brain with Braak stages"></svg>
+   <div class="row"><label for="lwStage">Braak stage (Lewy pathology ascends)</label><output id="lwStageV">0</output><input type="range" id="lwStage" min="0" max="6" step="1" value="0"></div></div>
+  <div>
+   <div class="card" id="lwInfo"></div>
+   <div class="card"><h3>Histology</h3><div class="btns" id="lwMode"><button class="sm" data-hm="he" aria-pressed="true">H&amp;E</button><button class="sm" data-hm="ihc" aria-pressed="false">α-syn (pS129) IHC</button></div>
+    <svg class="viz" id="lwHisto" viewBox="0 0 320 240" role="img" aria-label="Lewy body histology schematic"></svg>
+    <p class="note" id="lwHistoNote"></p></div>
+  </div>
+ </div>
+ <div class="card"><p class="note"><b>Caveat:</b> Braak's caudo-rostral scheme (and the gut/olfactory “dual-hit” idea) fits many but not all patients. The <b>body-first vs brain-first</b> model (Horsager 2020; Borghammer) proposes that enteric/autonomic-onset disease (early RBD, constipation) differs from brain-first, nigral-onset disease. Lewy pathology burden also correlates imperfectly with neuron loss.</p></div>
+</section>
+
+<!-- 7 MITO -->
+<section class="mod" id="m-mito">
+ <div class="grid">
+  <div class="card"><h3>7 · Mitochondrial dysfunction</h3>
+   <div style="position:relative"><svg class="viz" id="mtSvg" viewBox="0 0 800 440" role="img" aria-label="Mitochondrial electron transport chain"></svg><canvas id="mtCv" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas></div>
+   <p class="note">Electrons (yellow) flow NADH → I → Q → III → cyt c → IV → O₂; protons (cyan) pumped at I, III, IV drive ATP synthase (V). Red sparks = superoxide leak, mainly at complex I.</p></div>
+  <div>
+   <div class="card"><h3>Insults</h3>
+    <div class="row"><label for="miInh">Complex I inhibition (rotenone, MPP⁺, genetic)</label><output id="miInhV">0%</output><input type="range" id="miInh" min="0" max="100" value="0"></div>
+    <div class="row"><label for="miCa">Ca²⁺ load from Cav1.3 pacemaking</label><output id="miCaV">30%</output><input type="range" id="miCa" min="0" max="100" value="30"></div>
+    <div class="row"><label for="miMit">PINK1/Parkin mitophagy efficiency</label><output id="miMitV">100%</output><input type="range" id="miMit" min="0" max="100" value="100"></div>
+    <div class="btns"><button class="sm" data-mi="0,30,100">Healthy</button><button class="sm" data-mi="40,50,70">Ageing SNc</button><button class="sm" data-mi="80,40,100">MPTP/MPP⁺</button><button class="sm" data-mi="40,60,10">PINK1/PRKN loss</button></div></div>
+   <div class="card"><h3>Readout</h3><div id="miMeters"></div><p id="miText" aria-live="polite"></p></div>
+  </div>
+ </div>
+</section>
+
+<!-- 8 OXID -->
+<section class="mod" id="m-oxid">
+ <div class="grid">
+  <div class="card"><h3>8 · Oxidative stress in dopaminergic neurons</h3>
+   <svg class="viz" id="oxSvg" viewBox="0 0 800 330" role="img" aria-label="Dopamine oxidation chemistry"></svg>
+   <h4 style="margin-top:14px">Vicious cycle <span class="note">(nodes glow with your other modules' current values)</span></h4>
+   <svg class="viz" id="oxLoop" viewBox="0 0 800 330" role="img" aria-label="Self-reinforcing pathogenic cycle"></svg></div>
+  <div>
+   <div class="card"><h3>Drivers</h3>
+    <div class="row"><label for="oxDa">Cytosolic dopamine (vesicular storage failure, levodopa load)</label><output id="oxDaV">40%</output><input type="range" id="oxDa" min="0" max="100" value="40"></div>
+    <div class="row"><label for="oxFe">Labile iron (Fenton chemistry; SNc iron rises with age)</label><output id="oxFeV">40%</output><input type="range" id="oxFe" min="0" max="100" value="40"></div>
+    <div class="row"><label for="oxGsh">Antioxidant capacity (GSH, GPx, SOD, Nrf2)</label><output id="oxGshV">70%</output><input type="range" id="oxGsh" min="0" max="100" value="70"></div>
+    <div class="row"><label for="oxRos">Mitochondrial ROS input (from module 7)</label><output id="oxRosV">0%</output><input type="range" id="oxRos" min="0" max="100" value="0"></div>
+    <label class="chk"><input type="checkbox" id="oxMao"> MAO-B inhibitor (↓ H₂O₂ from DA deamination)</label></div>
+   <div class="card"><h3>Readout</h3><div id="oxMeters"></div><p id="oxText" aria-live="polite"></p></div>
+  </div>
+ </div>
+</section>
+
+<!-- 9 INFLAM -->
+<section class="mod" id="m-inflam">
+ <div class="grid">
+  <div class="card"><h3>9 · Neuroinflammation</h3>
+   <canvas class="viz" id="ifCv" aria-label="Microglia activation around a dopaminergic neuron"></canvas>
+   <p class="note">Resting microglia (teal, ramified) survey the neuron. Aggregated α-syn, damaged neurons and peripheral inflammation drive an activated, amoeboid state releasing TNF-α, IL-1β, NO and superoxide (e.g., via TLR2/4 → NF-κB → NLRP3 inflammasome).</p></div>
+  <div>
+   <div class="card"><h3>Triggers &amp; modifiers</h3>
+    <div class="row"><label for="ifAgg">Extracellular α-syn aggregates / debris</label><output id="ifAggV">30%</output><input type="range" id="ifAgg" min="0" max="100" value="30"></div>
+    <div class="row"><label for="ifPrim">Priming (age, LRRK2, GBA1, prior insults)</label><output id="ifPrimV">20%</output><input type="range" id="ifPrim" min="0" max="100" value="20"></div>
+    <label class="chk"><input type="checkbox" id="ifGut"> Peripheral / gut inflammation (gut–brain axis)</label>
+    <div class="row"><label for="ifAnti">Anti-inflammatory strategy (experimental)</label><output id="ifAntiV">0%</output><input type="range" id="ifAnti" min="0" max="100" value="0"></div>
+    <button id="ifReset" class="sm">Reset neuron</button></div>
+   <div class="card"><h3>Readout</h3><div id="ifMeters"></div><p class="note">No anti-inflammatory approach is yet proven disease-modifying in PD. Epidemiology on NSAIDs is mixed; NLRP3, LRRK2 and other targets are in development.</p></div>
+  </div>
+ </div>
+</section>
+
+<!-- 10 SYMPTOMS -->
+<section class="mod" id="m-sx">
+ <div class="grid">
+  <div class="card"><h3>10 · Connecting pathology to symptoms</h3>
+   <div class="row"><label for="sxLoss">Nigral neuron loss / disease stage</label><output id="sxLossV">0%</output><input type="range" id="sxLoss" min="0" max="100" value="0"></div>
+   <p id="sxHY"></p><div id="sxList"></div></div>
+  <div><div class="card" id="sxDetail"><p class="note">Select a symptom to see its mechanism and treatment.</p></div>
+  <div class="card"><h4>TRAP mnemonic</h4><p class="note"><b>T</b>remor (resting, 4–6 Hz) · <b>R</b>igidity (lead-pipe/cogwheel) · <b>A</b>kinesia/bradykinesia (required for diagnosis) · <b>P</b>ostural instability (late). Diagnosis (MDS): bradykinesia + rigidity or rest tremor, supportive criteria (levodopa response, olfactory loss), no exclusions.</p></div></div>
+ </div>
+</section>
+
+<!-- PHARM -->
+<section class="mod" id="m-pharm">
+ <div class="sub" role="group" aria-label="Pharmacology views"><button data-pt="classes" aria-pressed="true">Drug classes</button><button data-pt="pk" aria-pressed="false">Levodopa PK/PD simulator</button><button data-pt="avoid" aria-pressed="false">Cautions &amp; interactions</button></div>
+ <div id="ph-classes"></div>
+ <div id="ph-pk" hidden>
+  <div class="grid">
+   <div class="card"><h3>Levodopa pharmacokinetics → motor response</h3><canvas class="viz" id="pkCv" aria-label="Levodopa plasma concentration and motor response over the day"></canvas>
+   <p class="note">Blue dashed = relative plasma levodopa. Amber = net dopaminergic motor effect. Green band = therapeutic window (ON); below = OFF; above = dyskinesia. Early disease: striatal buffering smooths the response. Advanced disease: response follows plasma levels, and the window narrows.</p></div>
+   <div>
+    <div class="card"><h3>Regimen</h3>
+     <div class="row"><label for="pkL">Disease stage (SNc loss)</label><output id="pkLV">40%</output><input type="range" id="pkL" min="0" max="100" value="40"></div>
+     <div class="row"><label for="pkDose">Levodopa per dose</label><output id="pkDoseV">100 mg</output><input type="range" id="pkDose" min="25" max="300" step="25" value="100"></div>
+     <div class="row"><label for="pkN">Doses per day</label><output id="pkNV">3</output><input type="range" id="pkN" min="1" max="8" value="3"></div>
+     <div class="row"><label for="pkInt">Dosing interval</label><output id="pkIntV">5 h</output><input type="range" id="pkInt" min="2" max="8" step="0.5" value="5"></div>
+     <div class="row"><label for="pkStart">First dose</label><output id="pkStartV">07:00</output><input type="range" id="pkStart" min="6" max="9" step="0.5" value="7"></div>
+     <label class="chk"><input type="checkbox" id="pkCarb" checked> Carbidopa co-administered</label>
+     <label class="chk"><input type="checkbox" id="pkComt"> COMT inhibitor (entacapone/opicapone)</label>
+     <label class="chk"><input type="checkbox" id="pkMao"> MAO-B inhibitor</label>
+     <label class="chk"><input type="checkbox" id="pkAg"> Dopamine agonist</label>
+     <label class="chk"><input type="checkbox" id="pkAman"> Amantadine (anti-dyskinetic)</label>
+     <label class="chk"><input type="checkbox" id="pkProt"> High-protein meals at 08:00, 13:00, 19:00</label></div>
+    <div class="card"><h3>Waking-day outcome (07:00–22:00)</h3><div id="pkMeters"></div><p id="pkText" aria-live="polite"></p></div>
+   </div>
+  </div>
+ </div>
+ <div id="ph-avoid" hidden></div>
+</section>
+
+<!-- QUIZ -->
+<section class="mod" id="m-quiz">
+ <div class="grid"><div class="card" id="qzBox"></div>
+ <div class="card"><h3>Progress &amp; reporting</h3><div id="qzProg"></div><p class="note">When launched from an LMS (SCORM 1.2 or 2004) your score, pass/fail status and module progress are reported automatically. Outside an LMS, progress is stored in this browser only.</p></div></div>
+</section>
+</main>
+<footer>
+ <p><b>Educational use only.</b> Not medical advice. Key sources: Kalia &amp; Lang, <i>Lancet</i> 2015;386:896; Poewe et al., <i>Nat Rev Dis Primers</i> 2017;3:17013; Braak et al., <i>Neurobiol Aging</i> 2003;24:197; Surmeier, Obeso &amp; Halliday, <i>Nat Rev Neurosci</i> 2017;18:101; Armstrong &amp; Okun, <i>JAMA</i> 2020;323:548; Bloem, Okun &amp; Klein, <i>Lancet</i> 2021;397:2284; Horsager et al., <i>Brain</i> 2020;143:3077.</p>
+</footer>
+<noscript><p style="padding:20px">This simulator requires JavaScript.</p></noscript>
+
+<script>
+(function(){
+'use strict';
+/* ============ utilities ============ */
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const rand=(a,b)=>a+Math.random()*(b-a);
+const lerp=(a,b,t)=>a+(b-a)*t;
+const NS='http://www.w3.org/2000/svg';
+function el(tag,at,parent,text){const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e}
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function fit(c,w,h){const d=Math.min(2,window.devicePixelRatio||1);c.width=w*d;c.height=h*d;c.style.aspectRatio=w+'/'+h;const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return x}
+function mkMeters(host,defs){host.innerHTML=defs.map(d=>'<div class="mt" data-id="'+d.id+'"><div class="mtl"><span>'+d.label+'</span><b>–</b></div><div class="mtb"><i style="background:'+(d.color||'var(--acc)')+'"></i></div></div>').join('')}
+function setM(host,id,p,txt){const m=$('[data-id="'+id+'"]',host);if(!m)return;$('i',m).style.width=clamp(p,0,100)+'%';$('b',m).textContent=txt!=null?txt:Math.round(p)+'%'}
+const sev=(x,a,b)=>clamp((x-a)/(b-a));
+const striatalLoss=L=>1-Math.pow(1-L/100,2.3);
+const yearsFromLoss=L=>14*Math.pow(-Math.log(1-Math.min(L,99.5)/100),1/1.2);
+const heat=a=>'hsl('+Math.round(220-200*clamp(a))+' 65% '+Math.round(32+10*clamp(a))+'%)';
+const TAU=Math.PI*2;
+
+/* ============ global state, persistence, SCORM ============ */
+const G={loss:0,visited:{},quiz:{best:-1,last:-1,passed:false},ros:0,agg:0,infl:0,mitoDmg:0,oxDmg:0,paused:false};
+const store={get(){try{return JSON.parse(localStorage.getItem('pdsim1')||'{}')}catch(e){return{}}},set(o){try{localStorage.setItem('pdsim1',JSON.stringify(o))}catch(e){}}};
+const SC=(function(){let api=null,ver=null,on=false;
+ function find(w){let n=0;try{while(w&&n++<12){if(w.API_1484_11){ver='2004';return w.API_1484_11}if(w.API){ver='1.2';return w.API}if(w===w.parent)break;w=w.parent}}catch(e){}return null}
+ function init(){api=find(window)||(window.opener?find(window.opener):null);if(!api)return;try{const r=ver==='2004'?api.Initialize(''):api.LMSInitialize('');on=(r===true||r==='true');if(on){const sd=ver==='2004'?api.GetValue('cmi.suspend_data'):api.LMSGetValue('cmi.suspend_data');if(sd){try{const o=JSON.parse(sd);Object.assign(G.visited,o.v||{});if(o.q)Object.assign(G.quiz,o.q)}catch(e){}}
+  if(ver==='1.2'){const st=api.LMSGetValue('cmi.core.lesson_status');if(!st||st==='not attempted')set('cmi.core.lesson_status','incomplete')}else{set('cmi.completion_status','incomplete')}}}catch(e){on=false}}
+ function set(k,v){if(!on)return;try{ver==='2004'?api.SetValue(k,String(v)):api.LMSSetValue(k,String(v))}catch(e){}}
+ function commit(){if(!on)return;try{ver==='2004'?api.Commit(''):api.LMSCommit('')}catch(e){}}
+ function report(){if(!on)return;set('cmi.suspend_data',JSON.stringify({v:G.visited,q:G.quiz}));
+  const all=Object.keys(G.visited).length>=12,q=G.quiz.best;
+  if(q>=0){if(ver==='1.2'){set('cmi.core.score.min',0);set('cmi.core.score.max',100);set('cmi.core.score.raw',q)}else{set('cmi.score.min',0);set('cmi.score.max',100);set('cmi.score.raw',q);set('cmi.score.scaled',(q/100).toFixed(2))}}
+  const pass=q>=80;
+  if(ver==='1.2'){set('cmi.core.lesson_status',pass&&all?'passed':(q>=0&&!pass&&all?'failed':'incomplete'))}else{set('cmi.completion_status',all&&q>=0?'completed':'incomplete');if(q>=0)set('cmi.success_status',pass?'passed':'failed')}
+  commit()}
+ function end(){if(!on)return;report();try{ver==='2004'?api.Terminate(''):api.LMSFinish('')}catch(e){}on=false}
+ return{init,report,end,get active(){return on}}})();
+function persist(){store.set({v:G.visited,q:G.quiz,theme:document.documentElement.dataset.theme});SC.report()}
+
+/* shared patient-state slider binding */
+const lossBinds=[],lossHooks=[];
+function bindLoss(id){const r=$('#'+id),o=$('#'+id+'V');lossBinds.push([r,o]);r.addEventListener('input',()=>setLoss(+r.value))}
+function setLoss(v){G.loss=clamp(v,0,100);lossBinds.forEach(([r,o])=>{r.value=G.loss;if(o)o.textContent=Math.round(G.loss)+'%'});lossHooks.forEach(f=>f())}
+
+/* ============ navigation ============ */
+const M={};
+const MODS=[['home','Start'],['anatomy','1 Anatomy'],['circuit','2 Circuits'],['synapse','3 Dopamine'],['degen','4 SNc loss'],['asyn','5 α-Synuclein'],['lewy','6 Lewy & Braak'],['mito','7 Mitochondria'],['oxid','8 Oxidative'],['inflam','9 Inflammation'],['sx','10 Symptoms'],['pharm','Pharmacology'],['quiz','Quiz']];
+let cur='home';
+const tabs=$('#tabs');tabs.setAttribute('role','tablist');
+MODS.forEach(([id,t])=>{const b=document.createElement('button');b.textContent=t;b.dataset.id=id;b.setAttribute('role','tab');b.addEventListener('click',()=>show(id));tabs.appendChild(b)});
+tabs.addEventListener('keydown',e=>{const b=$$('button',tabs),i=b.indexOf(document.activeElement);if(i<0)return;if(e.key==='ArrowRight'){b[(i+1)%b.length].focus();e.preventDefault()}if(e.key==='ArrowLeft'){b[(i-1+b.length)%b.length].focus();e.preventDefault()}});
+function show(id){
+ if(M[cur]&&M[cur].stop)M[cur].stop();cur=id;
+ $$('.mod').forEach(s=>s.classList.toggle('active',s.id==='m-'+id));
+ $$('button',tabs).forEach(b=>{const on=b.dataset.id===id;b.setAttribute('aria-selected',on);b.tabIndex=on?0:-1;b.classList.toggle('vis',!!G.visited[b.dataset.id]&&b.dataset.id!=='home')});
+ const m=M[id];if(m){if(!m.ready){m.init&&m.init();m.ready=true}m.start&&m.start()}
+ if(id!=='home')G.visited[id]=1;
+ $$('button',tabs).forEach(b=>b.classList.toggle('vis',!!G.visited[b.dataset.id]&&b.dataset.id!=='home'));
+ updProg();persist();try{history.replaceState(null,'','#'+id)}catch(e){}window.scrollTo(0,0)}
+function updProg(){const n=Object.keys(G.visited).filter(k=>k!=='home').length;$('#prog').textContent=n+'/12';
+ const L=$('#objList');if(L)$$('li',L).forEach(li=>li.classList.toggle('done',!!G.visited[li.dataset.go]))}
+$$('[data-go]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.go)));
+(function(){const O=[['Identify basal ganglia structures','anatomy'],['Explain direct and indirect pathways','circuit'],['Understand dopamine modulation (D1/D2)','synapse'],['Visualize degeneration of SNc neurons','degen'],['Understand α-synuclein aggregation','asyn'],['Observe Lewy body formation','lewy'],['Explore mitochondrial dysfunction','mito'],['Understand oxidative stress','oxid'],['Understand neuroinflammation','inflam'],['Connect pathology to symptoms','sx']];
+ $('#objList').innerHTML=O.map((o,i)=>'<li data-go="'+o[1]+'" tabindex="0"><b>'+(i+1)+'</b><span>'+o[0]+'</span></li>').join('');
+ $$('#objList li').forEach(li=>{const f=()=>show(li.dataset.go);li.addEventListener('click',f);li.addEventListener('keydown',e=>{if(e.key==='Enter')f()})})})();
+$('#btnTheme').addEventListener('click',()=>{const d=document.documentElement;d.dataset.theme=d.dataset.theme==='dark'?'light':'dark';persist();const m=M[cur];m&&m.render&&m.render()});
+$('#btnAnim').addEventListener('click',e=>{G.paused=!G.paused;e.currentTarget.setAttribute('aria-pressed',G.paused);e.currentTarget.textContent=G.paused?'▶':'⏸';document.body.classList.toggle('reduce',G.paused)});
+if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches){G.paused=true;$('#btnAnim').setAttribute('aria-pressed','true');$('#btnAnim').textContent='▶';document.body.classList.add('reduce')}
+let lastT=0;function loop(ts){const dt=Math.min(.05,(ts-lastT)/1000||0);lastT=ts;const m=M[cur];if(m&&m.tick&&m.ready&&!G.paused)m.tick(dt,ts/1000);requestAnimationFrame(loop)}
+
+/* ============ shared physiology model ============ */
+function circuit(d,blk){d=clamp(d,0,1.2);
+ const D1=clamp(.2+.6*d),D2=clamp(.8-.6*d),GPe=clamp(.7*(1-.8*D2));
+ let STN=clamp(.6*(1-.8*GPe)+.15);if(blk)STN*=.4;
+ const GPi=clamp(.6+.5*STN-.6*D1),TH=clamp(1-GPi);
+ return{D1,D2,GPe,STN,GPi,TH,CTX:clamp(.3+.6*TH),DA:clamp(d)}}
+
+/* ============ 1 ANATOMY ============ */
+M.anatomy=(function(){
+ const NAMES={cortex:'Motor cortex (M1 / SMA / premotor)',caudate:'Caudate nucleus',putamen:'Putamen',gpe:'Globus pallidus externus (GPe)',gpi:'Globus pallidus internus (GPi)',stn:'Subthalamic nucleus (STN)',snc:'Substantia nigra pars compacta (SNc)',snr:'Substantia nigra pars reticulata (SNr)',thal:'Thalamus (VA/VL motor nuclei)'};
+ const COL={cortex:'#c4a1d6',caudate:'#60a5fa',putamen:'#38bdf8',gpe:'#34d399',gpi:'#f87171',stn:'#fbbf24',snc:'#8a5a2b',snr:'#fb923c',thal:'#a78bfa'};
+ const INFO={
+  cortex:{fn:'Generates movement commands; sends massive glutamatergic input to striatum (corticostriatal) and STN (hyperdirect), and receives the thalamocortical loop output.',role:'Origin and target of the cortico-basal ganglia-thalamo-cortical motor loop.',pd:'Reduced thalamocortical drive underactivates SMA/premotor cortex → hypokinesia. Late neocortical Lewy pathology (Braak 5–6) contributes to dementia.'},
+  caudate:{fn:'Dorsal striatum, head and body. Part of associative (dorsolateral prefrontal) loops: planning, working memory, set-shifting.',role:'Input nucleus: receives cortical glutamate and nigral dopamine; contains D1- and D2-MSNs (~95% GABAergic medium spiny neurons).',pd:'Dopamine loss is milder and later than in putamen; contributes to executive dysfunction. Cholinergic interneurons here are targets of anticholinergic drugs.'},
+  putamen:{fn:'Motor striatum with somatotopic cortical input; habitual / automatic movement sequences.',role:'Input nucleus of the motor loop; D1-MSNs → direct, D2-MSNs → indirect pathway.',pd:'Earliest and most severe dopamine depletion (dorsolateral, posterior putamen). Correlates with bradykinesia; seen as "comma → period" loss on DaTscan.'},
+  gpe:{fn:'Intrinsic GABAergic pacemaker nucleus; tonically inhibits STN and GPi.',role:'Relay of the indirect pathway (D2-MSN ⊣ GPe ⊣ STN).',pd:'Over-inhibited by hyperactive D2-MSNs → lower firing and bursting; disinhibits STN. Abnormal beta-band (13–30 Hz) synchrony.'},
+  gpi:{fn:'Output nucleus. Tonic high-frequency GABAergic inhibition of motor thalamus and brainstem (PPN).',role:'Converges direct (↓), indirect and hyperdirect (↑) influences.',pd:'Hyperactive → excess thalamic inhibition → bradykinesia. Classic DBS target (GPi-DBS) and historic pallidotomy target; useful for dyskinesia.'},
+  stn:{fn:'The only glutamatergic basal ganglia nucleus; excites GPi/SNr and GPe. Receives direct cortical (hyperdirect) input for rapid "stop/brake" signals.',role:'Indirect pathway relay and hyperdirect pathway entry.',pd:'Hyperactive with pathological beta oscillations. STN-DBS improves motor signs, reduces levodopa dose; can worsen mood/cognition and speech. Hemiballismus follows STN infarct.'},
+  snc:{fn:'Dopaminergic neurons (A9) with neuromelanin; nigrostriatal projection supplies striatal dopamine.',role:'Modulates striatum: D1 excitation of direct, D2 inhibition of indirect pathway.',pd:'Progressive loss (ventrolateral tier first), Lewy bodies, neuromelanin pallor. Motor signs at ~50–60% neuron loss / 70–80% striatal DA depletion.'},
+  snr:{fn:'GABAergic output nucleus similar to GPi; also controls saccades and brainstem locomotor centers.',role:'Output of associative/oculomotor loops, parallel to GPi.',pd:'Increased firing; contributes to axial, gait and freezing problems (via PPN/MLR inhibition).'},
+  thal:{fn:'VA/VL nuclei relay basal ganglia and cerebellar output to motor cortex.',role:'Disinhibited by direct pathway; inhibited by GPi/SNr.',pd:'Under-driven by GPi. Cerebello-thalamic (Vim) circuit generates tremor: Vim DBS / MR-guided focused ultrasound reduce tremor.'}};
+ const SH={caudate:'M535 118 C575 118 585 175 565 220 C552 245 530 240 528 212 C527 175 522 140 535 118 Z',putamen:'M625 175 C675 165 700 235 678 295 C662 335 625 330 615 290 C606 250 608 195 625 175 Z',gpe:'M575 265 C596 258 606 290 598 320 C590 342 570 338 565 315 C560 295 563 272 575 265 Z',gpi:'M535 285 C555 280 563 305 557 328 C550 348 530 345 527 322 C524 305 526 290 535 285 Z',thal:'M440 255 C490 240 525 265 520 305 C515 340 470 350 445 335 C425 320 425 270 440 255 Z',stn:'M505 355 C530 350 545 365 535 380 C525 392 500 390 495 375 C492 365 497 358 505 355 Z',snc:'M445 393 C480 385 525 390 538 405 C520 412 480 412 445 410 Z',snr:'M445 412 C480 414 520 414 538 408 C540 425 500 438 470 436 C445 434 436 420 445 412 Z'};
+ const LAB={caudate:[553,185,'Cd'],putamen:[655,255,'Put'],gpe:[582,302,'GPe'],gpi:[541,318,'GPi'],thal:[473,300,'Thal'],stn:[517,376,'STN'],snc:[490,402,'SNc'],snr:[488,428,'SNr'],cortex:[640,52,'Motor cortex']};
+ const svg=$('#anatSvg');let sel=null,quiz=false,target=null,score=0,tries=0,labG,daG;
+ function select(id){sel=id;$$('.st',svg).forEach(e=>e.classList.toggle('sel',e.dataset.id===id));const i=INFO[id];$('#anatInfo').innerHTML='<h3><span class="dot" style="background:'+COL[id]+'"></span>'+NAMES[id]+'</h3><p><b>Normal function.</b> '+i.fn+'</p><p><b>Circuit role.</b> '+i.role+'</p><p><b>In Parkinson disease.</b> '+i.pd+'</p>'}
+ function click(id){if(quiz){tries++;const ok=id===target;if(ok)score++;const els=$$('.st[data-id="'+id+'"]',svg);if(ok){els.forEach(e=>{e.classList.remove('right');void e.getBoundingClientRect();e.classList.add('right')})}
+   $('#anatScore').textContent='Score '+score+' / '+tries+(ok?' ✔ Correct!':' ✘ That was the '+NAMES[id]+'.');nextQ();return}
+  select(id)}
+ function nextQ(){const ids=Object.keys(NAMES);target=ids[Math.floor(Math.random()*ids.length)];$('#anatPrompt').textContent='Find: '+NAMES[target]}
+ function labels(){labG.style.display=$('#anatLabels').checked&&!quiz?'':'none'}
+ function init(){
+  const defs=el('defs',{},svg);const g1=el('radialGradient',{id:'gbr',cx:'50%',cy:'40%',r:'70%'},defs);el('stop',{offset:'0','stop-color':'#a695ab'},g1);el('stop',{offset:'1','stop-color':'#6f6075'},g1);
+  const g2=el('radialGradient',{id:'gwm',cx:'50%',cy:'45%',r:'65%'},defs);el('stop',{offset:'0','stop-color':'#f0e8ee'},g2);el('stop',{offset:'1','stop-color':'#cdbfcb'},g2);
+  el('ellipse',{cx:400,cy:250,rx:370,ry:235,fill:'url(#gbr)',stroke:'#4b3f52','stroke-width':3},svg);
+  let sd=11;const sr=()=>(sd=(sd*16807)%2147483647)/2147483647;const gs=el('g',{},svg);
+  for(let a=0;a<360;a+=8){const th=a*Math.PI/180,x0=400+366*Math.cos(th),y0=250+231*Math.sin(th),L=14+sr()*20,x1=400+(366-L)*Math.cos(th+.09),y1=250+(231-L*.7)*Math.sin(th+.09);el('path',{d:'M'+x0.toFixed(1)+' '+y0.toFixed(1)+' Q '+((x0+x1)/2+sr()*10-5).toFixed(1)+' '+((y0+y1)/2+sr()*10-5).toFixed(1)+' '+x1.toFixed(1)+' '+y1.toFixed(1),stroke:'#4b3f52','stroke-width':2.2,fill:'none','stroke-linecap':'round',opacity:.75},gs)}
+  el('ellipse',{cx:400,cy:250,rx:330,ry:195,fill:'url(#gwm)',stroke:'#a99aa8','stroke-width':2,'pointer-events':'none'},svg);
+  el('path',{d:'M400 58 V445',stroke:'#8c7d8b','stroke-width':3,opacity:.5},svg);
+  el('ellipse',{cx:400,cy:300,rx:7,ry:55,fill:'#6b93c9',opacity:.7},svg);
+  const hem=(tr)=>{const g=el('g',tr?{transform:tr}:{},svg);
+   el('path',{d:'M420 110 C480 85 540 115 530 175 C525 215 485 230 455 215 C430 200 425 150 420 110 Z',fill:'#6b93c9',opacity:.75,stroke:'#4a74ab','stroke-width':2},g);
+   Object.keys(SH).forEach(id=>{const p=el('path',{d:SH[id],fill:COL[id],'fill-opacity':.92,stroke:'#0008','stroke-width':2,class:'st','data-id':id,tabindex:0,role:'button','aria-label':NAMES[id]},g);
+    p.addEventListener('click',()=>click(id));p.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();click(id)}});
+    p.addEventListener('mouseenter',()=>$$('.st[data-id="'+id+'"]',svg).forEach(x=>x.classList.add('hov')));p.addEventListener('mouseleave',()=>$$('.st.hov',svg).forEach(x=>x.classList.remove('hov')));
+    const t=el('title',{},p,NAMES[id])});
+   return g};
+  hem(null);hem('translate(800,0) scale(-1,1)');
+  daG=el('g',{},svg);[['M545 400 C640 402 690 380 668 336'],['M520 388 C565 340 566 270 552 236']].forEach(d=>{el('path',{d:d[0],stroke:'#fbbf24','stroke-width':3.5,fill:'none',class:'flow','pointer-events':'none'},daG)});
+  const mc=el('path',{d:'M464 19 A370 235 0 0 1 720 133',stroke:COL.cortex,'stroke-width':26,fill:'none','stroke-linecap':'round',class:'st','data-id':'cortex',tabindex:0,role:'button','aria-label':NAMES.cortex,opacity:.95},svg);
+  mc.addEventListener('click',()=>click('cortex'));mc.addEventListener('keydown',e=>{if(e.key==='Enter')click('cortex')});
+  labG=el('g',{},svg);Object.keys(LAB).forEach(id=>{const l=LAB[id];el('text',{x:l[0],y:l[1],'text-anchor':'middle',class:'lbl'},labG,l[2])});
+  el('text',{x:400,y:508,'text-anchor':'middle',class:'ts'},svg,'Composite schematic: nuclei from different coronal levels shown together; left side mirrored.');
+  $('#anatLegend').innerHTML=Object.keys(NAMES).map(id=>'<button data-id="'+id+'"><span class="dot" style="background:'+COL[id]+'"></span>'+NAMES[id].replace(/ \(.*\)/,'')+'</button>').join('');
+  $$('#anatLegend button').forEach(b=>b.addEventListener('click',()=>click(b.dataset.id)));
+  $('#anatLabels').addEventListener('change',labels);$('#anatDA').addEventListener('change',e=>{daG.style.display=e.target.checked?'':'none'});
+  $('#anatQuiz').addEventListener('click',e=>{quiz=!quiz;e.target.textContent=quiz?'■ Exit game':'🎯 Find-the-structure game';if(quiz){score=0;tries=0;nextQ();$('#anatScore').textContent='Score 0 / 0'}else{$('#anatPrompt').textContent='';$('#anatScore').textContent=''}labels()});
+  select('putamen')}
+ return{init}})();
+
+/* ============ 2 CIRCUITS ============ */
+M.circuit=(function(){
+ const svg=$('#cirSvg');const N={},E=[];
+ const ND=[['ctx','CTX','Motor cortex',400,50,150,44,'direct indirect hyper'],['d1','D1','Striatum D1-MSN',190,170,150,50,'direct'],['d2','D2','Striatum D2-MSN',610,170,150,50,'indirect'],['snc','DA','SNc (dopamine)',400,170,120,40,'da'],['gpe','GPe','GPe',610,285,140,44,'indirect'],['stn','STN','STN',690,380,110,40,'indirect hyper'],['gpi','GPi','GPi / SNr',400,400,150,44,'direct indirect hyper'],['th','TH','Thalamus (VA/VL)',110,300,150,44,'direct indirect hyper']];
+ const ED=[['ctx_d1','M350 72 C300 100 230 100 200 145','glu','CTX','direct'],['ctx_d2','M450 72 C500 100 570 100 600 145','glu','CTX','indirect'],['ctx_stn','M475 48 C760 20 790 250 700 360','glu','CTX','hyper'],['d1_gpi','M190 195 C190 320 290 360 345 380','gaba','D1','direct'],['d2_gpe','M610 195 L610 263','gaba','D2','indirect'],['gpe_stn','M650 307 C665 325 665 340 660 360','gaba','GPe','indirect'],['stn_gpi','M635 385 C580 390 530 398 478 400','glu','STN','indirect hyper'],['gpi_th','M325 410 C200 420 110 380 110 322','gaba','GPi','direct indirect hyper'],['th_ctx','M110 278 C90 130 200 50 325 50','glu','TH','direct indirect hyper'],['snc_d1','M340 170 L268 170','da+','DA','da'],['snc_d2','M460 170 L532 170','da-','DA','da']];
+ const CL={glu:'#34d399',gaba:'#f87171','da+':'#fbbf24','da-':'#fbbf24'};
+ function render(){const d=+$('#cirD').value/100,blk=$('#cirStn').checked;$('#cirDv').textContent=Math.round(d*100)+'%';
+  const c=circuit(d,blk),n=circuit(1,false);
+  ND.forEach(a=>{const o=N[a[0]],v=c[a[1]];o.r.setAttribute('fill',heat(v));o.v.textContent=a[0]==='snc'?'stim '+Math.round(v*100):'rel. '+Math.round(v*100)});
+  E.forEach(e=>{e.p.setAttribute('stroke-width',(1.2+6*c[e.src]).toFixed(1));e.p.setAttribute('stroke-opacity',(.45+.5*c[e.src]).toFixed(2))});
+  const mt=$('#cirMeters');[['D1','D1-MSN (direct)',c.D1,'var(--blue)'],['D2','D2-MSN (indirect)',c.D2,'var(--blue)'],['GPe','GPe',c.GPe,'var(--glu)'],['STN','STN',c.STN,'var(--da)'],['GPi','GPi/SNr output',c.GPi,'var(--gaba)'],['TH','Thalamocortical drive',c.TH,'var(--vio)']].forEach(r=>setM(mt,r[0],r[2]*100,Math.round(r[2]*100)));
+  const rel=Math.round(c.TH/n.TH*100);
+  let tx='<b>Thalamocortical drive = '+rel+'% of normal.</b> ';
+  if(d>=.95&&d<=1.05&&!blk)tx+='Balanced direct (“go”) and indirect (“no-go/stop”) pathways: GPi/SNr tonic inhibition is moderate and selectively released to permit movement.';
+  else if(d>1.05)tx+='Over-stimulation of D1/D2 receptors: excess disinhibition of thalamus → choreiform dyskinesias (levodopa-induced).';
+  else if(d>=.5)tx+='Compensated state: striatal turnover and receptor sensitivity maintain near-normal output; patient is pre-motor/asymptomatic.';
+  else tx+='Hypo-dopaminergic: D1-MSNs (direct) under-driven AND D2-MSNs (indirect) disinhibited → GPe↓, STN↑, GPi/SNr↑ → thalamus over-inhibited → <b>bradykinesia/akinesia</b>.';
+  if(blk)tx+=' <b>STN block</b> removes excitatory drive to GPi, partly restoring thalamic output (basis of STN-DBS).';
+  $('#cirText').innerHTML=tx}
+ function init(){
+  const defs=el('defs',{},svg);Object.keys(CL).forEach(k=>{const ex=k==='glu'||k==='da+';const m=el('marker',{id:'mk-'+k.replace('+','p').replace('-','m'),markerWidth:14,markerHeight:14,refX:ex?10:6,refY:7,orient:'auto',markerUnits:'userSpaceOnUse'},defs);
+   if(ex)el('path',{d:'M0 1 L11 7 L0 13 Z',fill:CL[k]},m);else el('path',{d:'M6 0 V14',stroke:CL[k],'stroke-width':3.5,fill:'none'},m)});
+  ED.forEach(e=>{const g=el('g',{class:'e '+e[4]},svg);const p=el('path',{d:e[1],fill:'none',stroke:CL[e[2]],'stroke-linecap':'round',class:'flow','marker-end':'url(#mk-'+e[2].replace('+','p').replace('-','m')+')'},g);E.push({p,src:e[3]})});
+  ND.forEach(a=>{const g=el('g',{class:'n '+a[7]},svg);const r=el('rect',{x:a[3]-a[5]/2,y:a[4]-a[6]/2,width:a[5],height:a[6],rx:11,stroke:'#fff6','stroke-width':1.5},g);el('text',{x:a[3],y:a[4]-2,'text-anchor':'middle',fill:'#fff','font-size':13,'font-weight':700},g,a[2]);const v=el('text',{x:a[3],y:a[4]+13,'text-anchor':'middle',fill:'#fffc','font-size':11},g,'');N[a[0]]={r,v}});
+  el('text',{x:400,y:455,'text-anchor':'middle',class:'ts'},svg,'Relative activity units are illustrative (0–100), not Hz.');
+  $('#cirD').addEventListener('input',render);$('#cirStn').addEventListener('change',render);
+  $$('[data-cp]').forEach(b=>b.addEventListener('click',()=>{$('#cirD').value=b.dataset.cp;render()}));
+  $$('#cirModes button').forEach(b=>b.addEventListener('click',()=>{svg.dataset.mode=b.dataset.m;$$('#cirModes button').forEach(x=>x.setAttribute('aria-pressed',x===b))}));
+  mkMeters($('#cirMeters'),[{id:'D1',label:'D1-MSN (direct)',color:'var(--blue)'},{id:'D2',label:'D2-MSN (indirect)',color:'var(--blue)'},{id:'GPe',label:'GPe',color:'var(--glu)'},{id:'STN',label:'STN',color:'var(--da)'},{id:'GPi',label:'GPi/SNr output',color:'var(--gaba)'},{id:'TH',label:'Thalamocortical drive',color:'var(--vio)'}]);render()}
+ return{init,start:render,render,set(v){$('#cirD').value=v;if(M.circuit.ready)render()}}})();
+
+/* ============ 3 DOPAMINE SYNAPSE ============ */
+M.synapse=(function(){
+ const svg=$('#sySvg');let ves=[],parts=[],g1,g2,flags={};const MT=$('#syMeters');
+ function calc(){const term=1-striatalLoss(G.loss),lev=$('#syLev').checked,mao=$('#syMao').checked,comt=$('#syComt').checked,ag=$('#syAg').checked;
+  const synth=term+(lev?.6:0),clear=(.55+.45*term)*(1-(mao?.2:0)-(comt?.08:0));const da=clamp(synth/clear,0,1.3);
+  const d1=clamp(da*.9+(ag?.1:0),0,1.2),d2=clamp(da+(ag?.55:0),0,1.2);return{term,da,d1,d2,eff:(d1+d2)/2}}
+ function render(){const r=calc();
+  ves.forEach((v,i)=>v.style.display=i<Math.round(r.term*10)?'':'none');
+  parts.forEach((p,i)=>p.style.display=i<Math.round(clamp(r.da/1.2)*40)?'':'none');
+  g1.setAttribute('opacity',clamp(r.d1/1.2).toFixed(2));g2.setAttribute('opacity',clamp(r.d2/1.2).toFixed(2));
+  flags.lev.style.display=$('#syLev').checked?'':'none';flags.ag.style.display=$('#syAg').checked?'':'none';flags.mao.style.display=$('#syMao').checked?'':'none';flags.comt.style.display=$('#syComt').checked?'':'none';
+  setM(MT,'term',r.term*100);setM(MT,'da',r.da/1.3*100,Math.round(r.da*100)+'% of normal');setM(MT,'d1',r.d1/1.2*100,Math.round(r.d1*100));setM(MT,'d2',r.d2/1.2*100,Math.round(r.d2*100));setM(MT,'c1',(.2+.6*r.d1)*100,'cAMP '+Math.round((.2+.6*r.d1)*100));setM(MT,'c2',clamp(.8-.6*r.d2)*100,'cAMP '+Math.round(clamp(.8-.6*r.d2)*100));
+  $('#syText').innerHTML=r.term<.3&&!$('#syLev').checked?'Few terminals remain: little vesicular storage, low synaptic dopamine → both D1 under-stimulation and D2 under-stimulation (indirect pathway disinhibited).':r.da>1.05?'Supraphysiologic receptor stimulation → risk of dyskinesia and impulse-control disorders.':'Effective dopaminergic signal ≈ '+Math.round(r.eff*100)+'% of normal. In late disease, levodopa-derived dopamine is made in non-dopaminergic cells (e.g., serotonergic terminals) and is released unregulated → fluctuations.'}
+ function init(){
+  el('rect',{x:70,y:20,width:520,height:170,rx:40,fill:'#2a3b63',stroke:'#5b7bc0','stroke-width':2},svg);el('text',{x:90,y:42,class:'ts'},svg,'Presynaptic nigrostriatal terminal');
+  el('rect',{x:70,y:262,width:520,height:190,rx:36,fill:'#33264d',stroke:'#7c5fb5','stroke-width':2},svg);el('text',{x:90,y:440,class:'ts'},svg,'Postsynaptic medium spiny neuron (MSN)');
+  el('path',{d:'M610 70 C650 40 740 50 770 100 C795 160 780 260 740 300 C690 340 625 300 612 230 C600 160 580 100 610 70 Z',fill:'#244a47',stroke:'#3a8f86','stroke-width':2},svg);el('text',{x:690,y:150,class:'ts','text-anchor':'middle'},svg,'Astrocyte');el('text',{x:690,y:168,class:'ts','text-anchor':'middle'},svg,'COMT · MAO-B');el('text',{x:690,y:186,class:'ts','text-anchor':'middle'},svg,'→ 3-MT, DOPAC, HVA');
+  const pill=(x,y,t,c)=>{el('rect',{x:x-42,y:y-13,width:84,height:26,rx:13,fill:c,opacity:.9},svg);el('text',{x,y:y+4,'text-anchor':'middle',fill:'#fff','font-size':11,'font-weight':700},svg,t)};
+  pill(120,66,'Tyrosine','#4b6aa8');pill(250,66,'L-DOPA','#b45309');pill(390,66,'Dopamine','#a16207');
+  const ar=(x1,x2,y,t)=>{el('path',{d:'M'+x1+' '+y+' H'+x2,stroke:'#cbd5e1','stroke-width':2,'marker-end':'none'},svg);el('path',{d:'M'+(x2-6)+' '+(y-4)+' L'+x2+' '+y+' L'+(x2-6)+' '+(y+4),stroke:'#cbd5e1','stroke-width':2,fill:'none'},svg);el('text',{x:(x1+x2)/2,y:y-6,'text-anchor':'middle',class:'ts'},svg,t)};
+  ar(165,205,66,'TH');ar(295,345,66,'AADC');
+  el('text',{x:390,y:100,'text-anchor':'middle',class:'ts'},svg,'↓ VMAT2');
+  for(let i=0;i<10;i++){const c=el('circle',{cx:105+i*30,cy:135,r:11,fill:'#fbbf24',stroke:'#92400e','stroke-width':2},svg);el('circle',{cx:105+i*30,cy:135,r:4,fill:'#92400e'},svg);ves.push(c)}
+  el('ellipse',{cx:480,cy:85,rx:45,ry:22,fill:'#3b2f63',stroke:'#a78bfa'},svg);el('text',{x:480,y:83,'text-anchor':'middle',fill:'#fff','font-size':10},svg,'Mitochondrion');el('text',{x:480,y:95,'text-anchor':'middle',fill:'#fcd34d','font-size':10},svg,'MAO-B');
+  el('rect',{x:520,y:178,width:30,height:24,rx:6,fill:'#ef4444'},svg);el('text',{x:535,y:195,'text-anchor':'middle',fill:'#fff','font-size':10,'font-weight':700},svg,'DAT');
+  el('text',{x:330,y:222,class:'ts','text-anchor':'middle'},svg,'Synaptic cleft: dopamine diffusion · reuptake via DAT');
+  for(let i=0;i<40;i++){const c=el('circle',{cx:(90+Math.random()*470).toFixed(0),cy:(200+Math.random()*50).toFixed(0),r:4.2,fill:'#fbbf24',class:'dap',style:'animation-delay:'+(-Math.random()*3).toFixed(1)+'s'},svg);parts.push(c)}
+  g1=el('g',{},svg);el('circle',{cx:170,cy:268,r:34,fill:'#60a5fa',opacity:.45},g1);g2=el('g',{},svg);el('circle',{cx:410,cy:268,r:34,fill:'#a78bfa',opacity:.45},g2);
+  const rec=(x,c,t,s1,s2)=>{el('rect',{x:x-20,y:252,width:40,height:20,rx:8,fill:c,stroke:'#fff8'},svg);el('text',{x,y:267,'text-anchor':'middle',fill:'#fff','font-size':12,'font-weight':800},svg,t);el('text',{x,y:300,'text-anchor':'middle',fill:'#e2e8f0','font-size':11},svg,s1);el('text',{x,y:316,'text-anchor':'middle',fill:'#e2e8f0','font-size':11},svg,s2)};
+  rec(170,'#2563eb','D1','Gαolf → AC ↑','cAMP ↑ PKA ↑ DARPP-32');rec(410,'#7c3aed','D2','Gαi/o → AC ↓','cAMP ↓ (less inhibitory tone)');
+  el('text',{x:170,y:350,'text-anchor':'middle',fill:'#93c5fd','font-size':12,'font-weight':700},svg,'Direct-pathway MSN: EXCITED');el('text',{x:410,y:350,'text-anchor':'middle',fill:'#c4b5fd','font-size':12,'font-weight':700},svg,'Indirect-pathway MSN: INHIBITED');
+  el('text',{x:300,y:400,'text-anchor':'middle',class:'ts'},svg,'Net: dopamine facilitates movement through both pathways');
+  const fl=(x,y,t,c)=>{const g=el('g',{style:'display:none'},svg);el('rect',{x,y,width:t.length*6.6+16,height:20,rx:5,fill:c},g);el('text',{x:x+8,y:y+14,fill:'#fff','font-size':11,'font-weight':700},g,t);return g};
+  flags.lev=fl(210,44,'↑ levodopa','#16a34a');flags.mao=fl(430,12,'MAO-B inhibitor ⊣','#16a34a');flags.comt=fl(620,196,'COMT inhibitor ⊣','#16a34a');flags.ag=fl(250,326,'Agonist: D2/D3 ≫ D1','#16a34a');
+  mkMeters(MT,[{id:'term',label:'Surviving nigrostriatal terminals',color:'#a16207'},{id:'da',label:'Synaptic dopamine',color:'var(--da)'},{id:'d1',label:'D1 receptor stimulation',color:'var(--blue)'},{id:'d2',label:'D2 receptor stimulation',color:'var(--vio)'},{id:'c1',label:'D1-MSN cAMP',color:'var(--blue)'},{id:'c2',label:'D2-MSN cAMP',color:'var(--vio)'}]);
+  bindLoss('syLoss');lossHooks.push(render);['syLev','syMao','syComt','syAg'].forEach(i=>$('#'+i).addEventListener('change',render));
+  $('#sySend').addEventListener('click',()=>{M.circuit.set(Math.round(calc().eff*100));show('circuit');if(!M.circuit.ready){}M.circuit.start&&M.circuit.start()})}
+ return{init,start:()=>{$('#syLoss').value=G.loss;$('#syLossV').textContent=Math.round(G.loss)+'%';render()},render}})();
+
+/* ============ 4 DEGENERATION ============ */
+M.degen=(function(){
+ const W=620,H=340;let ctx,c2,N=[],playing=false;
+ function stage(L){return L<10?'Normal / early Lewy pathology':L<45?'Prodromal (compensated): hyposmia, RBD, constipation':L<52?'Motor onset (H&Y 1, unilateral)':L<60?'Early motor (H&Y 2)':L<72?'Mid (H&Y 3, postural instability)':L<88?'Advanced (H&Y 4)':'Late (H&Y 5)'}
+ function draw(){const L=G.loss,s=striatalLoss(L),ink=cssv('--ink'),mute=cssv('--mute');
+  ctx.clearRect(0,0,W,H);ctx.fillStyle=cssv('--panel2');ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=mute;ctx.font='12px system-ui';ctx.fillText('Substantia nigra pars compacta (schematic) — each cell = ~1% of the population',12,18);ctx.fillText('dorsal tier (spared longer)',12,H-8);ctx.fillText('ventrolateral tier (lost first) ↓',W-200,H-8);
+  N.forEach(n=>{const alive=L<n.thr,stress=alive&&(n.thr-L)<14;
+   if(!alive){ctx.strokeStyle='rgba(150,160,190,.3)';ctx.setLineDash([3,3]);ctx.beginPath();ctx.arc(n.x,n.y,8,0,TAU);ctx.stroke();ctx.setLineDash([]);return}
+   const sc=stress?.8:1,wob=stress?Math.sin(performance.now()/200+n.x)*1:0;
+   ctx.strokeStyle=stress?'#f87171':'#a47a52';ctx.lineWidth=1.4;n.d.forEach(d=>{ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(n.x+d[0]*(stress?.5:1),n.y+d[1]*(stress?.5:1)+wob);ctx.stroke()});
+   ctx.fillStyle=stress?'#7a3b2a':'#7c5a3a';ctx.beginPath();ctx.ellipse(n.x,n.y,11*sc,8*sc,n.a,0,TAU);ctx.fill();ctx.strokeStyle=stress?'#f87171':'#3b2a1a';ctx.lineWidth=stress?2:1;ctx.stroke();
+   ctx.fillStyle='#2b1d10';for(let k=0;k<4;k++){ctx.fillRect(n.x-5+k*3,n.y-2+(k%2)*3,1.8,1.8)}
+   if(n.inc&&L>4&&L<75){ctx.fillStyle='#fbcfe8';ctx.beginPath();ctx.arc(n.x+3,n.y,3.6,0,TAU);ctx.fill();ctx.strokeStyle='#ec4899';ctx.lineWidth=1.2;ctx.stroke()}});
+  ctx.fillStyle=ink;ctx.font='bold 13px system-ui';ctx.fillText('Surviving: '+N.filter(n=>L<n.thr).length+' / '+N.length,W-135,18);
+  // curve
+  const w=620,h=200,x0=44,y0=h-30,pw=w-64,ph=h-50;c2.clearRect(0,0,w,h);c2.fillStyle=cssv('--panel2');c2.fillRect(0,0,w,h);
+  const X=v=>x0+v/100*pw,Y=v=>y0-v/100*ph;c2.strokeStyle=cssv('--line');c2.lineWidth=1;c2.fillStyle=mute;c2.font='11px system-ui';
+  for(let v=0;v<=100;v+=25){c2.beginPath();c2.moveTo(x0,Y(v));c2.lineTo(x0+pw,Y(v));c2.stroke();c2.fillText(v+'',12,Y(v)+4);c2.fillText(v+'',X(v)-8,y0+14)}
+  c2.fillText('Nigral neuron loss (%)',x0+pw/2-55,h-4);c2.save();c2.translate(10,y0-ph/2+40);c2.rotate(-Math.PI/2);c2.fillText('Striatal DA loss (%)',0,0);c2.restore();
+  c2.fillStyle='rgba(248,113,113,.12)';c2.fillRect(X(45),Y(100),X(100)-X(45),ph);c2.fillStyle='rgba(52,211,153,.1)';c2.fillRect(X(0),Y(100),X(45)-X(0),ph);
+  c2.setLineDash([5,4]);c2.strokeStyle='#fb923c';c2.beginPath();c2.moveTo(x0,Y(75));c2.lineTo(x0+pw,Y(75));c2.stroke();c2.setLineDash([]);c2.fillStyle='#fb923c';c2.fillText('~75% striatal DA loss: motor signs',x0+8,Y(75)-4);
+  c2.fillStyle='#34d399';c2.fillText('pre-motor / compensated',X(2),Y(8));c2.fillStyle='#f87171';c2.fillText('symptomatic',X(60),Y(8));
+  c2.strokeStyle='#fbbf24';c2.lineWidth=3;c2.beginPath();for(let v=0;v<=100;v++){const y=striatalLoss(v);v?c2.lineTo(X(v),Y(y*100)):c2.moveTo(X(v),Y(y*100))}c2.stroke();
+  c2.fillStyle='#fff';c2.strokeStyle='#fbbf24';c2.lineWidth=3;c2.beginPath();c2.arc(X(L),Y(s*100),7,0,TAU);c2.fill();c2.stroke();
+  // text
+  const yrs=yearsFromLoss(L),on=yearsFromLoss(45);const st=$('#dgStats');
+  st.innerHTML='<div class="big">'+Math.round(L)+'<small style="font-size:1rem">% neurons lost</small></div><p><b>Striatal dopamine depletion:</b> '+Math.round(s*100)+'%</p><p><b>Stage:</b> '+stage(L)+'</p><p class="note">Illustrative timeline: ≈ '+yrs.toFixed(1)+' y since pathology began'+(L>=45?'; ≈ '+(yrs-on).toFixed(1)+' y after motor onset':'; motor onset predicted after ≈ '+(on-yrs).toFixed(1)+' y more')+'.</p><p class="note">Compensation (↑ DA turnover, D2 receptor supersensitivity, STN/pallidal adaptations) hides the first ~50% of loss.</p>';
+  // datscan
+  const dv=$('#dgDat');dv.innerHTML='';const side=(cx,loss,tail)=>{const a=clamp(1-loss);const col='rgb('+Math.round(255)+','+Math.round(120+100*a)+','+Math.round(40+20*a)+')';
+   el('circle',{cx:cx,cy:50,r:20,fill:col,opacity:.15+.85*clamp(1-loss*.8)},dv);el('path',{d:'M'+cx+' 65 C'+(cx+tail*4)+' 85 '+(cx+tail*20)+' 100 '+(cx+tail*30)+' 118',stroke:col,'stroke-width':18,'stroke-linecap':'round',fill:'none',opacity:.12+.88*clamp(1-loss*1.15)},dv)};
+  side(75,clamp(s*.95),-1);side(165,clamp(s*1.1),1);el('text',{x:5,y:12,class:'ts'},dv,'R');el('text',{x:228,y:12,class:'ts'},dv,'L')}
+ function init(){const cv=$('#dgCv');ctx=fit(cv,W,H);c2=fit($('#dgCurve'),620,200);
+  const cols=14,rows=8;let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;const arr=[];
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const tier=r/(rows-1);arr.push({x:46+c*(W-92)/(cols-1)+(rnd()-.5)*16,y:48+r*(H-96)/(rows-1)+(rnd()-.5)*12,sc:(1-tier)*.6+rnd()*.4,a:rnd()*3,inc:rnd()<.45,d:[0,1,2].map(()=>[(rnd()-.5)*34,(rnd()-.5)*30])})}
+  arr.sort((a,b)=>a.sc-b.sc);arr.forEach((n,i)=>n.thr=(i+.5)/arr.length*100);N=arr;
+  bindLoss('dgLoss');lossHooks.push(draw);
+  $('#dgPlay').addEventListener('click',e=>{if(G.loss>=100)setLoss(0);playing=!playing;e.target.textContent=playing?'⏸ Pause':'▶ Simulate disease course'});
+  $('#dgReset').addEventListener('click',()=>{playing=false;$('#dgPlay').textContent='▶ Simulate disease course';setLoss(0)})}
+ return{init,start:()=>{setLoss(G.loss);draw()},stop(){playing=false;const b=$('#dgPlay');if(b)b.textContent='▶ Simulate disease course'},tick(dt){if(playing){if(G.loss>=100){playing=false;$('#dgPlay').textContent='▶ Simulate disease course'}else setLoss(G.loss+dt*5)}else draw()},render:draw}})();
+
+/* ============ 5 ALPHA-SYNUCLEIN ============ */
+M.asyn=(function(){
+ const W=640,H=330,CX=320,CY=160,RX=292,RY=142;let ctx,cc,P=[],par={prod:1,clr:80,ox:20},paused=false,hist=[],hT=0,frame=0,cnt=[0,0,0,0,0],reached=[1,0,0,0,0];
+ const COLS=['#60a5fa','#fb923c','#ef4444','#d946ef','#f472b6'];
+ function inside(x,y){return Math.pow((x-CX)/RX,2)+Math.pow((y-CY)/RY,2)<.94}
+ function spawn(ty,x,y,s){let px=x,py=y;if(px==null){do{px=rand(30,W-30);py=rand(25,H-25)}while(!inside(px,py))}P.push({ty,x:px,y:py,vx:rand(-.5,.5),vy:rand(-.5,.5),s:s||1,a:rand(0,TAU)})}
+ function step(){const prod=par.prod,clr=par.clr/100,ox=par.ox/100;cnt=[0,0,0,0,0];P.forEach(p=>cnt[p.ty]++);
+  if(cnt[0]<26*prod&&Math.random()<.25*prod)spawn(0);
+  const dead=new Set(),lbN=cnt[4];
+  for(const p of P){p.a+=rand(-.2,.2);const sp=p.ty===4?0:p.ty===3?.35:p.ty===2?.5:.8;p.vx+=Math.cos(p.a)*.06*sp;p.vy+=Math.sin(p.a)*.06*sp;p.vx*=.96;p.vy*=.96;p.x+=p.vx*1.4;p.y+=p.vy*1.4;if(p.ty<4&&!inside(p.x,p.y)){p.vx=(CX-p.x)*.004;p.vy=(CY-p.y)*.004;p.x+=p.vx*8;p.y+=p.vy*8}}
+  for(const p of P){if(dead.has(p))continue;
+   if(p.ty===0){if(Math.random()<.0012*clr)dead.add(p);else if(Math.random()<.0005*(1+3*ox+(par.prod-1)*1.5))p.ty=1;
+    else for(const q of P){if(q.ty<1||q===p||dead.has(q))continue;const dx=q.x-p.x,dy=q.y-p.y;if(dx*dx+dy*dy<190&&Math.random()<.05){if(q.ty===1){q.ty=2;q.s=2}else if(q.ty===2||q.ty===3)q.s=Math.min(q.s+1,q.ty===3?40:7);dead.add(p);break}}}
+   else if(p.ty===1){if(Math.random()<.008*clr)dead.add(p);else for(const q of P){if(q===p||q.ty<1||q.ty>2||dead.has(q))continue;const dx=q.x-p.x,dy=q.y-p.y;if(dx*dx+dy*dy<260){q.ty=2;q.s=(q.ty===2?q.s:1)+2;dead.add(p);break}}}
+   else if(p.ty===2){if(Math.random()<.004*clr)dead.add(p);else if(p.s>=7){p.ty=3;p.s=8}}
+   else if(p.ty===3){if(Math.random()<.0002*clr)dead.add(p);else{for(const q of P){if(q===p||q.ty!==3||dead.has(q))continue;const dx=q.x-p.x,dy=q.y-p.y;if(dx*dx+dy*dy<700&&Math.random()<.012){p.s=Math.min(p.s+q.s,60);dead.add(q);break}}
+     if(p.s>=26&&lbN<5){p.ty=4;p.s=26;p.vx=p.vy=0}}}
+   else if(p.ty===4){for(const q of P){if(q===p||q.ty<1||q.ty>3||dead.has(q))continue;const dx=q.x-p.x,dy=q.y-p.y,r=p.s*.4+30;if(dx*dx+dy*dy<r*r){p.s=Math.min(p.s+(q.ty===3?q.s*.4:1),90);dead.add(q)}}}}
+  if(dead.size)P=P.filter(p=>!dead.has(p));if(P.length>420)P.splice(0,P.length-420)}
+ function draw(){const ink=cssv('--ink');ctx.clearRect(0,0,W,H);ctx.fillStyle=cssv('--panel2');ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(120,160,230,.10)';ctx.strokeStyle='rgba(120,160,230,.5)';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(CX,CY,RX,RY,0,0,TAU);ctx.fill();ctx.stroke();
+  ctx.fillStyle='rgba(60,70,120,.28)';ctx.beginPath();ctx.ellipse(CX+120,CY-70,34,26,0,0,TAU);ctx.fill();ctx.fillStyle=cssv('--mute');ctx.font='11px system-ui';ctx.fillText('nucleus',CX+95,CY-66);ctx.fillText('Dopaminergic neuron cytoplasm (schematic)',16,H-8);
+  for(const p of P){if(p.ty===0){ctx.fillStyle=COLS[0];ctx.beginPath();ctx.arc(p.x,p.y,3.4,0,TAU);ctx.fill()}
+   else if(p.ty===1){ctx.strokeStyle=COLS[1];ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(p.x-5,p.y);ctx.lineTo(p.x-2,p.y-3);ctx.lineTo(p.x+1,p.y+3);ctx.lineTo(p.x+5,p.y);ctx.stroke()}
+   else if(p.ty===2){const n=Math.round(p.s);ctx.fillStyle=COLS[2];for(let k=0;k<n;k++){ctx.beginPath();ctx.arc(p.x+Math.cos(k*2.1)*(3+k*.6),p.y+Math.sin(k*2.1)*(3+k*.6),3,0,TAU);ctx.fill()}}
+   else if(p.ty===3){ctx.strokeStyle=COLS[3];ctx.lineWidth=3.2;ctx.lineCap='round';const L=6+p.s*.9;ctx.beginPath();ctx.moveTo(p.x-Math.cos(p.a)*L/2,p.y-Math.sin(p.a)*L/2);ctx.lineTo(p.x+Math.cos(p.a)*L/2,p.y+Math.sin(p.a)*L/2);ctx.stroke()}
+   else{const r=10+p.s*.32;ctx.fillStyle='rgba(244,114,182,.18)';ctx.beginPath();ctx.arc(p.x,p.y,r+10,0,TAU);ctx.fill();ctx.fillStyle='#f9a8d4';ctx.beginPath();ctx.arc(p.x,p.y,r,0,TAU);ctx.fill();ctx.fillStyle='#be185d';ctx.beginPath();ctx.arc(p.x,p.y,r*.55,0,TAU);ctx.fill();ctx.fillStyle=ink;ctx.font='bold 11px system-ui';ctx.fillText('Lewy body',p.x-26,p.y-r-14)}}
+  // legend
+  [['monomer',0],['misfolded',1],['oligomer',2],['fibril',3],['Lewy body',4]].forEach((l,i)=>{ctx.fillStyle=COLS[l[1]];ctx.fillRect(14+i*0,0,0,0);ctx.beginPath();ctx.arc(20+i*105,16,5,0,TAU);ctx.fill();ctx.fillStyle=cssv('--mute');ctx.font='11px system-ui';ctx.fillText(l[0],30+i*105,20)});
+  // chart
+  const w=640,h=120;cc.clearRect(0,0,w,h);cc.fillStyle=cssv('--panel2');cc.fillRect(0,0,w,h);cc.fillStyle=cssv('--mute');cc.font='11px system-ui';cc.fillText('Aggregate burden over simulated time (oligomer-weighted)',10,14);cc.strokeStyle=cssv('--line');cc.strokeRect(.5,20.5,w-1,h-30);
+  cc.strokeStyle='#f87171';cc.lineWidth=2;cc.beginPath();hist.forEach((v,i)=>{const x=i/119*(w-10)+5,y=h-12-v*(h-40);i?cc.lineTo(x,y):cc.moveTo(x,y)});cc.stroke()}
+ function stats(){const burden=clamp((cnt[1]*.5+cnt[2]*3+cnt[3]*1.5+cnt[4]*4)/60);G.agg=burden;
+  mkMeters($('#asStats'),[{id:'m',label:'Native monomers',color:COLS[0]},{id:'o',label:'Misfolded + oligomers',color:COLS[2]},{id:'f',label:'Fibrils',color:COLS[3]},{id:'l',label:'Lewy bodies',color:COLS[4]},{id:'t',label:'Neurotoxic burden',color:'var(--gaba)'}]);
+  const h=$('#asStats');setM(h,'m',cnt[0]/80*100,cnt[0]);setM(h,'o',(cnt[1]+cnt[2])/20*100,cnt[1]+cnt[2]);setM(h,'f',cnt[3]/10*100,cnt[3]);setM(h,'l',cnt[4]/5*100,cnt[4]);setM(h,'t',burden*100);
+  reached[1]=reached[1]||cnt[1]+cnt[2]>0;reached[2]=reached[2]||cnt[2]>0;reached[3]=reached[3]||cnt[3]>0;reached[4]=reached[4]||cnt[4]>0;
+  $('#asStages').innerHTML=['Monomer ✓','Misfolding'+(reached[1]?' ✓':''),'Oligomer'+(reached[2]?' ✓':''),'Fibril'+(reached[3]?' ✓':''),'Lewy body'+(reached[4]?' ✓':'')].map(t=>'<span class="tag" style="font-size:.8rem;'+(t.includes('✓')?'color:var(--glu);border-color:var(--glu)':'')+'">'+t+'</span>').join('→')}
+ function setPar(){par.prod=+$('#asProd').value;par.clr=+$('#asClr').value;par.ox=+$('#asOx').value;$('#asProdV').textContent=par.prod+'×';$('#asClrV').textContent=par.clr+'%';$('#asOxV').textContent=par.ox+'%'}
+ function reset(){P=[];hist=[];reached=[1,0,0,0,0];for(let i=0;i<20;i++)spawn(0)}
+ function init(){ctx=fit($('#asCv'),W,H);cc=fit($('#asChart'),640,120);['asProd','asClr','asOx'].forEach(i=>$('#'+i).addEventListener('input',setPar));setPar();reset();
+  $('#asSeed').addEventListener('click',()=>spawn(2,rand(CX-80,CX+80),rand(CY-50,CY+50),4));$('#asReset').addEventListener('click',reset);
+  $('#asPause').addEventListener('click',e=>{paused=!paused;e.target.textContent=paused?'Resume':'Pause'});
+  const PR={age:[1,70,25],snca:[3,60,35],lyso:[1,20,30],ox:[1.5,60,90]};$$('[data-as]').forEach(b=>b.addEventListener('click',()=>{const v=PR[b.dataset.as];$('#asProd').value=v[0];$('#asClr').value=v[1];$('#asOx').value=v[2];setPar()}))}
+ return{init,start(){stats()},tick(dt,t){if(!paused){const k=Math.max(1,Math.round(dt*60));for(let i=0;i<k;i++)step();hT+=dt;if(hT>.5){hT=0;hist.push(G.agg);if(hist.length>120)hist.shift()}}frame++;if(frame%8===0)stats();draw()},render:draw}})();
+
+/* ============ 6 LEWY / BRAAK ============ */
+M.lewy=(function(){
+ const svg=$('#lwSvg');const ST=[['No Lewy pathology','Normal ageing brain: no α-synuclein inclusions.'],['Braak 1','Dorsal motor nucleus of the vagus (medulla) and olfactory bulb/anterior olfactory nucleus. Clinical correlate: <b>hyposmia, constipation</b> (prodromal).'],['Braak 2','Medulla oblongata + pontine tegmentum: locus coeruleus, raphe, gigantocellular reticular nucleus. Correlate: <b>REM sleep behavior disorder</b>, mood/autonomic dysfunction, pain.'],['Braak 3','Midbrain: <b>SNc</b> (also amygdala, PPN). Dopaminergic loss begins to reach threshold; <b>motor signs may appear</b>.'],['Braak 4','Temporal mesocortex and hippocampal CA2. Correlate: cognitive slowing, anxiety, <b>visual hallucinations</b> risk.'],['Braak 5','Neocortical association areas (prefrontal, high-order sensory). Correlate: executive dysfunction, <b>Parkinson disease dementia</b>.'],['Braak 6','First-order sensory and premotor cortex: advanced disease with severe cognitive/behavioural impairment.']];
+ const MK=[[1,545,305],[1,330,440],[2,332,395],[3,335,345],[3,450,300],[4,410,262],[5,495,175],[6,300,112],[6,200,170]];const mk=[];let mode='he';
+ function render(){const s=+$('#lwStage').value;$('#lwStageV').textContent=s;mk.forEach(m=>{const on=m.s<=s;m.c.setAttribute('fill',on?['#facc15','#fb923c','#f97316','#ef4444','#dc2626','#be123c'][m.s-1]:'rgba(150,160,190,.25)');m.c.classList.toggle('pulse',m.s===s&&!G.paused);m.c.setAttribute('r',on?15:10)});
+  $('#lwInfo').innerHTML='<h3>'+ST[s][0]+'</h3><p>'+ST[s][1]+'</p><p class="note">Clinical PD typically presents ≈ Braak 3–4; non-motor features can precede motor signs by 10–20 years.</p>';histo()}
+ function histo(){const h=$('#lwHisto');h.innerHTML='';const he=mode==='he';
+  el('rect',{width:320,height:240,fill:he?'#f3dfe6':'#e9edf2'},h);for(let i=0;i<60;i++)el('circle',{cx:(i*53%320),cy:(i*97%240),r:2+i%3,fill:he?'#c9a5bd':'#c8d0da',opacity:.5},h);
+  el('path',{d:'M60 40 C100 15 150 25 175 60 C190 85 170 125 140 135 C95 148 50 130 45 95 C40 70 45 50 60 40 Z',fill:he?'#a9764f':'#9aa5b5',stroke:he?'#6b4528':'#64748b','stroke-width':2},h);
+  for(let i=0;i<22;i++)el('circle',{cx:70+(i*37%100),cy:50+(i*53%75),r:1.6,fill:he?'#2b1d10':'#64748b'},h);
+  el('ellipse',{cx:150,cy:100,rx:20,ry:17,fill:he?'#e8c9dc':'#dde3ea',stroke:he?'#7c5aa0':'#94a3b8','stroke-width':1.5},h);el('circle',{cx:152,cy:100,r:4,fill:he?'#5b3a80':'#64748b'},h);
+  el('circle',{cx:98,cy:88,r:25,fill:he?'#fbd5e0':'#d7b49a',opacity:.8},h);el('circle',{cx:98,cy:88,r:17,fill:he?'#e11d48':'#6b3d17',stroke:he?'#9f1239':'#3f2410','stroke-width':3},h);el('circle',{cx:98,cy:88,r:9,fill:he?'#be123c':'#3f2410'},h);
+  if(!he){[['M200 55 C225 70 235 95 262 100'],['M205 160 C225 175 260 170 290 190'],['M170 180 C160 205 190 215 200 232']].forEach(d=>el('path',{d:d[0],stroke:'#6b3d17','stroke-width':4,fill:'none','stroke-linecap':'round'},h));el('text',{x:205,y:50,class:'ts'},h,'Lewy neurites')}
+  el('text',{x:98,y:134,'text-anchor':'middle',class:'ts'},h,'Lewy body');el('text',{x:150,y:135,class:'ts'},h,'nucleus');el('text',{x:20,y:232,class:'ts'},h,'Neuromelanin-pigmented SNc neuron');
+  $('#lwHistoNote').innerHTML=he?'<b>H&E:</b> classical (brainstem) Lewy body = round eosinophilic cytoplasmic inclusion with dense core and pale halo, displacing neuromelanin. Cortical Lewy bodies lack a halo.':'<b>IHC:</b> anti-phospho-Ser129 α-synuclein highlights Lewy bodies <i>and</i> Lewy neurites; ubiquitin, p62, neurofilament, lipids and organelle fragments are also present in the inclusion.'}
+ function init(){
+  el('ellipse',{cx:230,cy:385,rx:90,ry:50,fill:'#8a7a90',stroke:'#4b3f52','stroke-width':2},svg);el('path',{d:'M295 330 C295 380 300 420 312 458 L358 458 C352 420 356 380 362 330 Z',fill:'#b9aab9',stroke:'#4b3f52','stroke-width':2},svg);
+  el('ellipse',{cx:320,cy:190,rx:262,ry:152,fill:'#a695ab',stroke:'#4b3f52','stroke-width':3},svg);el('path',{d:'M110 190 Q320 70 530 195',stroke:'#e6dce6','stroke-width':8,fill:'none',opacity:.8},svg);
+  el('ellipse',{cx:548,cy:308,rx:28,ry:12,fill:'#cbbcc9',stroke:'#4b3f52','stroke-width':2},svg);el('text',{x:320,y:30,'text-anchor':'middle',class:'ts'},svg,'Sagittal view (front → right)');
+  el('text',{x:548,y:336,'text-anchor':'middle',class:'ts'},svg,'olfactory bulb');el('text',{x:372,y:448,class:'ts'},svg,'medulla (DMV)');el('text',{x:372,y:398,class:'ts'},svg,'pons (LC)');el('text',{x:372,y:350,class:'ts'},svg,'midbrain (SNc)');
+  MK.forEach(m=>{const c=el('circle',{cx:m[1],cy:m[2],r:12,stroke:'#fff','stroke-width':2},svg);el('text',{x:m[1],y:m[2]+4,'text-anchor':'middle',fill:'#fff','font-size':11,'font-weight':800,'pointer-events':'none'},svg,m[0]);mk.push({s:m[0],c})});
+  $('#lwStage').addEventListener('input',render);$$('#lwMode button').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.hm;$$('#lwMode button').forEach(x=>x.setAttribute('aria-pressed',x===b));histo()}))}
+ return{init,start:render,render}})();
+
+/* ============ 7 MITOCHONDRIA ============ */
+M.mito=(function(){
+ const W=800,H=440;let ctx,E=[],PR=[],RO=[],ATP=[],flux=1,ros=0,acc=0,svgb=false;
+ const PATH=[[90,225],[120,128],[190,108],[380,120],[448,82],[512,120],[585,215]];
+ const pt=u=>{const n=PATH.length-1,f=clamp(u)*n,i=Math.min(n-1,Math.floor(f)),t=f-i;return[PATH[i][0]+(PATH[i+1][0]-PATH[i][0])*t,PATH[i][1]+(PATH[i+1][1]-PATH[i][1])*t]};
+ function vals(){const inh=+$('#miInh').value/100,ca=+$('#miCa').value/100,mit=+$('#miMit').value/100;
+  const atp=100*(1-.75*inh)*(1-.2*ca),psi=100*(1-.5*inh)*(1-.1*ca),rosv=clamp((15+70*inh+25*ca)/100),dmg=clamp((inh*.6+ca*.2+rosv*.25)*(1-.7*mit)+inh*.1),pool=100*(1-dmg),mptp=clamp(ca*.45+rosv*.4+(1-mit)*.25*inh+.0);return{inh,ca,mit,atp,psi,ros:rosv,pool,mptp,dmg}}
+ function render(){const v=vals();$('#miInhV').textContent=Math.round(v.inh*100)+'%';$('#miCaV').textContent=Math.round(v.ca*100)+'%';$('#miMitV').textContent=Math.round(v.mit*100)+'%';
+  const h=$('#miMeters');setM(h,'atp',v.atp);setM(h,'psi',v.psi);setM(h,'ros',v.ros*100);setM(h,'pool',v.pool);setM(h,'mptp',v.mptp*100);
+  G.ros=Math.round(v.ros*100);G.mitoDmg=v.dmg;flux=1-.8*v.inh;ros=v.ros;
+  $('#miText').innerHTML=v.mptp>.6||v.atp<35?'<b>Energetic crisis:</b> low ATP, depolarized Δψm, high Ca²⁺ + ROS → mitochondrial permeability transition, cytochrome c release → neuronal death.':v.pool<75?'<b>Stress:</b> damaged mitochondria accumulate because mitophagy is insufficient. Complex I leak raises superoxide, which oxidizes α-synuclein and lipids.':'Adequate ATP and mitophagy; basal ROS is handled by antioxidant systems. SNc neurons still run close to their energetic limit (pacemaking, Ca²⁺ load, vast axon).'}
+ function init(){const svg=$('#mtSvg');
+  el('ellipse',{cx:400,cy:225,rx:380,ry:200,fill:'#3a2f55',stroke:'#a78bfa','stroke-width':4},svg);el('ellipse',{cx:400,cy:235,rx:340,ry:160,fill:'#4a3b6e',stroke:'#c4b5fd','stroke-width':3},svg);
+  for(let i=0;i<5;i++)el('path',{d:'M'+(150+i*120)+' 395 q 20 -40 0 -70',stroke:'#c4b5fd','stroke-width':3,fill:'none',opacity:.6},svg);
+  el('text',{x:60,y:50,class:'ts'},svg,'Intermembrane space (H⁺ accumulates)');el('text',{x:330,y:300,class:'t','text-anchor':'middle'},svg,'Matrix (TCA cycle → NADH)');el('text',{x:90,y:250,class:'ts','text-anchor':'middle'},svg,'NADH');el('text',{x:590,y:240,class:'ts','text-anchor':'middle'},svg,'O₂ → H₂O');
+  const cx=(x,l,c,w)=>{el('rect',{x:x-w/2,y:98,width:w,height:46,rx:12,fill:c,stroke:'#fff8','stroke-width':2},svg);el('text',{x,y:127,'text-anchor':'middle',fill:'#fff','font-size':15,'font-weight':800},svg,l)};
+  cx(120,'I','#2563eb',58);cx(250,'II','#0d9488',54);cx(380,'III','#7c3aed',62);cx(512,'IV','#db2777',58);
+  el('rect',{x:625,y:92,width:44,height:34,rx:10,fill:'#16a34a',stroke:'#fff8','stroke-width':2},svg);el('rect',{x:636,y:126,width:22,height:30,fill:'#15803d'},svg);el('text',{x:647,y:115,'text-anchor':'middle',fill:'#fff','font-size':13,'font-weight':800},svg,'V');el('text',{x:647,y:178,'text-anchor':'middle',class:'ts'},svg,'ATP synthase');
+  el('text',{x:185,y:88,class:'ts','text-anchor':'middle'},svg,'Q');el('text',{x:448,y:70,class:'ts','text-anchor':'middle'},svg,'cyt c');
+  el('text',{x:120,y:170,'text-anchor':'middle',class:'ts'},svg,'MPP⁺ / rotenone ⊣');
+  mkMeters($('#miMeters'),[{id:'atp',label:'ATP production',color:'var(--glu)'},{id:'psi',label:'Membrane potential (Δψm)',color:'var(--blue)'},{id:'ros',label:'ROS leak (superoxide)',color:'var(--gaba)'},{id:'pool',label:'Healthy mitochondrial pool',color:'var(--acc)'},{id:'mptp',label:'mPTP / cell-death risk',color:'var(--warn)'}]);
+  ctx=fit($('#mtCv'),W,H);for(let i=0;i<14;i++)E.push({u:i/14});
+  ['miInh','miCa','miMit'].forEach(i=>$('#'+i).addEventListener('input',render));$$('[data-mi]').forEach(b=>b.addEventListener('click',()=>{const v=b.dataset.mi.split(',');$('#miInh').value=v[0];$('#miCa').value=v[1];$('#miMit').value=v[2];render()}))}
+ return{init,start:render,render,tick(dt){acc+=dt;ctx.clearRect(0,0,W,H);
+  E.forEach(e=>{e.u+=dt*.14*flux;if(e.u>1)e.u-=1;const p=pt(e.u);ctx.fillStyle='#fde047';ctx.beginPath();ctx.arc(p[0],p[1],4.2,0,TAU);ctx.fill()});
+  if(Math.random()<.14*flux)[[120,98],[380,98],[512,98]].forEach(s=>{if(Math.random()<.5)PR.push({x:s[0]+rand(-8,8),y:s[1],st:0})});
+  PR=PR.filter(p=>{if(p.st===0){p.y-=1.2;if(p.y<60)p.st=1}else if(p.st===1){p.x+=(646-p.x)*.04+1.2;p.y+=Math.sin(acc*5+p.x)*.2;if(p.x>640){p.st=2}}else{p.y+=2;if(p.y>158){ATP.push({x:647,y:176,t:0});return false}}ctx.fillStyle='#22d3ee';ctx.beginPath();ctx.arc(p.x,p.y,3,0,TAU);ctx.fill();return true});
+  ATP=ATP.filter(a=>{a.t+=dt;a.y+=18*dt;ctx.fillStyle='rgba(74,222,128,'+(1-a.t).toFixed(2)+')';ctx.font='bold 11px system-ui';ctx.fillText('ATP',a.x-10,a.y);return a.t<1});
+  if(Math.random()<ros*.5)RO.push({x:120+rand(-12,12),y:112,vx:rand(-.8,.2),vy:rand(-1.5,-.4),t:0});
+  RO=RO.filter(r=>{r.t+=dt;r.x+=r.vx;r.y+=r.vy;ctx.fillStyle='rgba(239,68,68,'+(1-r.t/1.6).toFixed(2)+')';ctx.beginPath();ctx.arc(r.x,r.y,3.4,0,TAU);ctx.fill();ctx.fillStyle='rgba(255,255,255,'+(1-r.t/1.6).toFixed(2)+')';ctx.font='9px system-ui';ctx.fillText('O₂•⁻',r.x+4,r.y);return r.t<1.6});if(PR.length>150)PR.length=150}}})();
+
+/* ============ 8 OXIDATIVE STRESS ============ */
+M.oxid=(function(){
+ let lp;const OM=$('#oxMeters');
+ function calc(){const da=+$('#oxDa').value/100,fe=+$('#oxFe').value/100,gsh=+$('#oxGsh').value/100,mr=+$('#oxRos').value/100,mao=$('#oxMao').checked;
+  const h2o2=clamp(.45*da*(mao?.6:1)+.55*mr+.08),oh=clamp(h2o2*fe*1.3),quin=clamp(da*.6*(1+fe*.5)*(1-.5*gsh)),sc=1-.6*gsh,lipid=clamp((oh*.9+h2o2*.2)*sc*1.5),prot=clamp((h2o2*.4+oh*.8+quin*.5)*sc*1.2),dna=clamp(oh*.7*sc*1.3),net=clamp(.35*lipid+.3*prot+.15*dna+.2*quin);return{da,fe,gsh,mr,h2o2,oh,quin,lipid,prot,dna,net}}
+ function render(){['oxDa','oxFe','oxGsh','oxRos'].forEach(i=>$('#'+i+'V').textContent=$('#'+i).value+'%');const c=calc();G.oxDmg=c.net;
+  setM(OM,'h2o2',c.h2o2*100);setM(OM,'oh',c.oh*100);setM(OM,'quin',c.quin*100);setM(OM,'lipid',c.lipid*100);setM(OM,'prot',c.prot*100);setM(OM,'dna',c.dna*100);setM(OM,'net',c.net*100);
+  $('#oxText').innerHTML=c.net>.6?'<b>Oxidative collapse:</b> antioxidant defences overwhelmed → lipid peroxidation (4-HNE), protein carbonylation/nitration (promotes α-syn aggregation), DNA damage, apoptosis.':c.net>.3?'<b>Oxidative stress:</b> damage accumulating faster than repair. Typical of the PD substantia nigra: ↓ glutathione, ↑ iron, ↑ lipid peroxidation.':'Redox balance maintained. Notice how dopamine metabolism itself is a constant oxidant source.';drawLoop()}
+ function drawLoop(){if(!lp)return;const nodes=[['Mitochondrial\ndysfunction',G.mitoDmg],['ROS / oxidative\nstress',G.oxDmg],['α-Syn\naggregation',G.agg],['Proteostasis\nfailure',clamp(1-(+$('#asClr').value||80)/100+G.agg*.3)],['Neuro-\ninflammation',G.infl],['Dopaminergic\ncell death',G.loss/100]];lp.innerHTML='';
+  const R=[[400,40],[630,110],[630,235],[400,300],[170,235],[170,110]];
+  el('defs',{},lp).innerHTML='<marker id="lpA" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 1 L10 6 L0 11 Z" fill="#94a3b8"/></marker>';
+  for(let i=0;i<6;i++){const a=R[i],b=R[(i+1)%6];const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L;el('path',{d:'M'+(a[0]+ux*80)+' '+(a[1]+uy*30)+' L'+(b[0]-ux*84)+' '+(b[1]-uy*34),stroke:'#94a3b8','stroke-width':2.5,fill:'none','marker-end':'url(#lpA)',class:'flow'},lp)}
+  nodes.forEach((n,i)=>{const v=clamp(n[1]),g=el('g',{},lp);el('rect',{x:R[i][0]-72,y:R[i][1]-28,width:144,height:56,rx:14,fill:heat(v),stroke:v>.5?'#fff':'#fff5','stroke-width':v>.5?3:1.5,filter:v>.5?'drop-shadow(0 0 8px #f87171)':''},g);const ls=n[0].split('\n');ls.forEach((l,k)=>el('text',{x:R[i][0],y:R[i][1]-4+k*15,'text-anchor':'middle',fill:'#fff','font-size':13,'font-weight':700},g,l));el('text',{x:R[i][0],y:R[i][1]+24,'text-anchor':'middle',fill:'#fffd','font-size':10},g,Math.round(v*100)+'')});
+  el('text',{x:400,y:175,'text-anchor':'middle',class:'t'},lp,'Self-amplifying');el('text',{x:400,y:193,'text-anchor':'middle',class:'t'},lp,'degeneration loop')}
+ function init(){const s=$('#oxSvg');
+  const box=(x,y,w,t,c)=>{el('rect',{x,y,width:w,height:34,rx:10,fill:c,opacity:.92},s);el('text',{x:x+w/2,y:y+22,'text-anchor':'middle',fill:'#fff','font-size':13,'font-weight':700},s,t)};
+  const ar=(d)=>el('path',{d,stroke:'#94a3b8','stroke-width':2.4,fill:'none','marker-end':'url(#lpA2)'},s);
+  el('defs',{},s).innerHTML='<marker id="lpA2" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 1 L10 6 L0 11 Z" fill="#94a3b8"/></marker>';
+  box(30,30,150,'Cytosolic dopamine','#a16207');box(260,30,170,'MAO (outer mito) → H₂O₂','#7c3aed');box(260,100,190,'Auto-oxidation → quinones','#b45309');box(500,30,120,'H₂O₂','#dc2626');box(500,100,170,'+ Fe²⁺ (Fenton) → •OH','#be123c');box(260,180,190,'Neuromelanin binds Fe/quinones','#4b5563');box(30,180,160,'Mito complex I leak → O₂•⁻','#2563eb');box(560,180,210,'GSH/GPx, SOD, catalase detox','#16a34a');
+  ar('M180 47 H258');ar('M180 52 C220 90 230 110 258 117');ar('M430 47 H498');ar('M560 64 V98');ar('M190 200 C230 160 400 120 498 118');ar('M560 214 V250');
+  box(150,255,500,'Lipid peroxidation · protein oxidation/nitration · DNA damage','#7f1d1d');
+  el('text',{x:400,y:318,'text-anchor':'middle',class:'ts'},s,'Dopamine neurons are uniquely prone: reactive DA metabolism + Fe + high mitochondrial ROS + low GSH (~40% reduction in PD SNc).');
+  lp=$('#oxLoop');mkMeters(OM,[{id:'h2o2',label:'H₂O₂',color:'var(--warn)'},{id:'oh',label:'Hydroxyl radical (•OH)',color:'var(--gaba)'},{id:'quin',label:'Dopamine quinones',color:'#b45309'},{id:'lipid',label:'Lipid peroxidation',color:'var(--vio)'},{id:'prot',label:'Protein oxidation (α-syn, parkin, DJ-1)',color:'var(--blue)'},{id:'dna',label:'DNA damage',color:'var(--glu)'},{id:'net',label:'Net damage index',color:'var(--gaba)'}]);
+  ['oxDa','oxFe','oxGsh','oxRos'].forEach(i=>$('#'+i).addEventListener('input',render));$('#oxMao').addEventListener('change',render)}
+ return{init,start(){$('#oxRos').value=G.ros;render()},render}})();
+
+/* ============ 9 NEUROINFLAMMATION ============ */
+M.inflam=(function(){
+ const W=640,H=380;let ctx,MG=[[110,100],[320,62],[530,110],[190,250],[470,250]].map(p=>({x:p[0],y:p[1],m:0})),PT=[],A=0,viab=100,ac=0,fr=0;const NEU=[320,290];
+ function target(){const agg=+$('#ifAgg').value/100,pr=+$('#ifPrim').value/100,gut=$('#ifGut').checked?1:0,an=+$('#ifAnti').value/100;return clamp((agg*.8*(1+pr*1.7)+gut*.2)*(1-.7*an))}
+ function labels(){['ifAgg','ifPrim','ifAnti'].forEach(i=>$('#'+i+'V').textContent=$('#'+i).value+'%')}
+ function micro(x,y,m,t,i){const nb=9,len=lerp(48,16,m),r=lerp(7,13,m);const hue=lerp(170,18,m);ctx.strokeStyle='hsl('+hue+' 65% 55%)';ctx.lineWidth=lerp(1.3,3.4,m);ctx.lineCap='round';
+  for(let k=0;k<nb;k++){const a=k/nb*TAU+Math.sin(t*.8+i+k)*lerp(.25,.04,m),mx=x+Math.cos(a)*len*.55,my=y+Math.sin(a)*len*.55,ex=x+Math.cos(a+.4*Math.sin(t+k))*len,ey=y+Math.sin(a+.4*Math.sin(t+k))*len;ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(mx+Math.sin(t+k)*4,my,ex,ey);ctx.stroke()}
+  ctx.fillStyle='hsl('+hue+' 70% 45%)';ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill();ctx.strokeStyle='#fff8';ctx.lineWidth=1.5;ctx.stroke()}
+ function draw(t){ctx.clearRect(0,0,W,H);ctx.fillStyle=cssv('--panel2');ctx.fillRect(0,0,W,H);
+  [[50,265],[590,285]].forEach(a=>{ctx.strokeStyle='#8b5cf6';ctx.lineWidth=2;for(let k=0;k<8;k++){ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(a[0]+Math.cos(k*.785)*26,a[1]+Math.sin(k*.785)*26);ctx.stroke()}ctx.fillStyle='#a78bfa';ctx.beginPath();ctx.arc(a[0],a[1],8,0,TAU);ctx.fill()});
+  const agg=+$('#ifAgg').value/100;const nAgg=Math.round(agg*14);for(let k=0;k<nAgg;k++){const a=k*2.4,rr=60+(k%4)*18;ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(NEU[0]+Math.cos(a)*rr*1.6,NEU[1]-30+Math.sin(a)*rr*.55,4+(k%3),0,TAU);ctx.fill()}
+  const hs=viab/100;ctx.strokeStyle='rgba(164,122,82,'+(.3+.7*hs)+')';ctx.lineWidth=3;[[-50,-40],[-20,-60],[30,-55],[55,-30]].forEach(d=>{ctx.beginPath();ctx.moveTo(NEU[0],NEU[1]);ctx.lineTo(NEU[0]+d[0]*(.4+.6*hs),NEU[1]+d[1]*(.4+.6*hs));ctx.stroke()});
+  ctx.fillStyle='hsl(30 '+Math.round(35+15*hs)+'% '+Math.round(24+14*hs)+'%)';ctx.beginPath();ctx.arc(NEU[0],NEU[1],26*(.65+.35*hs),0,TAU);ctx.fill();ctx.strokeStyle=hs<.5?'#f87171':'#e7c9a5';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#fff';ctx.font='11px system-ui';ctx.fillText('DA neuron',NEU[0]-26,NEU[1]+46);
+  MG.forEach((m,i)=>micro(m.x,m.y,m.m,t,i));
+  PT.forEach(p=>{ctx.fillStyle=p.k?'#fbbf24':'#f87171';ctx.beginPath();ctx.arc(p.x,p.y,p.k?3.5:3,0,TAU);ctx.fill()});
+  ctx.fillStyle=cssv('--mute');ctx.font='11px system-ui';ctx.fillText('● TNF-α / IL-1β   ● NO / O₂•⁻   ◆ astrocytes   ● α-syn aggregates',10,H-8)}
+ function meters(){const h=$('#ifMeters');setM(h,'a',A*100);setM(h,'c',Math.pow(A,1.3)*100);setM(h,'r',A*A*100);setM(h,'v',viab,Math.round(viab)+'%')}
+ function init(){ctx=fit($('#ifCv'),W,H);mkMeters($('#ifMeters'),[{id:'a',label:'Microglial activation',color:'var(--warn)'},{id:'c',label:'Pro-inflammatory cytokines (TNF-α, IL-1β)',color:'var(--da)'},{id:'r',label:'NO / superoxide output',color:'var(--gaba)'},{id:'v',label:'Neuron viability',color:'var(--glu)'}]);
+  ['ifAgg','ifPrim','ifAnti'].forEach(i=>$('#'+i).addEventListener('input',labels));$('#ifReset').addEventListener('click',()=>{viab=100;PT=[]});labels()}
+ return{init,start(){$('#ifAgg').value=Math.round(clamp(G.agg)*100)||$('#ifAgg').value;labels()},render(){draw(ac)},tick(dt,t){ac=t;A=target();G.infl=A;
+  MG.forEach(m=>{m.m+=(A-m.m)*Math.min(1,dt*1.5)});
+  MG.forEach(m=>{if(Math.random()<A*dt*6){const k=Math.random()<.5?1:0;PT.push({x:m.x,y:m.y,k,vx:(NEU[0]-m.x)/rand(2.2,3.4),vy:(NEU[1]-m.y)/rand(2.2,3.4)})}});
+  PT=PT.filter(p=>{p.x+=(p.vx+rand(-15,15))*dt;p.y+=(p.vy+rand(-15,15))*dt;if(Math.hypot(p.x-NEU[0],p.y-NEU[1])<28){viab-=.12*(1+A);return false}return p.x>0&&p.x<W&&p.y>0&&p.y<H});
+  if(A<.15)viab=Math.min(100,viab+dt*.4);viab=clamp(viab,0,100);fr++;if(fr%6===0)meters();draw(t)}}})();
+
+/* ============ 10 SYMPTOMS ============ */
+M.sx=(function(){
+ const S=[
+  ['Bradykinesia / akinesia','m',(L,s)=>sev(s,.6,.98),'Reduced thalamocortical drive (↑GPi/SNr inhibition) and impaired SMA activation → slowness, decrement in amplitude, hesitation. Required for diagnosis. Dopamine-responsive.','Levodopa (most effective), dopamine agonists, MAO-B inhibitors; STN/GPi DBS; exercise, LSVT-BIG.'],
+  ['Rigidity (lead-pipe / cogwheel)','m',(L,s)=>sev(s,.65,1)*.9,'Increased tonic stretch-reflex gain from altered brainstem/spinal motor circuits; cogwheeling = rigidity + tremor. Dopamine-responsive.','Levodopa, agonists; anticholinergics in selected patients; physical therapy.'],
+  ['Resting tremor (4–6 Hz)','m',(L,s)=>.55*sev(s,.65,.95),'Basal ganglia "trigger" + cerebello-thalamo-cortical (Vim) oscillator (dimmer-switch model). Only partly dopamine-responsive; absent in ~30%.','Levodopa/agonists; anticholinergics (younger, no cognitive impairment); Vim-DBS or MR-guided focused ultrasound.'],
+  ['Hypomimia · hypophonia · micrographia','m',(L,s)=>.9*sev(s,.62,.98),'Bradykinesia of facial, laryngeal and hand muscles; amplitude scaling deficit.','Levodopa; speech therapy (LSVT LOUD).'],
+  ['Gait shuffling & freezing','m',(L,L2)=>sev(L,58,95),'Basal ganglia–PPN/mesencephalic locomotor region dysfunction, cholinergic and noradrenergic loss; OFF-related and ON-freezing forms.','Cueing strategies, physiotherapy, optimise levodopa for OFF freezing; avoid dual-tasking.'],
+  ['Postural instability / falls','m',(L)=>sev(L,62,96),'Late; largely <b>non-dopaminergic</b> (brainstem, PPN cholinergic, LC noradrenergic degeneration). Poor levodopa response. A red flag if early (consider atypical parkinsonism).','Balance/PT, home safety, avoid sedatives and orthostatic hypotension; DBS does not reliably help.'],
+  ['Hyposmia','n',(L)=>sev(L,0,22),'α-syn pathology in olfactory bulb/anterior olfactory nucleus (Braak 1). Present in >90% of patients; precedes motor signs by years. Not levodopa-responsive.','No effective treatment; supportive (smoke detectors, food safety).'],
+  ['Constipation','n',(L)=>sev(L,0,30),'Enteric nervous system and dorsal motor nucleus of vagus involvement → slowed colonic transit; pelvic floor dyssynergia.','Fluids, fibre, PEG/osmotic laxatives; avoid anticholinergics; levodopa timing.'],
+  ['REM sleep behavior disorder','n',(L)=>sev(L,4,40),'Loss of REM atonia from pontine sub-laterodorsal/gigantocellular circuits (Braak 2). >70% of idiopathic RBD converts to synucleinopathy.','Bedroom safety; melatonin; clonazepam with caution (falls, cognition).'],
+  ['Depression / anxiety','n',(L)=>sev(L,12,70)*.85,'Serotonergic raphe, noradrenergic LC and mesolimbic dopamine loss; also psychological reaction and OFF-related anxiety.','SSRIs/SNRIs (monitor serotonin syndrome with MAO-B inhibitors), CBT, exercise; pramipexole has some evidence.'],
+  ['Orthostatic hypotension','n',(L)=>sev(L,28,85),'Peripheral sympathetic noradrenergic denervation (heart, vessels) and baroreflex failure; worsened by levodopa, agonists, MAO-B inhibitors.','Fluids/salt, compression, head-up bed, fludrocortisone, midodrine, droxidopa; review medicines.'],
+  ['Cognitive impairment / dementia','n',(L)=>Math.pow(sev(L,48,100),1.3),'Cortical/limbic Lewy pathology (Braak 4–6), basal forebrain cholinergic loss, frequent Alzheimer co-pathology. Risk factors: age, RBD, hallucinations, late-stage disease.','Rivastigmine (or donepezil); remove anticholinergics, amantadine, high-dose agonists if possible.'],
+  ['Hallucinations / psychosis','n',(L)=>sev(L,50,95)*.75,'Visual association cortex/cholinergic deficits + dopaminergic medicines (agonists, anticholinergics, amantadine, levodopa).','Treat triggers; pimavanserin, low-dose quetiapine, clozapine (monitor ANC). <b>Avoid</b> typical antipsychotics, risperidone, olanzapine.']];
+ let selI=0;
+ function hy(L){return L<45?'Pre-motor (H&Y 0): compensated; non-motor prodrome possible':L<52?'H&Y 1: unilateral motor signs':L<60?'H&Y 2: bilateral, no balance impairment':L<72?'H&Y 3: postural instability, still independent':L<88?'H&Y 4: severe disability, can still walk':'H&Y 5: wheelchair/bedbound unless aided'}
+ function detail(i){selI=i;const s=S[i];$('#sxDetail').innerHTML='<h3>'+s[0]+'</h3><p><b>Pathophysiology.</b> '+s[3]+'</p><p><b>Management.</b> '+s[4]+'</p>';$$('.sx').forEach((e,k)=>e.classList.toggle('sel',k===i))}
+ function render(){const L=G.loss,sl=striatalLoss(L);$('#sxHY').innerHTML='<b>'+hy(L)+'</b> <span class="note">· striatal DA loss '+Math.round(sl*100)+'%</span>';
+  let h='';['m','n'].forEach(g=>{h+='<div class="sxg">'+(g==='m'?'Motor features':'Non-motor features')+'</div>';S.forEach((s,i)=>{if(s[1]!==g)return;const v=clamp(s[2](L,sl));const col=v>.66?'var(--gaba)':v>.33?'var(--warn)':v>.05?'var(--da)':'var(--glu)';h+='<div class="sx'+(i===selI?' sel':'')+'" data-i="'+i+'" tabindex="0"><span>'+s[0]+'</span><span class="b"><i style="width:'+Math.round(v*100)+'%;background:'+col+'"></i></span><b>'+Math.round(v*100)+'</b></div>'})});
+  $('#sxList').innerHTML=h;$$('.sx').forEach(e=>{const f=()=>detail(+e.dataset.i);e.addEventListener('click',f);e.addEventListener('keydown',ev=>{if(ev.key==='Enter')f()})})}
+ function init(){bindLoss('sxLoss');lossHooks.push(render);detail(0)}
+ return{init,start(){setLoss(G.loss);render();detail(selI)},render}})();
+
+/* ============ PHARMACOLOGY ============ */
+const DRUGS=[
+ ['Levodopa / carbidopa','Gold-standard symptomatic therapy','Sinemet, Rytary (ER), Duopa (enteral gel), Inbrija (inhaled, OFF rescue), Vyalev (subcutaneous infusion), Stalevo (+ entacapone)','Levodopa crosses the BBB via the LAT1 amino-acid transporter and is decarboxylated by AADC to dopamine. <b>Carbidopa</b> inhibits <i>peripheral</i> AADC (does not cross the BBB; ≥ ~70–100 mg/day needed to saturate), increasing CNS delivery ~5–10× and reducing nausea/orthostasis. t½ ≈ 1–1.5 h.','Nausea, orthostatic hypotension, somnolence, hallucinations; with time: <b>wearing-off, ON/OFF, peak-dose dyskinesia</b>. Protein competes for absorption/BBB transport; iron salts chelate levodopa.','Most effective drug for motor symptoms; not neuroprotective; no evidence that early use accelerates progression. Don\'t stop abruptly (neuroleptic-malignant-like syndrome). Use carbidopa/levodopa, not levodopa alone.'],
+ ['Dopamine agonists','Direct D2/D3 receptor stimulation','Pramipexole, ropinirole (oral); rotigotine (transdermal patch); apomorphine (SC injection/infusion, sublingual film — OFF rescue). Ergot types (bromocriptine, cabergoline) largely abandoned.','Directly activate postsynaptic D2-like receptors (rotigotine and apomorphine also D1). Longer t½ than levodopa; less dyskinesia, less effective, more neuropsychiatric AEs.','<b>Impulse-control disorders</b> (gambling, hypersexuality), sleep attacks, leg oedema, hallucinations, orthostasis. Ergot: cardiac valve/pleural/retroperitoneal fibrosis.','Use caution in older adults/cognitive impairment. Apomorphine: strongly emetogenic → pre-treat with trimethobenzamide; <b>avoid 5-HT3 antagonists</b> (ondansetron) → profound hypotension.'],
+ ['MAO-B inhibitors','Block dopamine breakdown','Selegiline, rasagiline (irreversible); safinamide (reversible; also ↓ glutamate release)','Inhibit mitochondrial MAO-B in astrocytes → ↓ DOPAC and H₂O₂, prolonging synaptic dopamine and levodopa effect. Mild monotherapy in early PD; adjunct for wearing-off.','Insomnia (selegiline → amphetamine metabolites), nausea, orthostasis, dyskinesia (with levodopa), hallucinations.','<b>Serotonin syndrome</b> risk with meperidine, tramadol, methadone, dextromethorphan, St John\'s wort; caution with SSRIs/SNRIs/TCAs. Tyramine restriction not needed at recommended selective doses. Neuroprotection not proven.'],
+ ['COMT inhibitors','Prolong levodopa half-life','Entacapone (peripheral, given with each dose), opicapone (peripheral, once daily at bedtime), tolcapone (peripheral + central)','Inhibit catechol-O-methyltransferase → less conversion of levodopa to 3-O-methyldopa, ↑ levodopa AUC, t½, and smoother plasma levels. Only useful with levodopa.','Dyskinesia (reduce levodopa dose), diarrhoea, orange-brown urine, nausea. <b>Tolcapone: boxed warning – hepatotoxicity; LFT monitoring</b>.','Add for end-of-dose wearing-off. Entacapone is part of Stalevo. Opicapone should be separated from levodopa by ≥ 1 h.'],
+ ['Anticholinergics','Restore dopamine/ACh balance','Trihexyphenidyl, benztropine','Block muscarinic receptors on striatal cholinergic interneurons that are disinhibited in dopamine deficiency.','Dry mouth, constipation, urinary retention, blurred vision, confusion, hallucinations.','Reserved for tremor in young patients; <b>avoid in older adults</b> (Beers) and in anyone with cognitive impairment.'],
+ ['Amantadine','NMDA antagonist (+ weak dopaminergic effects)','Amantadine IR; extended-release (Gocovri, Osmolex ER)','Non-competitive NMDA-receptor antagonism reduces glutamatergic over-activity in the indirect pathway; <b>the only drug class with proven benefit for levodopa-induced dyskinesia</b>.','Livedo reticularis, ankle oedema, hallucinations, confusion; renally cleared.','Dose-adjust for CrCl; avoid abrupt withdrawal (may rebound).'],
+ ['Istradefylline','Adenosine A2A antagonist','Nourianz','A2A receptors are co-localized with D2 on indirect-pathway MSNs; blockade reduces their excitation, giving non-dopaminergic OFF-time reduction.','Dyskinesia, dizziness, hallucinations, insomnia; CYP3A4 substrate (adjust with strong inhibitors/inducers).','Adjunct to levodopa for OFF episodes.'],
+ ['Device & procedural therapy','Surgery and infusions','STN or GPi deep-brain stimulation; levodopa-carbidopa intestinal gel; subcutaneous foslevodopa/foscarbidopa; MR-guided focused ultrasound','DBS functionally blocks pathological beta-oscillating circuits (see module 2). Infusions give continuous dopaminergic stimulation, avoiding pulsatile receptor stimulation.','DBS: haemorrhage, infection, speech/cognitive/mood effects. PEG-J: tube complications, neuropathy (B12 / B6).','Selection: motor fluctuations/dyskinesia/tremor despite optimal oral therapy, levodopa-responsive, good cognition.'],
+ ['Non-motor agents','Targeted symptomatic therapy','Rivastigmine; pimavanserin, quetiapine, clozapine; midodrine, droxidopa, fludrocortisone; melatonin; PEG/lubiprostone','Treat dementia (↑ ACh), psychosis (5-HT2A inverse agonism or low D2 affinity), neurogenic orthostatic hypotension, RBD and constipation.','Class-specific: bradycardia/GI (rivastigmine), QT & mortality warning (antipsychotics), supine hypertension (midodrine, droxidopa).','Always rationalise anti-parkinsonian drugs first (anticholinergic, agonist, amantadine) before adding antipsychotics.']];
+M.pharm=(function(){
+ let view='classes',cv,pc;const PM=$('#pkMeters');
+ function classes(){$('#ph-classes').innerHTML='<div class="card"><h3>Anti-parkinsonian drug classes</h3><p class="note">Open each class. Most patients need levodopa eventually; choice of add-ons targets <i>what is wrong</i> (OFF time, dyskinesia, tremor, non-motor symptoms).</p>'+DRUGS.map(d=>'<details><summary>'+d[0]+' <span class="tag">'+d[1]+'</span></summary><div><p><b>Agents.</b> '+d[2]+'</p><p><b>Mechanism.</b> '+d[3]+'</p><p><b>Adverse effects.</b> '+d[4]+'</p><div class="pearl">'+d[5]+'</div></div></details>').join('')+'</div>'}
+ function avoid(){$('#ph-avoid').innerHTML='<div class="grid"><div class="card"><h3>Drugs to avoid or use with caution</h3><div class="pearl warn"><b>Dopamine D2 blockers worsen parkinsonism:</b> haloperidol, risperidone, olanzapine, <b>metoclopramide</b>, <b>prochlorperazine</b>, <b>promethazine</b>, droperidol. Also: VMAT2 inhibitors (tetrabenazine, reserpine) and, rarely, valproate, lithium, amiodarone, calcium-channel blockers (flunarizine/cinnarizine) → drug-induced parkinsonism.</div><p><b>Safer alternatives:</b> nausea → ondansetron (not with apomorphine), trimethobenzamide, domperidone (not US). Psychosis → pimavanserin, quetiapine, clozapine. Agitation → treat cause.</p><div class="pearl warn"><b>Non-selective MAO inhibitors</b> (phenelzine, tranylcypromine) + levodopa → hypertensive crisis. <b>Linezolid</b> (weak MAOI) and meperidine/tramadol/methadone + MAO-B inhibitors → serotonin syndrome.</div></div><div class="card"><h3>Practical pharmacology pearls</h3><ul><li><b>Timing:</b> levodopa 30 min before / 60 min after meals if tolerated; protein redistribution diet can help late fluctuations.</li><li><b>Hospital admission:</b> give levodopa on time, every time. Missed doses risk akinetic crisis.</li><li><b>Wearing-off</b> → shorten interval, add COMT or MAO-B inhibitor, agonist, istradefylline, or advanced therapies.</li><li><b>Peak-dose dyskinesia</b> → smaller, more frequent levodopa doses; amantadine; DBS.</li><li><b>Orthostasis</b> → check all dopaminergic drugs, antihypertensives, α-blockers.</li><li><b>Iron, protein</b> and high-dose vitamin B6 (without carbidopa) interfere with levodopa.</li></ul></div></div>'}
+ /*PK-START*/
+ function pkRun(p){const ka=2.0,t12=1.5*(p.comt?1.5:1)*(p.carb?1:.75),ke=Math.LN2/t12,F=p.carb?1:.08,meals=[8,13,19],doses=[];
+  for(let day=-2;day<=0;day++)for(let i=0;i<p.n;i++){const t=p.start+i*p.interval+24*day;let amt=p.dose/100*F;if(p.prot&&meals.some(m=>Math.abs(((t%24)+24)%24-m)<1.25))amt*=.75;doses.push({t,amt})}
+  const L=p.L/100,tau=(.25+3*(1-L))*(p.mao?1.15:1),base=.5*(1-L)+(p.mao?.1:0)+(p.ag?.2:0),lo=.45,hi=1.5-.7*L+(p.aman?.3:0),dt=.05;let E=0;const T=[],C=[],Mo=[];let on=0,off=0,dys=0,cnt=0;
+  for(let t=-24;t<=24+1e-9;t+=dt){let c=0;for(const d of doses){const x=t-d.t;if(x>0)c+=d.amt*ka/(ka-ke)*(Math.exp(-ke*x)-Math.exp(-ka*x))}
+   E+=(c-E)/tau*dt;const m=base+1.0*E;if(t>=6){T.push(t);C.push(c);Mo.push(m);if(t>=7&&t<22){cnt++;if(m<lo)off++;else if(m>hi)dys++;else on++}}}
+  return{T,C,M:Mo,lo,hi,on:on/cnt*100,off:off/cnt*100,dys:dys/cnt*100,doses}}
+ /*PK-END*/
+ function pkRead(){return{L:+$('#pkL').value,dose:+$('#pkDose').value,n:+$('#pkN').value,interval:+$('#pkInt').value,start:+$('#pkStart').value,carb:$('#pkCarb').checked,comt:$('#pkComt').checked,mao:$('#pkMao').checked,ag:$('#pkAg').checked,aman:$('#pkAman').checked,prot:$('#pkProt').checked}}
+ function pk(){const p=pkRead();$('#pkDoseV').textContent=p.dose+' mg';$('#pkNV').textContent=p.n;$('#pkIntV').textContent=p.interval+' h';const hh=Math.floor(p.start),mm=(p.start%1)*60;$('#pkStartV').textContent=String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+  const r=pkRun(p);setM(PM,'on',r.on);setM(PM,'off',r.off);setM(PM,'dys',r.dys);setM(PM,'good',Math.max(0,r.on));
+  const tot=p.dose*p.n;let tx='<b>Total levodopa '+tot+' mg/day.</b> ';
+  if(!p.carb)tx+='<b>Without carbidopa</b> only ~8% reaches the circulation as intact levodopa; severe nausea, vomiting and hypotension from peripheral dopamine. ';
+  if(p.L<30&&r.off>15)tx+='Early disease with high OFF time suggests under-dosing: raise dose or add agent. ';
+  if(p.L>=60&&r.off>20)tx+='<b>Wearing-off:</b> little striatal storage left, so the motor response tracks the short plasma half-life. Options: shorten interval, add COMT/MAO-B inhibitor or agonist, ER/infusion forms. ';
+  if(r.dys>8)tx+='<b>Peak-dose dyskinesia:</b> the therapeutic window is narrow ('+r.lo.toFixed(2)+'–'+r.hi.toFixed(2)+'). Use smaller, more frequent doses; consider amantadine. ';
+  if(p.prot)tx+='High-protein meals compete for LAT1 transport and blunt the dose nearest each meal. ';
+  if(r.on>85&&r.dys<5)tx+='Smooth control: stable ON through the waking day.';
+  $('#pkText').innerHTML=tx;
+  const W=700,H=300,x0=44,y0=H-34,pw=W-60,ph=H-54;pc.clearRect(0,0,W,H);pc.fillStyle=cssv('--panel2');pc.fillRect(0,0,W,H);
+  const X=t=>x0+(t-6)/18*pw,Y=v=>y0-v/1.6*ph;
+  pc.fillStyle='rgba(248,113,113,.14)';pc.fillRect(x0,Y(1.6),pw,Y(r.hi)-Y(1.6));pc.fillStyle='rgba(52,211,153,.16)';pc.fillRect(x0,Y(r.hi),pw,Y(r.lo)-Y(r.hi));pc.fillStyle='rgba(148,163,184,.12)';pc.fillRect(x0,Y(r.lo),pw,y0-Y(r.lo));
+  pc.fillStyle=cssv('--mute');pc.font='11px system-ui';pc.fillText('DYSKINESIA',x0+6,Y(1.6)+13);pc.fillText('ON (therapeutic window)',x0+6,Y(r.hi)+14);pc.fillText('OFF',x0+6,y0-6);
+  pc.strokeStyle=cssv('--line');pc.lineWidth=1;for(let t=6;t<=24;t+=2){pc.beginPath();pc.moveTo(X(t),Y(1.6));pc.lineTo(X(t),y0);pc.stroke();pc.fillText(String(t%24).padStart(2,'0')+':00',X(t)-14,y0+14)}
+  for(let v=0;v<=1.6;v+=.4)pc.fillText(v.toFixed(1),10,Y(v)+4);
+  pc.strokeStyle='#60a5fa';pc.setLineDash([5,4]);pc.lineWidth=2;pc.beginPath();r.T.forEach((t,i)=>{i?pc.lineTo(X(t),Y(Math.min(1.6,r.C[i]))):pc.moveTo(X(t),Y(Math.min(1.6,r.C[i])))});pc.stroke();pc.setLineDash([]);
+  pc.strokeStyle='#fbbf24';pc.lineWidth=3.5;pc.beginPath();r.T.forEach((t,i)=>{const y=Y(clamp(r.M[i],0,1.6));i?pc.lineTo(X(t),y):pc.moveTo(X(t),y)});pc.stroke();
+  r.doses.filter(d=>d.t>=6&&d.t<=24).forEach(d=>{pc.fillStyle='#fff';pc.strokeStyle='#0d9488';pc.lineWidth=2;pc.beginPath();pc.arc(X(d.t),y0-2,6,0,TAU);pc.fill();pc.stroke()});
+  pc.fillStyle='#fbbf24';pc.fillText('— motor response',W-290,16);pc.fillStyle='#60a5fa';pc.fillText('- - plasma levodopa (relative)',W-190,16)}
+ function sub(v){view=v;['classes','pk','avoid'].forEach(k=>{$('#ph-'+k).hidden=k!==v});$$('[data-pt]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.pt===v));if(v==='pk')pk()}
+ function init(){classes();avoid();pc=fit($('#pkCv'),700,300);
+  mkMeters(PM,[{id:'on',label:'ON time (good control)',color:'var(--glu)'},{id:'off',label:'OFF time',color:'#94a3b8'},{id:'dys',label:'Dyskinesia time',color:'var(--gaba)'},{id:'good',label:'Overall quality of motor control',color:'var(--acc)'}]);
+  bindLoss('pkL');lossHooks.push(()=>{if(view==='pk')pk()});['pkDose','pkN','pkInt','pkStart'].forEach(i=>$('#'+i).addEventListener('input',pk));['pkCarb','pkComt','pkMao','pkAg','pkAman','pkProt'].forEach(i=>$('#'+i).addEventListener('change',pk));
+  $$('[data-pt]').forEach(b=>b.addEventListener('click',()=>sub(b.dataset.pt)))}
+ return{init,start(){$('#pkL').value=G.loss;$('#pkLV').textContent=Math.round(G.loss)+'%';if(view==='pk')pk()},render(){if(view==='pk')pk()}}})();
+
+/* ============ QUIZ ============ */
+M.quiz=(function(){
+ const Q=[
+ ['Which two nuclei are the main output structures of the basal ganglia?',['GPi and SNr','GPe and STN','Caudate and putamen','SNc and VTA'],'GPi and SNr send tonic GABAergic inhibition to motor thalamus/brainstem. GPe and STN are intrinsic nuclei, caudate/putamen are input structures, SNc/VTA are dopaminergic modulators.'],
+ ['Activation of the direct pathway ultimately has what effect on the motor cortex?',['Facilitation: D1-MSN ⊣ GPi/SNr → thalamic disinhibition → ↑ cortical drive','Suppression: D1-MSN ↑ GPi/SNr → ↓ thalamic activity','Suppression through increased STN glutamate output','None; it only modulates the cerebellum'],'Direct pathway = two inhibitory steps (striatum ⊣ GPi ⊣ thalamus) → net excitation of cortex ("go").'],
+ ['Why does loss of dopamine increase indirect-pathway activity?',['D2 receptors (Gαi/o) normally inhibit D2-MSNs; without dopamine they are disinhibited','D2 receptors are Gs-coupled and become over-activated','Dopamine normally excites STN neurons directly','Dopamine loss kills GPe neurons'],'↑D2-MSN → ↓GPe → ↑STN → ↑GPi/SNr → ↓thalamus → bradykinesia.'],
+ ['Motor signs typically become apparent when approximately what is lost?',['~50–60% of SNc neurons and ~70–80% of striatal dopamine','~10% of SNc neurons','~100% of SNc neurons','~20% of striatal dopamine without neuron loss'],'Compensatory mechanisms (↑ turnover, receptor supersensitivity) mask the first half of neuronal loss.'],
+ ['Which protein is the principal component of Lewy bodies?',['α-Synuclein (often phosphorylated at Ser129)','Tau','TDP-43','Huntingtin'],'α-Syn (with ubiquitin, p62, neurofilaments) is the signature; tau → tangles, TDP-43 → ALS/FTD.'],
+ ['Duplication or triplication of which gene causes autosomal-dominant PD through α-synuclein overexpression?',['SNCA','PRKN','PINK1','GBA1'],'SNCA dosage correlates with severity and earlier onset. GBA1 and LRRK2 are the commonest genetic risk factors; PRKN/PINK1/DJ-1 are recessive early-onset forms.'],
+ ['According to Braak, which regions show the earliest Lewy pathology?',['Dorsal motor nucleus of the vagus and olfactory bulb/anterior olfactory nucleus','Substantia nigra pars compacta','Primary motor cortex','Striatum'],'Braak 1 = medulla (DMV) + olfactory structures → hyposmia and constipation precede motor signs.'],
+ ['MPTP causes parkinsonism because its metabolite MPP⁺…',['Is taken up by DAT into dopaminergic neurons and inhibits mitochondrial complex I','Blocks striatal D2 receptors','Inhibits peripheral AADC','Activates microglia without entering neurons'],'MPTP → (astrocytic MAO-B) → MPP⁺ → DAT uptake → complex I inhibition → ATP loss and ROS. Rotenone acts similarly.'],
+ ['PINK1 and Parkin cooperate to…',['Tag depolarized mitochondria for mitophagy','Synthesize dopamine','Pump protons across the inner membrane','Phosphorylate tyrosine hydroxylase'],'Loss-of-function → impaired mitochondrial quality control → early-onset recessive PD.'],
+ ['Carbidopa improves levodopa therapy because it…',['Inhibits peripheral AADC and does not cross the blood–brain barrier','Crosses the BBB and inhibits MAO-B','Blocks D2 receptors in the area postrema','Inhibits COMT in the gut'],'Less peripheral dopamine → less nausea/hypotension and more levodopa reaching the brain.'],
+ ['Which COMT inhibitor carries a boxed warning for hepatotoxicity?',['Tolcapone','Entacapone','Opicapone','Safinamide'],'Tolcapone requires LFT monitoring. Safinamide is a MAO-B inhibitor, not COMT.'],
+ ['Which antiemetic is generally preferred in a PD patient who is not on apomorphine?',['Ondansetron','Metoclopramide','Prochlorperazine','Promethazine'],'Ondansetron has no D2 blockade. Combined with apomorphine it causes severe hypotension (use trimethobenzamide instead).'],
+ ['Which drug is approved for Parkinson disease psychosis and is NOT a dopamine antagonist?',['Pimavanserin (5-HT2A inverse agonist)','Haloperidol','Risperidone','Olanzapine'],'Quetiapine and clozapine are other acceptable low-D2-affinity options.'],
+ ['Why does “wearing-off” appear as SNc neurons are lost?',['Fewer terminals can store/release dopamine, so response tracks the short plasma half-life of levodopa','Levodopa becomes more potent','The BBB becomes impermeable to levodopa','Carbidopa is destroyed'],'Loss of presynaptic buffering converts a smooth response into a pulsatile, plasma-dependent one.'],
+ ['Which adverse effects are characteristic of non-ergot dopamine agonists?',['Impulse-control disorders, sleep attacks, leg oedema, hallucinations','Hepatotoxicity and orange urine','Livedo reticularis only','Serotonin syndrome'],'Ergot-derived agonists additionally cause valvular and retroperitoneal fibrosis.'],
+ ['Concomitant use of rasagiline/selegiline with which drug raises concern for serotonin syndrome?',['Meperidine (also tramadol, methadone, SSRIs/SNRIs)','Carbidopa','Entacapone','Trihexyphenidyl'],'Also dextromethorphan and St John\'s wort; avoid or monitor.'],
+ ['Activated pro-inflammatory microglia injure dopaminergic neurons mainly via…',['TNF-α, IL-1β, nitric oxide and superoxide (incl. NLRP3 inflammasome activation)','Releasing dopamine into the striatum','Supplying extra ATP to neurons','Producing neuroprotective α-synuclein antibodies only'],'Aggregated α-syn engages TLR2/4 → NF-κB/NLRP3 → cytokines and ROS, a feed-forward loop.'],
+ ['Which symptom typically appears late and responds poorly to levodopa, reflecting non-dopaminergic degeneration?',['Postural instability and falls','Bradykinesia','Rigidity','Hypomimia'],'Early falls should prompt consideration of atypical parkinsonism (e.g., PSP).']];
+ let order=[],idx=0,right=0,locked=false;
+ function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+ function prog(){const n=Object.keys(G.visited).filter(k=>k!=='home').length;$('#qzProg').innerHTML='<p><b>Modules explored:</b> '+n+' / 12</p><div class="mt" data-id="m"><div class="mtl"><span>Exploration</span><b>'+n+'/12</b></div><div class="mtb"><i style="width:'+n/12*100+'%;background:var(--acc)"></i></div></div><p><b>Best quiz score:</b> '+(G.quiz.best>=0?G.quiz.best+'%':'not yet taken')+'</p><p><b>Status:</b> '+(G.quiz.best>=80&&n>=12?'✅ Complete: mastery achieved':G.quiz.best>=80?'Quiz passed — visit remaining modules to complete':'Pass mark 80%')+'</p>'+(SC.active?'<p class="note">Reporting to LMS ✔</p>':'')}
+ function start(){order=shuffle(Q.map((q,i)=>i));idx=0;right=0;ask()}
+ function ask(){locked=false;if(idx>=order.length){finish();return}const q=Q[order[idx]],opts=shuffle(q[1].map((t,i)=>({t,ok:i===0})));
+  $('#qzBox').innerHTML='<h3>Question '+(idx+1)+' of '+order.length+'</h3><div class="mt"><div class="mtb"><i style="width:'+idx/order.length*100+'%;background:var(--acc)"></i></div></div><p style="font-size:1.05rem;margin-top:12px"><b>'+q[0]+'</b></p><div id="qo"></div><div id="qx"></div>';
+  opts.forEach(o=>{const b=document.createElement('button');b.className='qopt';b.textContent=o.t;b.addEventListener('click',()=>{if(locked)return;locked=true;if(o.ok){right++;b.classList.add('ok')}else{b.classList.add('bad');$$('.qopt').forEach(x=>{const m=opts.find(z=>z.t===x.textContent);if(m&&m.ok)x.classList.add('ok')})}
+   $('#qx').innerHTML='<div class="pearl"><b>'+(o.ok?'Correct. ':'Not quite. ')+'</b>'+q[2]+'</div><button class="btn pri" id="qn">'+(idx+1<order.length?'Next →':'See results')+'</button>';$('#qn').addEventListener('click',()=>{idx++;ask()})});$('#qo').appendChild(b)})}
+ function finish(){const pct=Math.round(right/order.length*100);G.quiz.last=pct;G.quiz.best=Math.max(G.quiz.best,pct);G.quiz.passed=G.quiz.best>=80;persist();prog();
+  $('#qzBox').innerHTML='<h3>Results</h3><div class="big" style="color:'+(pct>=80?'var(--glu)':'var(--warn)')+'">'+pct+'%</div><p>'+right+' of '+order.length+' correct. '+(pct>=80?'<b>Pass</b> — excellent command of PD pathophysiology and pharmacology.':'Below the 80% mastery mark. Revisit the modules linked below and retry.')+'</p><div class="btns"><button class="btn pri" id="qr">Retake quiz</button><button class="sm" data-go="circuit">Circuits</button><button class="sm" data-go="pharm">Pharmacology</button><button class="sm" data-go="sx">Symptoms</button></div>';
+  $('#qr').addEventListener('click',start);$$('#qzBox [data-go]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.go)))}
+ return{init(){$('#qzBox').innerHTML='<h3>Assessment</h3><p>18 questions covering anatomy, circuits, pathogenesis and pharmacology. Mastery = 80%. Options are shuffled each attempt, with explanations after every answer.</p><button class="btn pri" id="qs">Start quiz</button>';$('#qs').addEventListener('click',start)},start:prog}})();
+
+/* ============ boot ============ */
+(function(){const s=store.get();if(s.v)Object.assign(G.visited,s.v);if(s.q)Object.assign(G.quiz,s.q);if(s.theme)document.documentElement.dataset.theme=s.theme;
+ SC.init();window.addEventListener('beforeunload',()=>SC.end());window.addEventListener('pagehide',()=>SC.end());
+ const h=(location.hash||'').slice(1);show(MODS.some(m=>m[0]===h)?h:'home');requestAnimationFrame(loop)})();
+})();
+</script>
+</body>
+</html>
