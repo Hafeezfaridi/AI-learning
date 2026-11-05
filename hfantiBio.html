@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Advanced Antibiotics Pharmacology &amp; Antimicrobial Stewardship Simulator</title>
+<meta name="description" content="Offline PharmD simulator: antibiotic classes, mechanisms, resistance, PK/PD, stewardship, cases and NAPLEX-style quizzes.">
+<style>
+:root{--bg:#f4f1ea;--bg2:#ebe7dc;--surface:#fffdf8;--surface2:#f3efe5;--ink:#1b2430;--muted:#566273;--line:#d9d3c4;--accent:#0b7a75;--accent-ink:#fff;--accent-soft:#d5ece9;--good:#18794e;--good-soft:#dcf1e5;--bad:#b42318;--bad-soft:#fbe0dc;--warn:#9a5700;--warn-soft:#fbebcf;--drug:#2354d6;--bug:#c2410c;--shadow:0 1px 2px rgba(20,30,40,.06),0 8px 24px rgba(20,30,40,.08);--r:14px;--h0:#ece8dd;--h1:#c4e6df;--h2:#6cc2b4;--h3:#0b7a75;--h3ink:#fff;--h2ink:#06211e;
+--font:"Avenir Next","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",sans-serif;--serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+[data-theme=dark]{--bg:#0d1520;--bg2:#101c2a;--surface:#15212f;--surface2:#1b2a3b;--ink:#e7eef6;--muted:#9bacbf;--line:#2a3b50;--accent:#3ed6c4;--accent-ink:#06211e;--accent-soft:#12403d;--good:#4ade80;--good-soft:#123826;--bad:#ff8579;--bad-soft:#47211d;--warn:#fbbf5c;--warn-soft:#3d2d10;--drug:#7aa2ff;--bug:#ff9a62;--shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);--h0:#1b2a3b;--h1:#16504b;--h2:#1f8f84;--h3:#3ed6c4;--h3ink:#06211e;--h2ink:#fff}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--font);background-image:radial-gradient(900px 400px at 85% -10%,var(--accent-soft),transparent 70%);background-repeat:no-repeat;min-height:100vh;display:flex;flex-direction:column}
+h1,h2,h3,h4{font-family:var(--serif);line-height:1.2;margin:0 0 .5em;letter-spacing:-.01em}
+h2{font-size:1.7rem}h3{font-size:1.2rem}h4{font-size:1rem;font-family:var(--font);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+p{margin:.4em 0 .8em}
+a{color:var(--accent)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:absolute;left:-999px;top:8px;background:var(--accent);color:var(--accent-ink);padding:8px 14px;border-radius:8px;z-index:100}
+.skip:focus{left:8px}
+:focus-visible{outline:3px solid var(--drug);outline-offset:2px;border-radius:6px}
+.top{position:sticky;top:0;z-index:20;display:flex;gap:12px;align-items:center;padding:10px clamp(12px,3vw,28px);background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{display:flex;gap:10px;align-items:center;font-family:var(--serif);font-weight:700;cursor:pointer;background:none;border:0;color:var(--ink);font-size:1rem;text-align:left;padding:0}
+.brand svg{flex:none}
+.brand small{display:block;font-family:var(--font);font-weight:500;color:var(--muted);font-size:.72rem;letter-spacing:.04em}
+.brand .au{display:block;font-family:var(--font);font-weight:600;font-size:.8rem;color:var(--accent);letter-spacing:.01em}
+.spacer{flex:1}
+.lvl{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--muted)}
+.lvl b{color:var(--ink)}
+.xpbar{width:90px;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--drug));transition:width .6s}
+.ib{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:7px 10px;cursor:pointer;font:inherit;font-size:.85rem;display:inline-flex;gap:6px;align-items:center}
+.ib:hover{border-color:var(--accent)}
+.ib[aria-pressed=true]{background:var(--accent-soft)}
+main{flex:1;width:100%;max-width:1240px;margin:0 auto;padding:clamp(14px,3vw,30px)}
+main:focus{outline:none}
+footer{padding:18px;text-align:center;color:var(--muted);font-size:.78rem;border-top:1px solid var(--line)}
+.view{animation:rise .45s cubic-bezier(.2,.7,.2,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes swell{0%,100%{transform:scale(1)}60%{transform:scale(1.07)}85%{transform:scale(1.1) skewX(3deg);opacity:.6}}
+@keyframes dash{to{stroke-dashoffset:-24}}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+/* hero & dashboard */
+.hero{display:grid;gap:18px;grid-template-columns:1.4fr 1fr;align-items:center;margin-bottom:26px}
+.hero h1{font-size:clamp(1.7rem,4.2vw,2.8rem)}
+.hero p{color:var(--muted);max-width:60ch}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;box-shadow:var(--shadow)}
+.stat b{display:block;font-family:var(--serif);font-size:1.6rem}
+.stat span{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.dcard{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;cursor:pointer;color:var(--ink);font:inherit;box-shadow:var(--shadow);transition:transform .25s,border-color .25s;overflow:hidden;animation:rise .55s both}
+.dcard:hover{transform:translateY(-4px);border-color:var(--accent)}
+.dcard .n{position:absolute;right:14px;top:6px;font-family:var(--serif);font-size:3.2rem;font-weight:700;color:var(--line);line-height:1}
+.dcard .ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:1.5rem;background:var(--accent-soft);margin-bottom:12px}
+.dcard h3{margin-bottom:.3em}
+.dcard p{color:var(--muted);font-size:.88rem;margin:0 0 12px}
+.dcard .pg{height:6px;border-radius:9px;background:var(--line);overflow:hidden}
+.dcard .pg i{display:block;height:100%;background:var(--accent);transition:width .8s}
+/* components */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:clamp(14px,2.2vw,22px);box-shadow:var(--shadow);margin-bottom:16px}
+.row{display:flex;gap:16px;flex-wrap:wrap}
+.col{flex:1 1 320px;min-width:0}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);padding:9px 16px;border-radius:10px;font:inherit;font-weight:600;cursor:pointer;transition:transform .15s,filter .15s}
+.btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.sm{padding:5px 10px;font-size:.85rem}
+.chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);padding:5px 11px;border-radius:99px;font:inherit;font-size:.82rem;cursor:pointer}
+.chip[aria-pressed=true],.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:.72rem;font-weight:700;letter-spacing:.03em}
+.tag.good{background:var(--good-soft);color:var(--good)}.tag.bad{background:var(--bad-soft);color:var(--bad)}.tag.warn{background:var(--warn-soft);color:var(--warn)}.tag.info{background:var(--accent-soft);color:var(--accent)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:14px}
+.tab{border:0;background:none;padding:9px 14px;font:inherit;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
+.tab[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent);font-weight:700}
+.callout{border-left:4px solid var(--accent);background:var(--accent-soft);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.callout.bad{border-color:var(--bad);background:var(--bad-soft)}.callout.warn{border-color:var(--warn);background:var(--warn-soft)}.callout.good{border-color:var(--good);background:var(--good-soft)}
+.mhead{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.mhead h2{margin:0}
+.crumb{color:var(--muted);font-size:.85rem}
+select,input[type=text]{font:inherit;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+label{font-size:.85rem;color:var(--muted);display:block;margin-bottom:3px}
+.sl{margin:10px 0}
+.sl .lab{display:flex;justify-content:space-between;font-size:.88rem}
+.sl .lab b{font-family:var(--mono)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.scroll{overflow-x:auto}
+ul.tight{margin:.3em 0 .8em;padding-left:1.1em}ul.tight li{margin:.15em 0}
+/* quiz */
+.q{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--surface2);margin:10px 0}
+.q p.stem{font-weight:600;margin-top:0}
+.opt{display:block;width:100%;text-align:left;padding:10px 12px;margin:6px 0;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer;transition:border-color .2s,background .2s}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.ok{border-color:var(--good);background:var(--good-soft)}
+.opt.no{border-color:var(--bad);background:var(--bad-soft);animation:shake .35s}
+.opt:disabled{cursor:default}
+.exp{margin-top:8px;font-size:.9rem;animation:rise .3s both}
+.prog{height:8px;border-radius:9px;background:var(--line);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--accent);transition:width .4s}
+/* SVG themes */
+svg text{font-family:var(--font);fill:var(--ink)}
+.svgbox{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:6px}
+.svgbox svg{width:100%;height:auto;display:block}
+.cwall{fill:none;stroke:#8a6d3b;stroke-width:9}
+.cmemb{fill:var(--accent-soft);stroke:var(--accent);stroke-width:4}
+.cdna{fill:none;stroke:var(--drug);stroke-width:3;stroke-linecap:round}
+.cr50{fill:#b98a2e}.cr30{fill:#d9b45e}
+.crna{fill:#7c3aed}.cfol{fill:#0f9d77}
+.dp{fill:var(--drug);stroke:var(--surface);stroke-width:1}
+svg[data-k=wall] .cwall{stroke:var(--bad);animation:pulse 1s infinite}
+svg[data-k=memb] .cmemb,svg[data-k=memb] .cmemb2{stroke:var(--bad);stroke-dasharray:6 6;animation:dash 1s linear infinite}
+svg[data-k=dna] .cdna{stroke:var(--bad);stroke-dasharray:5 7;animation:dash 1s linear infinite}
+svg[data-k=p30] .cr30,svg[data-k=p50] .cr50,svg[data-k=rna] .crna,svg[data-k=fol] .cfol{fill:var(--bad);animation:pulse .9s infinite}
+svg[data-k=wall] .cellbody{transform-box:fill-box;transform-origin:center;animation:swell 3s ease-in-out infinite}
+svg[data-k=memb] .cellbody{opacity:.85}
+.noanim *{animation:none!important;transition:none!important}
+/* heat */
+.heat{display:grid;gap:4px;align-items:stretch}
+.hc{padding:8px 6px;border-radius:8px;text-align:center;font-size:.8rem;font-weight:700;transition:background .5s,color .5s,transform .3s;min-height:38px;display:flex;align-items:center;justify-content:center}
+.hc.l0{background:var(--h0);color:var(--muted)}.hc.l1{background:var(--h1);color:var(--ink)}.hc.l2{background:var(--h2);color:var(--h2ink)}.hc.l3{background:var(--h3);color:var(--h3ink)}
+.hl{font-size:.78rem;color:var(--muted);display:flex;align-items:center;font-weight:600}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:.78rem;margin-top:8px}
+.legend span{display:inline-flex;gap:5px;align-items:center}.legend i{width:14px;height:14px;border-radius:4px;display:inline-block}
+/* battle */
+.bugs{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.bugb{background:var(--surface2);border:1.5px solid var(--line);border-radius:12px;padding:8px;cursor:pointer;text-align:center;font:inherit;color:var(--ink)}
+.bugb[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft)}
+.bugb svg{width:54px;height:40px}
+.bugb b{display:block;font-size:.8rem;line-height:1.2}
+.druglist{display:flex;flex-wrap:wrap;gap:6px;max-height:190px;overflow:auto;padding:4px}
+.score{font-family:var(--serif);font-size:3rem;font-weight:700;line-height:1}
+.dots{display:grid;grid-template-columns:repeat(20,1fr);gap:3px;max-width:330px}
+.dots i{aspect-ratio:1;border-radius:50%;background:var(--bug);transition:opacity .4s,background .4s}
+.dots i.r{background:#7c3aed}
+/* match */
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mcell{padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);text-align:left;font:inherit;color:var(--ink);cursor:pointer;min-height:48px}
+.mcell.sel{border-color:var(--drug);background:var(--accent-soft)}
+.mcell.done{border-color:var(--good);background:var(--good-soft);opacity:.65;cursor:default}
+.mcell.wrong{animation:shake .35s;border-color:var(--bad)}
+/* tree */
+.node{animation:pop .4s both}
+.path{display:flex;gap:6px;flex-wrap:wrap;font-size:.8rem;margin-bottom:10px}
+.path span{background:var(--surface2);border:1px solid var(--line);padding:3px 9px;border-radius:99px}
+/* metrics */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.metric{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.metric span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block}
+.metric b{font-family:var(--serif);font-size:1.5rem}
+.metric small{display:block;font-size:.75rem}
+.up{color:var(--bad)}.dn{color:var(--good)}
+canvas{width:100%;height:auto;display:block;border-radius:10px;background:var(--surface2);border:1px solid var(--line)}
+.pol{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1.5px solid var(--line);border-radius:12px;margin:8px 0;background:var(--surface);cursor:pointer;width:100%;text-align:left;font:inherit;color:var(--ink)}
+.pol[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft)}
+.pol .cost{margin-left:auto;font-family:var(--mono);font-size:.8rem;white-space:nowrap}
+.badge{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:4px;background:var(--surface2)}
+.badge.locked{opacity:.4;filter:grayscale(1)}
+#toasts{position:fixed;right:14px;bottom:14px;display:flex;flex-direction:column;gap:8px;z-index:50}
+.toast{background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);animation:rise .3s both;font-size:.88rem}
+.bar2{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:.85rem}
+.bar2 .lbl{width:120px;flex:none}
+.bar2 .prog{flex:1}
+@media(max-width:760px){.hero{grid-template-columns:1fr}.lvl .xpbar{display:none}.brand small{display:none}.mgrid{grid-template-columns:1fr}.bar2 .lbl{width:90px}}
+@media(max-width:560px){.lvl{display:none}.ib span{display:none}.brand{font-size:.88rem}.top{gap:8px}.brand svg{width:28px;height:28px}.grid{grid-template-columns:1fr}.bugs{grid-template-columns:repeat(2,1fr)}.dots{max-width:100%}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media print{.top,footer,#toasts{display:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#app">Skip to main content</a>
+<header class="top" role="banner">
+  <button class="brand" id="homeBtn" aria-label="Go to dashboard">
+    <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="var(--accent)"/><ellipse cx="17" cy="17" rx="10" ry="6" fill="none" stroke="var(--accent-ink)" stroke-width="2.4" transform="rotate(-35 17 17)"/><circle cx="23" cy="11" r="2.6" fill="var(--accent-ink)"/></svg>
+    <span>Antibiotics &amp; Stewardship Simulator<b class="au">Hafeez Faridi, Ph.D.</b><small>PharmD · Infectious Diseases</small></span>
+  </button>
+  <div class="spacer"></div>
+  <div class="lvl" id="lvl" aria-label="Learner level"></div>
+  <button class="ib" id="animBtn" aria-pressed="true" title="Toggle animations">✨ <span>Motion</span></button>
+  <button class="ib" id="themeBtn" aria-label="Toggle dark and light mode" title="Toggle theme">🌓 <span id="themeLbl">Dark</span></button>
+</header>
+<main id="app" tabindex="-1"></main>
+<div id="live" class="sr" aria-live="polite" role="status"></div>
+<div id="toasts"></div>
+<footer>Educational simulator for PharmD learners. Doses and recommendations are simplified for teaching; always verify against current local guidelines (IDSA, ATS, ASHP, institutional antibiograms) and product labeling before clinical use.</footer>
+<script>
+'use strict';
+/* ============ CORE ============ */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const KEY='abxsim.v1';
+const defaults=()=>({theme:null,anim:true,xp:0,visited:{},quiz:{},wrong:[],cases:{},battle:{runs:0,wins:0,fails:0,resist:0,seen:{}},match:{best:{},rounds:0},stew:{best:0,consults:{},runs:0},classQ:{},tree:{},pkpd:{moves:0},badges:{},answered:0,correct:0,res:{}});
+let S=(()=>{try{return Object.assign(defaults(),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){return defaults()}})();
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const fmt=(x,d=1)=>Number.isFinite(x)?x.toFixed(d):'–';
+const live=m=>{$('#live').textContent='';setTimeout(()=>$('#live').textContent=m,40)};
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;$('#toasts').appendChild(t);setTimeout(()=>t.remove(),3200)}
+const level=()=>Math.floor(Math.sqrt(S.xp/40))+1;
+const lvlBase=l=>(l-1)*(l-1)*40;
+function renderLvl(){const l=level(),a=lvlBase(l),b=lvlBase(l+1);$('#lvl').innerHTML=`Level <b>${l}</b> <span class="xpbar" title="${S.xp} XP"><i style="width:${clamp((S.xp-a)/(b-a)*100,0,100)}%"></i></span> <b>${S.xp}</b> XP`}
+const BADGES=[
+ ['first','🔬','First Steps','Open any module',s=>Object.keys(s.visited).length>=1],
+ ['explorer','🧭','Explorer','Visit all 12 modules',s=>Object.keys(s.visited).length>=12],
+ ['classy','🧪','Class Act','Answer 8 class practice questions correctly',s=>Object.values(s.classQ).filter(Boolean).length>=8],
+ ['quiz20','🎯','Sharp Shooter','Answer 20 quiz questions correctly',s=>s.correct>=20],
+ ['quiz80','🏅','Board Ready','Answer 80 quiz questions correctly',s=>s.correct>=80],
+ ['battle','⚔️','Bug Slayer','Win 5 battles',s=>s.battle.wins>=5],
+ ['cre','🛡️','CRE Crusher','Defeat CRE with an active agent',s=>s.battle.seen.cre_win],
+ ['cases','🩺','Clinician','Complete 4 cases',s=>Object.keys(s.cases).length>=4],
+ ['steward','🌿','Steward','Score 80+ in Stewardship Command Center',s=>s.stew.best>=80],
+ ['match','🧩','Matchmaker','Finish 3 matching rounds',s=>s.match.rounds>=3],
+ ['pkpd','📈','PK/PD Tinkerer','Adjust PK/PD controls 25 times',s=>s.pkpd.moves>=25],
+ ['tree','🌳','Pathfinder','Complete 3 decision trees',s=>Object.keys(s.tree).length>=3]];
+function addXP(n){const l0=level();S.xp+=n;const l1=level();BADGES.forEach(b=>{if(!S.badges[b[0]]&&b[4](S)){S.badges[b[0]]=Date.now();toast(`${b[1]} Badge unlocked: ${b[2]}`)}});if(l1>l0)toast(`⬆️ Level ${l1}!`);save();renderLvl()}
+/* theme + motion */
+function applyTheme(){const t=S.theme||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;$('#themeLbl').textContent=t==='dark'?'Light':'Dark'}
+function applyAnim(){const on=S.anim&&!matchMedia('(prefers-reduced-motion:reduce)').matches;document.body.classList.toggle('noanim',!on);$('#animBtn').setAttribute('aria-pressed',S.anim);$$('svg').forEach(s=>{try{on?s.unpauseAnimations():s.pauseAnimations()}catch(e){}})}
+/* ============ QUESTION ENGINE ============ */
+const Q=(c,q,o,a,e)=>({c,q,o:o.split('|'),a,e});
+function renderQ(box,q,cb,opts={}){
+  const order=shuffle(q.o.map((t,i)=>i));let done=false;
+  box.innerHTML=`<div class="q"><p class="stem">${q.q}</p><div role="group" aria-label="Answer choices">${order.map((i,k)=>`<button class="opt" data-i="${i}"><b>${'ABCDE'[k]}.</b> ${q.o[i]}</button>`).join('')}</div><div class="exp" hidden></div></div>`;
+  $$('.opt',box).forEach(b=>b.onclick=()=>{if(done)return;done=true;const ok=+b.dataset.i===q.a;
+    $$('.opt',box).forEach(x=>{x.disabled=true;if(+x.dataset.i===q.a)x.classList.add('ok')});if(!ok)b.classList.add('no');
+    const e=$('.exp',box);e.hidden=false;e.innerHTML=`<span class="tag ${ok?'good':'bad'}">${ok?'Correct':'Incorrect'}</span> ${q.e}`;live(ok?'Correct':'Incorrect');cb&&cb(ok)})
+}
+/* ============ DATA ============ */
+const CATS=['Gram+','Gram−','Anaerobes','Atypicals','Enterococcus','MRSA','Pseudomonas'];
+const LV=['None','Poor','Good','Excellent'], LS=['—','+','++','+++'];
+const MECH={
+ wall:{n:'Cell wall synthesis inhibition',drugs:'β-lactams, vancomycin & other glycopeptides',target:'Penicillin-binding proteins (transpeptidases) or D-Ala-D-Ala termini of peptidoglycan precursors',
+  steps:['Drug reaches the periplasm (via porins in Gram-negatives; directly in Gram-positives).','β-lactams acylate PBPs; glycopeptides bind D-Ala-D-Ala and block transglycosylation.','Peptidoglycan cross-linking stops while autolysins keep cutting the wall.','Wall weakens and cell swells against high internal osmotic pressure.','Osmotic lysis and cell death.'],
+  out:'Bactericidal, time-dependent killing of actively dividing bacteria.',clin:'Efficacy tracks time above MIC (fT>MIC). Inactive vs cell-wall-less organisms (Mycoplasma) and weak vs Gram-negatives with poor outer-membrane penetration (vancomycin).'},
+ p30:{n:'Protein synthesis inhibition: 30S',drugs:'Aminoglycosides (irreversible), tetracyclines (reversible)',target:'30S ribosomal subunit (A-site / decoding centre)',
+  steps:['Aminoglycosides enter by O₂-dependent transport (explains no anaerobic activity).','Bind 16S rRNA at the A-site; mRNA is misread.','Faulty proteins insert into the membrane, increasing uptake (positive feedback).','Tetracyclines block aminoacyl-tRNA docking, halting elongation.','Aminoglycosides: rapid concentration-dependent killing; tetracyclines: growth arrest.'],
+  out:'Aminoglycosides are bactericidal; tetracyclines are bacteriostatic.',clin:'Aminoglycosides: Cmax/MIC driven, post-antibiotic effect, nephro-/ototoxicity. Tetracyclines: atypicals, MRSA SSTI, tick-borne illness; avoid in pregnancy and children <8 y.'},
+ p50:{n:'Protein synthesis inhibition: 50S',drugs:'Macrolides, clindamycin, linezolid (also chloramphenicol, streptogramins)',target:'50S subunit: exit tunnel (macrolides), peptidyl transferase centre (clindamycin), P-site / initiation complex (linezolid)',
+  steps:['Drug diffuses into the cytoplasm.','Macrolides plug the peptide exit tunnel; clindamycin blocks peptide bond formation.','Linezolid prevents formation of the 70S initiation complex.','Peptide elongation stalls; nascent chains drop off.','Growth stops; toxin production also falls (rationale for clindamycin/linezolid in toxin-mediated disease).'],
+  out:'Generally bacteriostatic (linezolid is bactericidal only vs streptococci).',clin:'Macrolides: atypicals, QT prolongation, CYP3A4 (clarithro/erythro). Linezolid: MRSA/VRE, serotonin syndrome, myelosuppression.'},
+ dna:{n:'DNA replication inhibition',drugs:'Fluoroquinolones; metronidazole (DNA damage)',target:'DNA gyrase (Gram−) and topoisomerase IV (Gram+); in anaerobes, DNA itself via reduced nitro radicals',
+  steps:['Drug penetrates cell and forms a ternary complex with enzyme-DNA.','Gyrase / topo IV cannot re-ligate DNA after cleavage.','Double-strand breaks accumulate; replication fork collapses.','SOS response fails and chromosome fragments.','Cell death. (Metronidazole: ferredoxin reduces the nitro group → radicals that break DNA.)'],
+  out:'Bactericidal, concentration-dependent (AUC/MIC, Cmax/MIC).',clin:'Tendinopathy, QT, dysglycemia, CNS effects, C. difficile, chelation by divalent cations. Resistance via gyrA/parC mutations and efflux.'},
+ rna:{n:'RNA transcription inhibition',drugs:'Rifamycins (rifampin, rifabutin, rifapentine, rifaximin)',target:'β-subunit of DNA-dependent RNA polymerase (rpoB)',
+  steps:['Lipophilic drug enters the cell readily (good intracellular / biofilm penetration).','Binds the RNAP β-subunit in the DNA/RNA channel.','Blocks elongation after 2–3 nucleotides ("steric occlusion").','mRNA synthesis ceases; proteins are no longer made.','Cell death; single-step rpoB mutations arise easily, so never use as monotherapy.'],
+  out:'Bactericidal; rapid resistance if used alone.',clin:'TB, adjunct in staph prosthetic-device infections, prophylaxis. Potent CYP3A4/2C9/P-gp inducer; red-orange body fluids; hepatotoxicity.'},
+ fol:{n:'Folate synthesis inhibition',drugs:'Sulfonamides (sulfamethoxazole) + trimethoprim',target:'DHPS (sulfonamide) and DHFR (trimethoprim) in the folate pathway',
+  steps:['Sulfonamide mimics PABA and inhibits dihydropteroate synthase (DHPS).','Dihydrofolate (DHF) formation falls.','Trimethoprim blocks DHFR, so DHF cannot become tetrahydrofolate (THF).','Sequential blockade depletes thymidine, purines and some amino acids.','DNA synthesis halts; combination is often bactericidal.'],
+  out:'Each alone is bacteriostatic; the combination is synergistic and often bactericidal.',clin:'UTI, MRSA SSTI, Stenotrophomonas, PJP, Nocardia. Hyperkalemia, ↑SCr (blocked secretion), SJS/TEN, marrow suppression, warfarin interaction. Humans obtain folate from diet, which is the basis of selective toxicity.'},
+ memb:{n:'Membrane disruption',drugs:'Daptomycin (Gram+), polymyxins / colistin (Gram−)',target:'Cytoplasmic membrane phospholipid (daptomycin, Ca²⁺-dependent) or LPS / outer membrane (polymyxins)',
+  steps:['Daptomycin binds Ca²⁺ and oligomerizes; polymyxins bind lipid A of LPS displacing Mg²⁺/Ca²⁺.','Drug inserts into / permeabilizes the membrane.','K⁺ efflux and membrane depolarization; ion gradients collapse.','DNA, RNA and protein synthesis stop; contents leak.','Rapid concentration-dependent cell death.'],
+  out:'Rapidly bactericidal.',clin:'Daptomycin: MRSA/VRE bacteremia & endocarditis, CK monitoring, inactivated by surfactant (no pneumonia). Colistin: last-line vs CRE/CRAB; nephro- and neurotoxicity.'}
+};
+const CLS=[
+ {id:'pen',g:'β-Lactams',n:'Penicillins',ic:'💊',ex:'Penicillin G/V, amoxicillin, nafcillin, ampicillin-sulbactam, piperacillin-tazobactam',m:'wall',cidal:1,sp:[3,3,3,1,2,0,3],
+  ind:'Strep pharyngitis, syphilis (benzathine PCN G), MSSA (nafcillin), E. faecalis (ampicillin), intra-abdominal/HAP (pip-tazo), listeriosis (ampicillin)',
+  adv:'Bactericidal, extensive safety record, IV and PO options, inhibitor combinations broaden spectrum',lim:'Hypersensitivity (most labels are not true allergy), seizures in renal failure/high dose, nafcillin phlebitis/AIN/hypokalemia, short half-lives',
+  bbw:'Benzathine/procaine penicillin G: never IV (cardiorespiratory arrest, death).',res:'β-lactamases (TEM, SHV, staph penicillinase), altered PBPs (PBP2a, S. pneumoniae), porin loss, efflux',
+  q:Q('Classification','Which penicillin is preferred for MSSA bloodstream infection?','Nafcillin / oxacillin (or cefazolin)|Penicillin V|Ampicillin|Piperacillin-tazobactam',0,'Anti-staphylococcal penicillins resist staph penicillinase. Cefazolin is an equally effective, better-tolerated alternative.')},
+ {id:'ceph',g:'β-Lactams',n:'Cephalosporins',ic:'💊',ex:'Cefazolin, cefuroxime, ceftriaxone, ceftazidime, cefepime, ceftaroline, ceftazidime-avibactam, cefiderocol',m:'wall',cidal:1,sp:[3,3,1,0,0,3,3],
+  ind:'Surgical prophylaxis & SSTI (cefazolin), CAP/meningitis/gonorrhea (ceftriaxone), febrile neutropenia & HAP (cefepime), MRSA (ceftaroline), CRE/MDR-PA (ceftazidime-avibactam, ceftolozane-tazobactam)',
+  adv:'Broad options by generation, good CNS penetration (3rd gen), once-daily ceftriaxone, low toxicity',lim:'No activity vs Enterococcus, Listeria, atypicals (except ceftaroline has limited E. faecalis); ESBL/AmpC hydrolysis; cefepime neurotoxicity; ceftriaxone biliary sludging',
+  bbw:'None. Ceftriaxone is contraindicated in neonates receiving IV calcium.',res:'ESBLs, AmpC (derepressed), carbapenemases, PBP alteration, porin/efflux changes',
+  q:Q('Spectrum','Which cephalosporin has activity against MRSA?','Ceftaroline|Ceftriaxone|Cefepime|Cefazolin',0,'Ceftaroline binds PBP2a. No other cephalosporin is reliable for MRSA.')},
+ {id:'carb',g:'β-Lactams',n:'Carbapenems',ic:'💊',ex:'Meropenem, imipenem-cilastatin, ertapenem, doripenem; meropenem-vaborbactam, imipenem-relebactam',m:'wall',cidal:1,sp:[3,3,3,0,1,0,3],
+  ind:'ESBL infections, severe polymicrobial infection, febrile neutropenia, meningitis (meropenem), ertapenem for community-acquired ESBL/IAI',
+  adv:'Broadest β-lactam spectrum, stable to ESBL/AmpC, bactericidal',lim:'Seizure risk (imipenem > meropenem), valproate interaction (↓VPA levels), C. difficile, reserve to prevent CRE; ertapenem lacks Pseudomonas/Acinetobacter activity',
+  bbw:'None (valproate co-administration is a major interaction).',res:'Carbapenemases (KPC, NDM, VIM, IMP, OXA-48), OprD porin loss + AmpC, efflux',
+  q:Q('Toxicity','Which interaction is associated with carbapenems?','Marked drop in valproic acid concentrations|Increased warfarin effect via CYP2C9|Hyperkalemia with ACE inhibitors|Serotonin syndrome with SSRIs',0,'Carbapenems inhibit valproate glucuronide hydrolysis, lowering levels within 24 h and risking breakthrough seizures.')},
+ {id:'mono',g:'β-Lactams',n:'Monobactams',ic:'💊',ex:'Aztreonam (± ceftazidime-avibactam for MBL producers)',m:'wall',cidal:1,sp:[0,3,0,0,0,0,2],
+  ind:'Gram-negative infection in patients with severe β-lactam allergy; combine with ceftazidime-avibactam for NDM (metallo-β-lactamase) CRE',
+  adv:'No cross-reactivity with penicillins/most cephalosporins; stable to metallo-β-lactamases',lim:'No Gram-positive or anaerobic coverage; hydrolyzed by ESBLs/AmpC/KPC; shares side chain with ceftazidime',
+  bbw:'None.',res:'ESBLs, AmpC, KPC hydrolyze aztreonam; MBL producers often co-carry ESBL',
+  q:Q('Resistance','Which regimen is recommended for NDM-producing Enterobacterales?','Ceftazidime-avibactam + aztreonam|Meropenem alone|Ertapenem alone|Ceftriaxone + gentamicin',0,'Aztreonam is stable to NDM; avibactam protects it from co-produced ESBL/AmpC.')},
+ {id:'glyco',g:'Other',n:'Glycopeptides',ic:'🧬',ex:'Vancomycin; telavancin, dalbavancin, oritavancin (lipoglycopeptides)',m:'wall',cidal:1,sp:[3,0,1,0,2,3,0],
+  ind:'MRSA bacteremia, endocarditis, osteomyelitis, HAP/VAP, meningitis (with ceftriaxone), PO vancomycin for C. difficile, β-lactam-allergic Gram-positive infection',
+  adv:'Reliable MRSA & ampicillin-resistant Enterococcus activity; AUC-guided dosing; long-acting lipoglycopeptides',lim:'Slow bactericidal, poor tissue/CNS penetration, nephrotoxicity (↑ with pip-tazo), infusion reaction, VRE',
+  bbw:'None for vancomycin (telavancin: nephrotoxicity, fetal risk).',res:'VanA/VanB (D-Ala-D-Lac), VISA thickened wall, heteroresistance',
+  q:Q('Toxicity','"Vancomycin infusion reaction" (red man syndrome) is best managed by:','Slowing the infusion rate ± antihistamine|Permanent avoidance of vancomycin|Switching to a penicillin|Giving epinephrine immediately',0,'It is histamine release from rapid infusion, not IgE allergy. Infuse ≤1 g/h.')},
+ {id:'macro',g:'Other',n:'Macrolides',ic:'🧬',ex:'Azithromycin, clarithromycin, erythromycin, fidaxomicin (macrocycle)',m:'p50',cidal:0,sp:[2,1,0,3,0,0,0],
+  ind:'CAP (atypical coverage), pertussis, chlamydia, MAC, H. pylori (clarithromycin), erythromycin as prokinetic',
+  adv:'Excellent tissue/intracellular penetration, oral, anti-inflammatory',lim:'QT prolongation, CYP3A4 inhibition (clarithro/erythro), GI intolerance, rising pneumococcal resistance',
+  bbw:'None.',res:'erm methylation (MLSB, inducible clindamycin resistance), mef efflux, 23S mutations',
+  q:Q('Interactions','Which macrolide has the LEAST CYP3A4 inhibition?','Azithromycin|Clarithromycin|Erythromycin|Telithromycin',0,'Azithromycin is a weak CYP3A4 inhibitor, so simvastatin and similar interactions are far less relevant.')},
+ {id:'tetra',g:'Other',n:'Tetracyclines',ic:'🧬',ex:'Doxycycline, minocycline, tigecycline, eravacycline, omadacycline',m:'p30',cidal:0,sp:[2,2,1,3,1,2,0],
+  ind:'Rickettsia, Lyme, atypical CAP, MRSA SSTI, acne, malaria prophylaxis, tigecycline for cIAI/cSSTI, Acinetobacter, Stenotrophomonas',
+  adv:'Oral bioavailability, atypical & MRSA coverage, no renal adjustment (doxycycline)',lim:'Photosensitivity, esophagitis, chelation, teeth staining <8 y/pregnancy; tigecycline: low serum levels (avoid bacteremia), nausea',
+  bbw:'Tigecycline: increased all-cause mortality.',res:'Tet(A/B) efflux, ribosomal protection (tetM); tigecycline resistant via efflux/tet(X)',
+  q:Q('Toxicity','Tigecycline carries a boxed warning for:','Increased all-cause mortality|Tendon rupture|Hepatic failure|Ototoxicity',0,'Tigecycline should be reserved for cases without alternatives and is poor for bloodstream infection.')},
+ {id:'amino',g:'Other',n:'Aminoglycosides',ic:'🧬',ex:'Gentamicin, tobramycin, amikacin, streptomycin, plazomicin',m:'p30',cidal:1,sp:[2,3,0,0,1,0,3],
+  ind:'Synergy for Gram-positive endocarditis (low-dose gentamicin), Pseudomonas, CF (inhaled tobramycin), MAC/TB (amikacin, streptomycin), cUTI (plazomicin)',
+  adv:'Rapid concentration-dependent killing, post-antibiotic effect, synergy with cell wall agents, retains activity vs many MDR GNR',lim:'Nephro-, oto- and vestibulotoxicity, narrow therapeutic index, poor lung/CNS penetration, inactive in anaerobic/acidic environments',
+  bbw:'Nephrotoxicity, ototoxicity, neuromuscular blockade, fetal harm.',res:'Aminoglycoside-modifying enzymes (AAC, ANT, APH), 16S rRNA methylases (armA/rmtB), efflux, reduced uptake',
+  q:Q('PK/PD','Extended-interval (once-daily) aminoglycoside dosing exploits:','Concentration-dependent killing and the post-antibiotic effect|Time above MIC|Protein-binding saturation|Enterohepatic recirculation',0,'High peaks (Cmax/MIC ≥8–10) maximize killing; PAE protects during the low-concentration period and lowers toxicity from uptake saturation.')},
+ {id:'fq',g:'Other',n:'Fluoroquinolones',ic:'🧬',ex:'Ciprofloxacin, levofloxacin, moxifloxacin, delafloxacin',m:'dna',cidal:1,sp:[2,3,0,3,1,0,2],
+  ind:'Complicated UTI/pyelonephritis (when susceptible), CAP in comorbid patients, anthrax/plague, Legionella, bone/joint, travelers\' diarrhea',
+  adv:'Excellent bioavailability (IV=PO), tissue penetration, atypical coverage',lim:'Tendinopathy, neuropathy, CNS effects, QT, dysglycemia, aortic aneurysm/dissection, C. difficile, chelation, resistance selection',
+  bbw:'Tendinitis/tendon rupture, peripheral neuropathy, CNS effects, myasthenia gravis exacerbation.',res:'gyrA/parC mutations, qnr plasmids, efflux (MexAB), aac(6\')-Ib-cr',
+  q:Q('Interactions','Ciprofloxacin should be separated from which product?','Calcium/iron/magnesium/aluminum products|Acetaminophen|Omeprazole|Metoprolol',0,'Divalent/trivalent cations chelate FQs (dose FQ 2 h before or 6 h after). Cipro is also a CYP1A2 inhibitor (tizanidine contraindicated).')},
+ {id:'sulf',g:'Other',n:'Sulfonamides / Trimethoprim',ic:'🧬',ex:'Sulfamethoxazole-trimethoprim (TMP-SMX), nitrofurantoin (separate class), sulfadiazine',m:'fol',cidal:0,sp:[2,2,0,0,0,2,0],
+  ind:'Uncomplicated UTI, MRSA SSTI (oral), Stenotrophomonas, PJP treatment/prophylaxis, Nocardia, toxoplasmosis',
+  adv:'Oral/IV equivalence, inexpensive, activity vs MRSA & Stenotrophomonas',lim:'Hyperkalemia, SCr rise, SJS/TEN, marrow suppression, hemolysis in G6PD deficiency, kernicterus (late pregnancy/neonates)',
+  bbw:'None.',res:'dfr (altered DHFR), sul genes (altered DHPS), reduced permeability',
+  q:Q('Toxicity','A patient on lisinopril and spironolactone starts TMP-SMX. Highest concern?','Hyperkalemia|Hypokalemia|QT prolongation|Hypoglycemia only',0,'Trimethoprim blocks ENaC in the distal tubule, acting like amiloride; additive hyperkalemia with RAAS agents.')},
+ {id:'oxaz',g:'Other',n:'Oxazolidinones',ic:'🧬',ex:'Linezolid, tedizolid',m:'p50',cidal:0,sp:[3,0,1,1,3,3,0],
+  ind:'MRSA pneumonia & SSTI, VRE, nocardiosis, NTM, drug-resistant TB',
+  adv:'100% oral bioavailability, lung penetration, toxin suppression, active vs VRE/MRSA',lim:'Myelosuppression (>10–14 d), serotonin syndrome, lactic acidosis, neuropathy, MAO inhibition, bacteriostatic',
+  bbw:'None.',res:'23S rRNA mutations (G2576T), cfr methylase, optrA/poxtA',
+  q:Q('Interactions','Linezolid + sertraline poses a risk of:','Serotonin syndrome|QT prolongation|Hyperkalemia|Fanconi syndrome',0,'Linezolid is a reversible, nonselective MAO inhibitor; avoid with serotonergic drugs or monitor closely.')},
+ {id:'lipo',g:'Other',n:'Lipopeptides',ic:'🧬',ex:'Daptomycin',m:'memb',cidal:1,sp:[3,0,0,0,3,3,0],
+  ind:'MRSA/VRE bacteremia & right-sided endocarditis, cSSTI, osteomyelitis, VRE bacteremia (high dose 8–12 mg/kg)',
+  adv:'Rapid concentration-dependent killing, once daily, active vs VRE/VISA',lim:'Inactivated by pulmonary surfactant (no pneumonia), CPK elevation/myopathy, eosinophilic pneumonia, rising MIC with vancomycin exposure',
+  bbw:'None.',res:'mprF, dltABCD, yycFG mutations (cell-membrane charge repulsion)',
+  q:Q('Spectrum','Why is daptomycin avoided for pneumonia?','Inactivated by pulmonary surfactant|No Gram-positive activity|Hepatic first-pass loss|Poor activity vs MRSA',0,'Surfactant binds the drug in alveoli. It is still appropriate for bacteremic MRSA or hematogenous septic emboli.')},
+ {id:'nitro',g:'Other',n:'Nitroimidazoles',ic:'🧬',ex:'Metronidazole, tinidazole, secnidazole',m:'dna',cidal:1,sp:[0,0,3,0,0,0,0],
+  ind:'Anaerobes (intra-abdominal, brain abscess, B. fragilis), C. difficile (alternative), trichomoniasis, BV, amebiasis, giardiasis',
+  adv:'Superb anaerobic activity, IV=PO, excellent tissue/CNS penetration',lim:'Metallic taste, peripheral neuropathy with prolonged use, encephalopathy, warfarin ↑INR, alcohol-related reactions (weak evidence)',
+  bbw:'Carcinogenic in rodents (boxed in some labeling); avoid unnecessary use.',res:'nim genes, decreased drug activation (rare)',
+  q:Q('Spectrum','Which class provides reliable anaerobic coverage with essentially no aerobic activity?','Nitroimidazoles|Aminoglycosides|Aztreonam|Fluoroquinolones',0,'Reduction of the nitro group occurs only in low-redox anaerobic conditions.')},
+ {id:'poly',g:'Other',n:'Polymyxins',ic:'🧬',ex:'Colistin (polymyxin E), polymyxin B',m:'memb',cidal:1,sp:[0,3,0,0,0,0,3],
+  ind:'Last-line therapy for CRE, carbapenem-resistant Acinetobacter and Pseudomonas, often in combination',
+  adv:'Activity vs most MDR Gram-negatives (not Proteus, Serratia, Burkholderia)',lim:'Nephrotoxicity, neurotoxicity, poor lung penetration, complicated dosing (colistin prodrug CBA), heteroresistance',
+  bbw:'Nephrotoxicity, neurotoxicity, respiratory paralysis (label).',res:'mcr-1 plasmid, PmrAB/PhoPQ/mgrB lipid A modification (L-Ara4N, PEtN)',
+  q:Q('Resistance','Plasmid-mediated colistin resistance is encoded by:','mcr-1|mecA|vanA|blaKPC',0,'mcr genes add phosphoethanolamine to lipid A, reducing polymyxin binding.')},
+ {id:'rif',g:'Other',n:'Rifamycins',ic:'🧬',ex:'Rifampin, rifabutin, rifapentine, rifaximin',m:'rna',cidal:1,sp:[3,1,0,1,0,2,0],
+  ind:'TB, LTBI, staph prosthetic-material/biofilm infection (adjunct), meningococcal prophylaxis, MAC (rifabutin), rifaximin for HE/traveler\'s diarrhea',
+  adv:'Intracellular and biofilm penetration, bactericidal vs dormant organisms',lim:'Rapid resistance if monotherapy; massive CYP3A4/2C9/P-gp induction (warfarin, DOACs, HIV PIs, contraceptives); hepatotoxicity; orange fluids',
+  bbw:'None for rifampin; always combine.',res:'rpoB mutations (single-step), efflux in mycobacteria',
+  q:Q('Interactions','A patient on warfarin starts rifampin. Expected effect?','Decreased INR; warfarin dose must increase|Increased INR|No change|Increased bleeding from platelet inhibition',0,'Rifampin induces CYP2C9/3A4 (onset ~1 wk, offset ~2–4 wk after stopping).')}
+];
+/* Drug table: cov=[Gram+,Gram-,Anaer,Atyp,Enterococcus,MRSA,Pseudomonas] */
+const D=(id,n,c,cov,pk,rr,tox)=>({id,n,c,cov,pk,rr,tox});
+const DRUGS=[
+ D('penG','Penicillin G','pen',[3,1,2,0,1,0,0],'T',1,'Hypersensitivity, seizures at high dose'),
+ D('amc','Amoxicillin-clavulanate','pen',[3,2,3,1,2,0,0],'T',1,'Diarrhea, hepatotoxicity (cholestatic)'),
+ D('naf','Nafcillin','pen',[3,0,0,0,0,0,0],'T',1,'Phlebitis, AIN, hypokalemia, warfarin ↓ effect'),
+ D('pzt','Piperacillin-tazobactam','pen',[3,3,3,0,2,0,3],'T',1,'AKI with vancomycin, cytopenias, hypersensitivity'),
+ D('cfz','Cefazolin','ceph',[3,1,0,0,0,0,0],'T',1,'Hypersensitivity (unique side chain)'),
+ D('cro','Ceftriaxone','ceph',[3,3,0,0,0,0,0],'T',1,'Biliary sludging, neonatal hyperbilirubinemia/Ca precipitation'),
+ D('fep','Cefepime','ceph',[3,3,0,0,0,0,3],'T',1,'Neurotoxicity/encephalopathy in renal impairment'),
+ D('cza','Ceftazidime-avibactam','ceph',[1,3,0,0,0,0,3],'T',1,'Renal dose adjustment, C. difficile'),
+ D('cpt','Ceftaroline','ceph',[3,2,0,0,0,3,0],'T',1,'Positive Coombs, rash'),
+ D('mem','Meropenem','carb',[3,3,3,0,1,0,3],'T',1,'Seizures (less than imipenem), valproate interaction'),
+ D('etp','Ertapenem','carb',[3,3,3,0,0,0,0],'T',1,'Seizures, valproate interaction; no Pseudomonas coverage'),
+ D('atm','Aztreonam','mono',[0,3,0,0,0,0,2],'T',1,'LFT elevation, rash; safe in most β-lactam allergy'),
+ D('van','Vancomycin','glyco',[3,0,1,0,2,3,0],'AUC',1,'Nephrotoxicity, infusion reaction, ototoxicity'),
+ D('azi','Azithromycin','macro',[2,1,0,3,0,0,0],'AUC',1,'QT prolongation, GI upset'),
+ D('dox','Doxycycline','tetra',[2,2,1,3,0,1,0],'AUC',1,'Photosensitivity, esophagitis, chelation'),
+ D('tig','Tigecycline','tetra',[3,2,3,3,3,3,0],'AUC',1,'Boxed warning: mortality; nausea; pancreatitis'),
+ D('gen','Gentamicin','amino',[2,3,0,0,1,0,2],'CMAX',1,'Nephro/ototoxicity, neuromuscular blockade'),
+ D('ami','Amikacin','amino',[1,3,0,0,0,0,3],'CMAX',1,'Nephro/ototoxicity (cochlear)'),
+ D('lev','Levofloxacin','fq',[2,3,0,3,0,0,2],'AUC',2,'Tendinopathy, QT, dysglycemia, CNS, aortic dissection'),
+ D('cip','Ciprofloxacin','fq',[1,3,0,2,0,0,3],'AUC',2,'Tendinopathy, CYP1A2 inhibition, chelation'),
+ D('smx','TMP-SMX','sulf',[2,2,0,0,0,2,0],'AUC',1,'Hyperkalemia, SCr rise, SJS/TEN, marrow suppression'),
+ D('lzd','Linezolid','oxaz',[3,0,1,0,3,3,0],'AUC',1,'Thrombocytopenia, serotonin syndrome, lactic acidosis'),
+ D('dap','Daptomycin','lipo',[3,0,0,0,3,3,0],'CMAX',1,'CPK elevation/myopathy, eosinophilic pneumonia'),
+ D('mtz','Metronidazole','nitro',[0,0,3,0,0,0,0],'CMAX',1,'Neuropathy, metallic taste, ↑INR with warfarin'),
+ D('col','Colistin','poly',[0,3,0,0,0,0,3],'AUC',1,'Nephrotoxicity, neurotoxicity'),
+ D('rif','Rifampin','rif',[3,1,0,1,0,2,0],'AUC',3,'CYP induction, hepatotoxicity, orange fluids; never monotherapy'),
+ D('cli','Clindamycin','macro',[3,0,2,0,0,1,0],'AUC',1,'Boxed warning: C. difficile colitis')
+];
+const DR=Object.fromEntries(DRUGS.map(d=>[d.id,d]));
+/* Bugs for battle simulator */
+const BUGS=[
+ {id:'gp',n:'Gram-positive (MSSA / Strep)',cat:0,sh:'coccus',d:'Staph aureus (methicillin-susceptible) causing bacteremia.',o:{},tip:'Anti-staphylococcal β-lactams (nafcillin, cefazolin) outperform vancomycin for MSSA.'},
+ {id:'gn',n:'Gram-negative (wild-type E. coli)',cat:1,sh:'rod',d:'Community-onset pyelonephritis with bacteremia.',o:{},tip:'Ceftriaxone is a reliable choice if no ESBL risk; narrow when susceptibilities return.'},
+ {id:'ana',n:'Anaerobes (B. fragilis)',cat:2,sh:'rod',d:'Perforated appendicitis with abscess.',o:{penG:0,cli:1,amc:2},tip:'Source control is essential; cover anaerobes with metronidazole, β-lactam/inhibitor or carbapenem. B. fragilis is often clindamycin-resistant.'},
+ {id:'aty',n:'Atypicals (Legionella / Mycoplasma)',cat:3,sh:'pleo',d:'Community-acquired pneumonia with hyponatremia.',o:{cro:0},tip:'Atypicals lack a classic cell wall or are intracellular: use macrolide, doxycycline or FQ, never β-lactams alone.'},
+ {id:'psa',n:'Pseudomonas aeruginosa',cat:6,sh:'rod',d:'Ventilator-associated pneumonia in ICU.',o:{},tip:'Use an antipseudomonal agent at maximal dose; consider extended infusion. Avoid monotherapy with agents that select resistance.'},
+ {id:'mrsa',n:'MRSA',cat:5,sh:'coccus',d:'Bacteremia with skin source, PBP2a positive.',o:{cpt:3,smx:2},tip:'Vancomycin (AUC-guided) or daptomycin for bacteremia; linezolid for pneumonia.'},
+ {id:'vre',n:'VRE (E. faecium)',cat:4,sh:'coccus',d:'Vancomycin- and ampicillin-resistant E. faecium bacteremia.',o:{van:0,penG:0,amc:0,pzt:0,mem:0,cpt:0,tig:2,dap:3,lzd:3},tip:'Linezolid or high-dose daptomycin (8–12 mg/kg). VanA = D-Ala-D-Lac.'},
+ {id:'esbl',n:'ESBL producer (E. coli)',cat:1,sh:'rod',d:'CTX-M-15 E. coli urosepsis.',o:{cro:0,cfz:0,fep:1,pzt:1,atm:0,amc:0,cza:3,mem:3,etp:3,lev:1,cip:1,gen:2,ami:2,smx:1,tig:2,col:3},tip:'Carbapenem is drug of choice for serious ESBL infection (MERINO). Oral FQ/TMP-SMX step-down only if susceptible.'},
+ {id:'cre',n:'CRE (KPC-producing K. pneumoniae)',cat:1,sh:'rod',d:'KPC bacteremia from line infection.',o:{mem:0,etp:0,cro:0,fep:0,pzt:0,atm:0,amc:0,cfz:0,cza:3,ami:2,gen:1,lev:0,cip:0,smx:0,tig:2,col:2},tip:'Ceftazidime-avibactam, meropenem-vaborbactam or imipenem-relebactam for KPC; cefiderocol or ceftazidime-avibactam + aztreonam for MBL (NDM).'}
+];
+/* Resistance mechanisms */
+const RES=[
+ {id:'bl',n:'β-Lactamases',type:'enzyme',how:'Plasmid- or chromosome-encoded enzymes hydrolyse the β-lactam ring in the periplasm. Penicillinase (TEM-1, SHV-1) targets penicillins; AmpC (Ambler class C) also cleaves cephalosporins.',fail:'Drug is cleaved before it can reach PBPs, so cell wall synthesis continues.',over:'β-lactamase inhibitors (clavulanate, sulbactam, tazobactam), AmpC-stable cefepime, or carbapenems.',ex:'Enterobacter (inducible AmpC), H. influenzae, M. catarrhalis, staph penicillinase'},
+ {id:'esbl',n:'ESBL (Extended-spectrum β-lactamases)',type:'enzyme',how:'Class A (CTX-M, TEM/SHV variants) enzymes hydrolyse penicillins, 3rd/4th-gen cephalosporins and aztreonam. Spread on plasmids that also carry aminoglycoside/FQ/TMP-SMX resistance genes.',fail:'Ceftriaxone, ceftazidime and aztreonam hydrolysed. Pip-tazo shows inoculum effect.',over:'Carbapenems (meropenem, ertapenem); ceftazidime-avibactam if carbapenem-sparing is needed.',ex:'E. coli CTX-M-15, Klebsiella pneumoniae'},
+ {id:'carb',n:'Carbapenemases',type:'enzyme',how:'KPC (class A), NDM/VIM/IMP (class B, metallo-β-lactamases with Zn²⁺), OXA-48 (class D) hydrolyse carbapenems and most β-lactams. Class B enzymes are NOT inhibited by avibactam/vaborbactam/relebactam.',fail:'Carbapenems, cephalosporins and penicillins are destroyed; therapy options narrow to polymyxins, tigecycline, aminoglycosides.',over:'KPC: ceftazidime-avibactam, meropenem-vaborbactam, imipenem-relebactam. NDM: cefiderocol or ceftazidime-avibactam + aztreonam.',ex:'CRE (KPC-Kp), NDM-1 E. coli, Acinetobacter OXA-23'},
+ {id:'target',n:'Target modification',type:'target',how:'The drug target is altered so affinity falls: PBP2a (mecA) in MRSA; D-Ala-D-Lac (vanA) in VRE; gyrA/parC mutations; erm-methylated 23S rRNA; altered DHFR.',fail:'Drug no longer binds; the target keeps working despite drug exposure.',over:'Agents that bind the altered target (ceftaroline for PBP2a), or a different target altogether (linezolid, daptomycin).',ex:'MRSA, VRE, penicillin-resistant S. pneumoniae, FQ-R E. coli'},
+ {id:'efflux',n:'Efflux pumps',type:'efflux',how:'Tripartite pumps (MexAB-OprM, AcrAB-TolC) or Tet/Mef transporters actively export drug, keeping intracellular concentration below MIC. Often confer multidrug resistance.',fail:'Subinhibitory intracellular levels permit growth and select for further mutants.',over:'Poor pump substrates (e.g., colistin, aminoglycosides in some strains, newer tetracyclines such as eravacycline), higher exposures, or combination therapy.',ex:'P. aeruginosa, tetracycline/macrolide/FQ resistance'},
+ {id:'perm',n:'Reduced permeability',type:'perm',how:'Loss or down-regulation of outer-membrane porins (OprD in Pseudomonas; OmpK35/36 in Klebsiella) limits drug entry. Combined with AmpC or ESBL, it causes carbapenem resistance.',fail:'Hydrophilic drugs cannot reach periplasmic targets.',over:'Siderophore cephalosporin cefiderocol (Trojan-horse iron uptake), agents that cross the membrane by other routes (polymyxins, FQs).',ex:'OprD-negative P. aeruginosa, ertapenem-resistant Klebsiella'},
+ {id:'biofilm',n:'Biofilm formation',type:'biofilm',how:'Sessile communities in an extracellular matrix on devices/valves/bones: drug diffusion is limited, cells are slow-growing, and persisters tolerate β-lactams.',fail:'Drug fails to penetrate or kill dormant cells; relapses after therapy stops.',over:'Device removal/source control, high-dose therapy, agents that penetrate biofilm (rifampin, with a partner drug; FQs), prolonged courses.',ex:'Prosthetic joint infection, CLABSI, CF Pseudomonas, endocarditis vegetations'},
+ {id:'degrade',n:'Enzymatic drug modification',type:'enzyme',how:'Aminoglycoside-modifying enzymes (AAC, ANT, APH) acetylate/adenylate/phosphorylate the drug; chloramphenicol acetyltransferase inactivates chloramphenicol.',fail:'Modified drug cannot bind the 30S ribosome.',over:'Amikacin (resists most AMEs), plazomicin, or alternative classes.',ex:'Gentamicin-resistant Enterococcus, Acinetobacter'}
+];
+/* PK/PD presets (70 kg adult). CL0 at CrCl=100, fr = renal fraction */
+const PKD={
+ mem:{n:'Meropenem',dose:1000,tau:8,tinf:0.5,vd:25,cl:17,fr:0.8,mic:2,fu:0.98,type:'T',tgt:'fT>MIC ≥ 40–50% (≥ 100% for critically ill / Pseudomonas)',note:'Extended 3-h infusion improves fT>MIC for higher MICs.'},
+ pzt:{n:'Piperacillin (pip-tazo)',dose:4000,tau:6,tinf:0.5,vd:18,cl:12,fr:0.7,mic:16,fu:0.7,type:'T',tgt:'fT>MIC ≥ 50% (≥ 100% for severe infection)',note:'Extended infusion (4 h) or continuous infusion is often used for MIC ≥ 8.'},
+ fep:{n:'Cefepime',dose:2000,tau:8,tinf:0.5,vd:18,cl:6.2,fr:0.85,mic:8,fu:0.8,type:'T',tgt:'fT>MIC ≥ 60–70%',note:'Accumulates in renal impairment → neurotoxicity. Adjust to CrCl.'},
+ van:{n:'Vancomycin',dose:1250,tau:12,tinf:1.5,vd:49,cl:6,fr:0.9,mic:1,fu:1,type:'AUC',tgt:'AUC24/MIC 400–600 (MIC by BMD = 1)',note:'AUC > 600 increases AKI risk. Troughs of 15–20 are no longer recommended.'},
+ gen:{n:'Gentamicin',dose:490,tau:24,tinf:0.5,vd:17.5,cl:5.4,fr:0.95,mic:1,fu:1,type:'CMAX',tgt:'Cmax/MIC ≥ 8–10; trough < 1 mg/L for toxicity',note:'7 mg/kg once daily (adjusted body weight if obese). Hold doses if trough high.'},
+ lev:{n:'Levofloxacin',dose:750,tau:24,tinf:1,vd:90,cl:8.9,fr:0.85,mic:0.5,fu:0.7,type:'AUC',tgt:'fAUC24/MIC ≥ 125 (Gram-neg); Cmax/MIC ≥ 10',note:'Renal dose adjustment (CrCl <50). Chelation reduces oral absorption.'}
+};
+/* ============ QUIZ BANK ============ */
+const BANK=[
+Q('Classification','Which agent is a monobactam?','Aztreonam|Ertapenem|Cefepime|Ceftaroline',0,'Aztreonam is the only clinically available monobactam; it has Gram-negative (aerobic) activity only.'),
+Q('Classification','Which of the following is a glycopeptide?','Vancomycin|Daptomycin|Linezolid|Azithromycin',0,'Vancomycin (plus telavancin, dalbavancin, oritavancin). Daptomycin is a lipopeptide; linezolid an oxazolidinone.'),
+Q('Classification','Tigecycline belongs to which class?','Glycylcyclines (tetracycline derivatives)|Macrolides|Aminoglycosides|Polymyxins',0,'It is a tetracycline analogue that evades most efflux and ribosomal-protection mechanisms.'),
+Q('Classification','Which cephalosporin has activity against Pseudomonas aeruginosa?','Ceftazidime|Ceftriaxone|Cefotaxime|Cefuroxime',0,'Ceftazidime and cefepime are antipseudomonal; ceftriaxone is not.'),
+Q('Classification','Ertapenem differs from meropenem because it:','Lacks Pseudomonas and Acinetobacter activity|Is a monobactam|Has MRSA activity|Is not stable to ESBLs',0,'Ertapenem is narrower (no non-fermenter coverage) but once daily, useful for community ESBL and OPAT.'),
+Q('Classification','Which drug is a streptogramin or oxazolidinone with VRE activity?','Linezolid|Cefazolin|Aztreonam|Gentamicin',0,'Linezolid (oxazolidinone) is active against VRE and MRSA.'),
+Q('MOA','Vancomycin binds to:','D-Ala-D-Ala terminus of peptidoglycan precursors|Penicillin-binding proteins|30S ribosome|DNA gyrase',0,'This blocks transglycosylation and transpeptidation steric access; VanA changes the terminus to D-Ala-D-Lac.'),
+Q('MOA','Which class binds the 30S subunit irreversibly and is bactericidal?','Aminoglycosides|Tetracyclines|Macrolides|Oxazolidinones',0,'Tetracyclines bind 30S reversibly (bacteriostatic); macrolides and oxazolidinones target 50S.'),
+Q('MOA','Fluoroquinolones inhibit:','DNA gyrase and topoisomerase IV|Dihydrofolate reductase|RNA polymerase|Peptidyl transferase',0,'Gyrase is the primary target in Gram-negatives; topo IV in Gram-positives.'),
+Q('MOA','TMP-SMX produces its synergistic effect by:','Sequential inhibition of DHPS and DHFR|Inhibiting gyrase and topo IV|Blocking 30S and 50S|Binding PBPs and β-lactamase',0,'Two steps in folate synthesis are blocked.'),
+Q('MOA','Daptomycin works by:','Ca²⁺-dependent insertion into the Gram-positive membrane causing depolarization|Inhibiting 50S|Binding LPS|Inhibiting RNA polymerase',0,'Rapid concentration-dependent bactericidal effect.'),
+Q('MOA','Rifampin inhibits:','The β-subunit of bacterial RNA polymerase|DNA gyrase|Folate synthesis|Cell wall transpeptidases',0,'Mutations in rpoB cause high-level resistance, so combine with other agents.'),
+Q('MOA','Metronidazole is active against anaerobes because:','Its nitro group is reduced to DNA-damaging radicals in low-redox conditions|It inhibits PBPs|It binds the 30S ribosome|It blocks folate synthesis',0,'Aerobes lack the ferredoxin-type reductive pathway.'),
+Q('MOA','Which is a bacteriostatic ribosomal inhibitor commonly used for atypical pneumonia?','Azithromycin|Gentamicin|Ceftriaxone|Colistin',0,'Macrolides block 50S elongation; atypicals are intracellular/cell-wall-deficient so β-lactams fail.'),
+Q('MOA','Avibactam is best described as:','A non-β-lactam β-lactamase inhibitor active against KPC, AmpC and some OXA enzymes|A cephalosporin|An aminoglycoside enhancer|An efflux pump inhibitor',0,'Not active against metallo-β-lactamases (NDM, VIM, IMP).'),
+Q('Spectrum','Which has reliable activity against Bacteroides fragilis?','Metronidazole|Aztreonam|Gentamicin|TMP-SMX',0,'Also carbapenems, pip-tazo, amoxicillin-clavulanate; clindamycin resistance is increasing.'),
+Q('Spectrum','Which does NOT have Pseudomonas activity?','Ertapenem|Cefepime|Meropenem|Piperacillin-tazobactam',0,'Ertapenem lacks non-fermenter activity.'),
+Q('Spectrum','Which does NOT reliably cover Legionella?','Ceftriaxone|Azithromycin|Levofloxacin|Doxycycline',0,'β-lactams do not reach or act effectively on intracellular atypicals.'),
+Q('Spectrum','Which is first-line for VRE faecium bacteremia?','Linezolid or high-dose daptomycin|Ampicillin|Vancomycin|Ceftriaxone',0,'E. faecium is typically ampicillin- and vancomycin-resistant.'),
+Q('Spectrum','Aminoglycosides lack activity against anaerobes because:','Uptake requires oxygen-dependent transport|They cannot bind ribosomes|They are destroyed by anaerobic enzymes|They are too polar to dissolve',0,'Aminoglycoside entry requires an electron-transport-driven proton motive force.'),
+Q('Spectrum','Which has intrinsic activity vs Stenotrophomonas maltophilia?','TMP-SMX|Meropenem|Ceftriaxone|Aztreonam',0,'Stenotrophomonas produces the L1 metallo-β-lactamase and is intrinsically carbapenem resistant; TMP-SMX is first-line.'),
+Q('Spectrum','Enterococci are intrinsically resistant to:','All cephalosporins|Ampicillin|Vancomycin (E. faecalis)|Linezolid',0,'Low-affinity PBPs mean cephalosporins have no reliable activity against Enterococcus.'),
+Q('Spectrum','Tigecycline should be avoided for bacteremia because:','Serum concentrations are low (large Vd)|It is nephrotoxic|It has no Gram-negative activity|It is ototoxic',0,'It distributes extensively into tissues; boxed warning for mortality too.'),
+Q('Spectrum','Listeria monocytogenes is reliably covered by:','Ampicillin|Ceftriaxone|Vancomycin|Cefepime',0,'Listeria is intrinsically resistant to cephalosporins; add ampicillin in meningitis for age >50 or immunocompromised.'),
+Q('Resistance','MRSA resistance to β-lactams is mediated by:','PBP2a encoded by mecA|β-lactamase hydrolysis|Efflux pumps|Porin loss',0,'PBP2a has low β-lactam affinity; ceftaroline is the exception.'),
+Q('Resistance','VanA-type resistance results from:','D-Ala-D-Lac substitution lowering vancomycin affinity|Thickened cell wall|Efflux pumps|Enzyme cleavage',0,'VanA confers high-level resistance to vancomycin and teicoplanin.'),
+Q('Resistance','Drug of choice for serious ESBL E. coli bacteremia:','Meropenem|Ceftriaxone|Cefepime|Piperacillin-tazobactam',0,'MERINO trial: lower mortality with meropenem than pip-tazo.'),
+Q('Resistance','For infections with inducible AmpC organisms (e.g., Enterobacter cloacae), avoid:','Ceftriaxone (risk of derepression on therapy)|Cefepime|Meropenem|Ertapenem',0,'Third-generation cephalosporins can select derepressed mutants; cefepime is usually stable.'),
+Q('Resistance','Which agent is active against KPC-producing Enterobacterales?','Ceftazidime-avibactam|Meropenem|Ertapenem|Ceftriaxone',0,'Also meropenem-vaborbactam and imipenem-relebactam.'),
+Q('Resistance','NDM-producing CRE are best treated with:','Cefiderocol or ceftazidime-avibactam + aztreonam|Meropenem-vaborbactam|Imipenem-relebactam|Ceftolozane-tazobactam',0,'Metallo-β-lactamases are not inhibited by avibactam, vaborbactam or relebactam.'),
+Q('Resistance','A positive D-test in S. aureus means:','Inducible clindamycin resistance (erm), so avoid clindamycin|Vancomycin resistance|Beta-lactamase production|FQ resistance',0,'Erythromycin-resistant, clindamycin-susceptible isolates may carry erm; D-zone indicates inducible resistance.'),
+Q('Resistance','Loss of the OprD porin in P. aeruginosa primarily reduces susceptibility to:','Carbapenems (imipenem > meropenem)|Ceftriaxone|Fluoroquinolones|Aminoglycosides',0,'OprD is the carbapenem entry channel in Pseudomonas.'),
+Q('Resistance','Which adjunct has anti-biofilm activity in staph prosthetic joint infection?','Rifampin (with a partner drug)|Aztreonam|Penicillin V|Colistin',0,'Never use rifampin alone; check interactions (CYP induction).'),
+Q('Resistance','Mcr-1 confers resistance to:','Colistin / polymyxins|Vancomycin|Rifampin|Fluoroquinolones',0,'Plasmid-mediated lipid A modification; a concern for pan-drug resistance.'),
+Q('Resistance','Most common mechanism of β-lactam resistance in Gram-negative bacilli:','β-lactamase production|PBP mutation|Ribosomal methylation|Folate bypass',0,'There are hundreds of β-lactamase variants (Ambler A–D).'),
+Q('PK/PD','The PK/PD index for β-lactams is:','fT>MIC|Cmax/MIC|AUC/MIC|Post-antibiotic effect',0,'Killing is maximal when concentrations stay above the MIC (~4× MIC saturates).'),
+Q('PK/PD','Extended or continuous infusion of piperacillin-tazobactam aims to:','Increase fT>MIC|Increase Cmax|Shorten half-life|Increase protein binding',0,'Lengthening infusion keeps concentrations above MIC for more of the interval.'),
+Q('PK/PD','The vancomycin AUC24/MIC target for serious MRSA infection is:','400–600|100–200|700–900|50–100',0,'Targeting AUC rather than trough lowers nephrotoxicity (2020 ASHP/IDSA guideline).'),
+Q('PK/PD','A drug with t½ = 4 h reaches steady state in about:','16–20 h|4 h|8 h|48 h',0,'About 4–5 half-lives.'),
+Q('PK/PD','In septic shock after large fluid resuscitation, hydrophilic antibiotics show:','Increased volume of distribution and lower concentrations|Decreased Vd|Increased half-life only|No change',0,'β-lactams, aminoglycosides and vancomycin distribute in extracellular fluid, so loading doses matter.'),
+Q('PK/PD','Which agent has a clinically important post-antibiotic effect vs Gram-negatives?','Aminoglycosides|Penicillins|Cephalosporins|Aztreonam',0,'PAE supports once-daily aminoglycoside dosing; β-lactams have little PAE vs GNR.'),
+Q('PK/PD','Loading dose = ?','Vd × target concentration|CL × target concentration|Ke × Vd|CL / F',0,'For Vd 49 L and target 20 mg/L, LD ≈ 980 mg.'),
+Q('PK/PD','Cockcroft-Gault CrCl for a 60-year-old man, 80 kg, SCr 1.0 mg/dL:','≈ 89 mL/min|≈ 45 mL/min|≈ 133 mL/min|≈ 67 mL/min',0,'(140−60)×80 / (72×1.0) = 88.9 mL/min.'),
+Q('PK/PD','The best dosing weight for aminoglycosides in an obese patient is typically:','Adjusted body weight|Actual body weight|Ideal body weight only|Lean body mass without adjustment',0,'AdjBW = IBW + 0.4 (TBW − IBW); aminoglycosides distribute poorly into fat.'),
+Q('PK/PD','Which PK/PD parameter best predicts fluoroquinolone efficacy against Gram-negative bacilli?','AUC24/MIC ≥ 125|fT>MIC 100%|Trough only|Time above toxic threshold',0,'Also Cmax/MIC ≥ 10 to suppress resistance.'),
+Q('Toxicity','Which antibiotic requires weekly CPK monitoring?','Daptomycin|Linezolid|Vancomycin|Aztreonam',0,'Consider holding statins; CPK > 10× ULN with symptoms warrants discontinuation.'),
+Q('Toxicity','Cefepime neurotoxicity is most likely in:','Renal impairment without dose adjustment|Hepatic failure|Hypokalemia|Obesity',0,'Presents as encephalopathy, myoclonus, non-convulsive status.'),
+Q('Toxicity','A boxed warning for tendon rupture applies to:','Fluoroquinolones|Macrolides|Tetracyclines|Cephalosporins',0,'Risk increased by age >60, steroids and transplant.'),
+Q('Toxicity','Tetracyclines are avoided in pregnancy and children <8 y because of:','Tooth discoloration / bone growth inhibition|Hepatic failure|Ototoxicity|Aplastic anemia',0,'Doxycycline short courses are sometimes accepted for specific indications.'),
+Q('Toxicity','Prolonged linezolid (> 2 weeks) most commonly causes:','Thrombocytopenia|Hypokalemia|Hepatic failure|Tendinopathy',0,'Also lactic acidosis, neuropathy and serotonin syndrome.'),
+Q('Toxicity','Clindamycin carries a boxed warning for:','C. difficile-associated colitis|QT prolongation|Hepatic failure|Ototoxicity',0,'Highest risk antibiotics for CDI include clindamycin, FQs and cephalosporins.'),
+Q('Toxicity','Colistin dose-limiting toxicity is:','Nephrotoxicity|Photosensitivity|Tendon rupture|Cytopenias',0,'Neurotoxicity also occurs; monitor SCr.'),
+Q('Toxicity','Aztreonam can be used in IgE-mediated penicillin allergy EXCEPT when the patient is allergic to:','Ceftazidime (shared side chain)|Meropenem|Vancomycin|Doxycycline',0,'Aztreonam and ceftazidime share an identical R1 side chain.'),
+Q('Toxicity','Ceftriaxone is contraindicated in neonates receiving:','Calcium-containing IV solutions|Dextrose|Vancomycin|Acetaminophen',0,'Fatal ceftriaxone-calcium precipitates in lungs/kidneys have been reported.'),
+Q('Toxicity','The most common cause of a rising SCr with TMP-SMX (without kidney injury) is:','Inhibition of tubular secretion of creatinine|Glomerular necrosis|Obstructive crystals only|Hemolysis',0,'Trimethoprim blocks secretion; true AKI is less common, and BUN is unchanged.'),
+Q('Interactions','Rifampin + warfarin results in:','Reduced INR; needs higher warfarin dose|Increased INR|No change|Increased platelet function',0,'CYP2C9/3A4 induction.'),
+Q('Interactions','Which combination is contraindicated?','Ciprofloxacin + tizanidine|Amoxicillin + acetaminophen|Azithromycin + atorvastatin|Doxycycline + metformin',0,'Ciprofloxacin (CYP1A2 inhibitor) raises tizanidine levels 10-fold → hypotension/sedation.'),
+Q('Interactions','Clarithromycin + simvastatin leads to:','Rhabdomyolysis risk via CYP3A4 inhibition|Reduced statin efficacy|Hypoglycemia|Hyperkalemia',0,'Avoid or hold the statin; azithromycin has less interaction.'),
+Q('Interactions','Levofloxacin should be separated from:','Calcium, magnesium, iron or aluminum products|Levothyroxine|Metoprolol|Omeprazole',0,'Chelation reduces absorption by up to 90%.'),
+Q('Interactions','Vancomycin + piperacillin-tazobactam is associated with:','Higher rates of AKI (serum creatinine elevation)|Seizures|Hypoglycemia|QT prolongation',0,'Consider cefepime or a different combination when both are needed.'),
+Q('Interactions','Metronidazole potentiates which agent?','Warfarin|Digoxin|Heparin|Rivaroxaban',0,'CYP2C9 inhibition; monitor INR closely.'),
+Q('Interactions','TMP-SMX + enalapril increases risk of:','Hyperkalemia|Hypokalemia|Hypoglycemia|Hyponatremia only',0,'Also with spironolactone, ARBs and potassium supplements.'),
+Q('Interactions','Which combination most increases QT risk?','Levofloxacin + ondansetron|Amoxicillin + omeprazole|Doxycycline + insulin|Cefazolin + metoprolol',0,'Additive QT prolongation; check K/Mg and ECG.'),
+Q('Interactions','Doxycycline should be separated from:','Antacids, iron and dairy|Acetaminophen|Insulin|Statins',0,'Divalent/trivalent cations reduce absorption.'),
+Q('Stewardship','An antibiotic "time-out" is performed at:','48–72 h after initiation|Day 14|Admission only|Discharge only',0,'Review cultures, diagnosis, allergy, and decide to stop, narrow, switch to PO or continue.'),
+Q('Stewardship','Asymptomatic bacteriuria in a non-pregnant patient (no urologic procedure) should be:','Not treated|Treated with FQ|Treated 7 days|Treated with nitrofurantoin',0,'Treatment promotes resistance and CDI; screen only in pregnancy and before urologic procedures.'),
+Q('Stewardship','A negative MRSA nasal PCR in pneumonia has an NPV of:','> 95% so vancomycin/linezolid can usually be stopped|< 50%|About 70%|Unrelated to MRSA pneumonia',0,'High NPV; combine with clinical context.'),
+Q('Stewardship','A PEN-FAST score < 3 suggests:','Low risk; consider direct oral amoxicillin challenge|High risk; avoid all β-lactams|Aztreonam only|Need for desensitization',0,'PEN-FAST: Five years or less, Anaphylaxis/angioedema or Severe cutaneous reaction, Treatment required.'),
+Q('Stewardship','Initial episode of C. difficile (non-fulminant) is preferably treated with:','Fidaxomicin (or oral vancomycin 125 mg QID × 10 d)|Metronidazole IV|Ceftriaxone|Oral rifampin',0,'IDSA/SHEA 2021: fidaxomicin preferred; vancomycin acceptable; metronidazole only if others unavailable (mild).'),
+Q('Stewardship','Duration for uncomplicated Gram-negative bacteremia with source control:','7 days|14 days|4 weeks|3 days',0,'Short courses (7 d) are non-inferior to 14 d.'),
+Q('Stewardship','Surgical prophylaxis for clean procedures should be given:','Within 60 min before incision, stopped ≤ 24 h post-op|Only after culture results|For 5 days|After the wound closes',0,'Cefazolin first-line; redose if surgery > 4 h or blood loss > 1.5 L.'),
+Q('Stewardship','Which metric is used to benchmark antibiotic use?','Days of therapy (DOT) per 1000 patient-days|Cost per vial|Number of prescribers|Length of stay only',0,'DOT is preferred over DDD in US hospitals.'),
+Q('Stewardship','Procalcitonin is most useful to:','Support stopping antibiotics in lower respiratory tract infection|Diagnose viral infection with certainty|Replace cultures|Dose vancomycin',0,'Low PCT with clinical stability supports withholding or discontinuing antibiotics.'),
+Q('Stewardship','Which is an example of de-escalation?','Switching from cefepime to ceftriaxone after culture identifies sensitive E. coli|Adding vancomycin|Increasing dose|Starting a second Gram-negative agent',0,'De-escalation narrows spectrum based on microbiology.'),
+Q('Stewardship','Blood culture growing coagulase-negative staph in 1 of 2 sets, no device:','Likely contaminant; do not treat|Treat with vancomycin 14 d|Treat with linezolid|Treat with cefepime',0,'Contamination is common; always correlate with clinical picture.'),
+Q('Clinical','First-line for uncomplicated cystitis in a healthy woman:','Nitrofurantoin 5 days|Levofloxacin 7 days|IV ceftriaxone|Linezolid',0,'Also fosfomycin single dose or TMP-SMX (if resistance <20%). Avoid FQs when alternatives exist.'),
+Q('Clinical','Outpatient CAP, no comorbidities or MRSA/PSA risk:','Amoxicillin (or doxycycline)|Levofloxacin|Ceftazidime|Vancomycin',0,'ATS/IDSA 2019. Macrolide only if local pneumococcal resistance < 25%.'),
+Q('Clinical','Treatment of early syphilis:','Benzathine penicillin G IM|Azithromycin|Doxycycline for 3 days|Ceftriaxone PO',0,'Single dose for primary/secondary/early latent; weekly × 3 for late latent.'),
+Q('Clinical','Empiric meningitis in adults 18–50:','Vancomycin + ceftriaxone + dexamethasone|Ampicillin alone|Gentamicin|Linezolid|',0,'Add ampicillin for age > 50 or immunocompromised (Listeria).'),
+Q('Clinical','MSSA endocarditis therapy:','Nafcillin/oxacillin or cefazolin|Vancomycin|Daptomycin|Linezolid',0,'β-lactams are superior to vancomycin for MSSA.'),
+Q('Clinical','Febrile neutropenia empiric therapy:','Antipseudomonal β-lactam (e.g., cefepime) within 60 min|Oral amoxicillin|Vancomycin alone|Fluconazole',0,'Add vancomycin only for specific indications.'),
+Q('Clinical','A patient with anaphylaxis to penicillin needs Gram-negative coverage. A reasonable option is:','Aztreonam (if not ceftazidime-allergic)|Ampicillin|Piperacillin-tazobactam|Nafcillin',0,'Allergy evaluation should follow.'),
+Q('Clinical','Which is contraindicated in pregnancy?','Doxycycline|Amoxicillin|Azithromycin|Cephalexin',0,'Tetracyclines are avoided; FQ are also usually avoided.'),
+Q('Clinical','Purulent cellulitis (abscess) in outpatient with MRSA risk:','I&D ± TMP-SMX or doxycycline|Ceftriaxone only|IV vancomycin always|Levofloxacin',0,'I&D is the cornerstone.'),
+Q('Clinical','Complicated intra-abdominal infection with adequate source control — duration:','About 4 days|14 days|10 days|Until CRP is normal',0,'STOP-IT trial.'),
+Q('Clinical','MRSA pneumonia first-line options include:','Vancomycin or linezolid|Daptomycin|Ceftriaxone|Tigecycline',0,'Daptomycin is inactivated by surfactant.'),
+Q('Clinical','For CAP with severe disease and MRSA risk factor, add:','Vancomycin or linezolid|Gentamicin|Metronidazole|Aztreonam',0,'Obtain nasal PCR to de-escalate.')
+].filter(q=>q.o.length>=2).map(q=>{q.o=q.o.filter(x=>x!=='');return q});
+CLS.forEach(c=>BANK.push(Object.assign({},c.q,{id:'cls-'+c.id})));
+BANK.forEach((q,i)=>{if(!q.id)q.id='q'+i});
+/* ============ CASES ============ */
+const CASES=[
+ {id:'cap',t:'Outpatient community-acquired pneumonia',v:'67-year-old woman with COPD and type 2 diabetes presents with 3 days of productive cough, fever 38.6 °C, RR 22, SpO₂ 93 %, BP 128/76. CXR: right lower lobe infiltrate. No antibiotics in past 90 days, no prior MRSA/Pseudomonas, CrCl 62 mL/min.',cult:null,
+  s:[Q('','Best empiric outpatient regimen?','Amoxicillin-clavulanate + azithromycin (or doxycycline)|Azithromycin alone|Ceftazidime|Vancomycin + cefepime',0,'ATS/IDSA 2019: comorbidities → β-lactam + macrolide/doxycycline, or respiratory FQ monotherapy.'),
+     Q('','Sputum culture grows penicillin-susceptible S. pneumoniae (MIC 0.03). Best action?','Narrow to amoxicillin (high dose)|Add vancomycin|Switch to levofloxacin|Escalate to meropenem',0,'Narrow to the narrowest effective agent; stop atypical coverage if urinary Legionella antigen/PCR negative.'),
+     Q('','Appropriate duration if clinically stable by day 3?','5 days total|14 days|21 days|3 days only',0,'Minimum 5 days and clinical stability (afebrile 48–72 h).')]},
+ {id:'hap',t:'Hospital-acquired pneumonia in the ICU',v:'58-year-old man intubated 6 days for pancreatitis; new fever 39.2 °C, purulent secretions, WBC 17, PaO₂/FiO₂ 180. Received ceftriaxone 4 days ago. Local MRSA prevalence in ICU is 25 %. Nasal MRSA PCR pending.',cult:'Day 2: ETT aspirate — P. aeruginosa (cefepime S, pip-tazo S, meropenem S, levofloxacin R, amikacin S). MRSA nasal PCR NEGATIVE.',
+  s:[Q('','Best empiric regimen before cultures?','Vancomycin (or linezolid) + antipseudomonal β-lactam (cefepime)|Ceftriaxone|Azithromycin|Ertapenem',0,'HAP/VAP with MDR risk: cover MRSA and Pseudomonas (IDSA/ATS 2016).'),
+     Q('','Culture shows susceptible P. aeruginosa and MRSA nasal PCR is negative. Best action?','Stop MRSA coverage; continue cefepime as monotherapy|Add levofloxacin|Continue all drugs 14 days|Switch to colistin',0,'MRSA PCR NPV > 95 %. Monotherapy with a susceptible antipseudomonal β-lactam is adequate; avoid FQ (resistant).'),
+     Q('','Appropriate duration and administration strategy?','7 days; consider extended-infusion cefepime|14 days|3 days|Until extubation',0,'7 days is recommended for HAP/VAP; extended infusion improves fT>MIC.')]},
+ {id:'esbl',t:'Pyelonephritis with ESBL E. coli',v:'44-year-old woman, flank pain, fever 39 °C, HR 112, SCr 1.0. Prior ESBL UTI 8 months ago. UA: pyuria, nitrite +. Blood cultures drawn.',cult:'48 h: E. coli in blood and urine. Ceftriaxone R, cefepime R, pip-tazo I, ertapenem S, meropenem S, levofloxacin R, TMP-SMX S, gentamicin S.',
+  s:[Q('','Best empiric therapy given prior ESBL?','Meropenem or ertapenem|Ceftriaxone|Nitrofurantoin|Cefazolin',0,'Prior ESBL colonization/infection within 12 mo predicts recurrence; use a carbapenem.'),
+     Q('','After clinical improvement, best oral step-down based on susceptibilities?','TMP-SMX|Levofloxacin|Amoxicillin-clavulanate|Cefpodoxime',0,'Oral step-down is acceptable with a susceptible, bioavailable agent. FQ is resistant; β-lactams unreliable.'),
+     Q('','Duration for bacteremic pyelonephritis with source control?','7 days total|14 days|21 days|3 days',0,'7 days is non-inferior to 14 d in uncomplicated GNR bacteremia with source control.')]},
+ {id:'sab',t:'Staphylococcus aureus bacteremia',v:'62-year-old man with hemodialysis catheter, fever, WBC 15. 2/2 blood cultures: GPC in clusters. Rapid PCR detects S. aureus; mecA POSITIVE. Allergy: none.',cult:'Day 3: MRSA, vancomycin MIC 1 (BMD). Repeat cultures day 3 still positive; day 5 negative. TTE negative; TEE shows 8 mm mitral vegetation.',
+  s:[Q('','Optimal initial therapy?','Vancomycin AUC-guided (AUC24 400–600) or daptomycin|Cefazolin|Ceftriaxone|Linezolid',0,'IDSA MRSA guidelines. Remove infected catheter and obtain ID consult.'),
+     Q('','Why is TEE now essential?','Persistent bacteremia > 72 h and high endocarditis risk|Check lung function|Replace blood cultures|Determine MIC',0,'S. aureus bacteremia carries ~ 10–20% IE risk; vegetation changes duration.'),
+     Q('','Expected duration with endocarditis?','4–6 weeks from first negative culture|14 days|7 days|3 days',0,'Complicated SAB requires 4–6 weeks.')]},
+ {id:'iai',t:'Perforated appendicitis',v:'31-year-old man with 2 days of RLQ pain; CT shows perforated appendicitis with abscess. T 38.7, WBC 19, hemodynamically stable. NKDA.',cult:'Operative cultures: E. coli (ceftriaxone S), B. fragilis, viridans strep.',
+  s:[Q('','Best empiric regimen?','Ceftriaxone + metronidazole (or pip-tazo)|Vancomycin|Levofloxacin alone|Aztreonam alone',0,'Cover Enterobacterales and anaerobes. Source control is critical.'),
+     Q('','Cultures show susceptible organisms. Next step?','Continue current regimen; do not extend spectrum|Add vancomycin|Switch to meropenem|Add micafungin',0,'The regimen already covers the isolates.'),
+     Q('','Duration after adequate source control?','About 4 days|10–14 days|21 days|Until WBC is < 4',0,'STOP-IT: 4 days fixed duration equals longer courses.')]},
+ {id:'ssti',t:'Purulent skin and soft tissue infection',v:'28-year-old man, 5 cm fluctuant right forearm abscess with 8 cm surrounding erythema, T 38.1, HR 98. Prior MRSA contact. Allergy: penicillin (rash age 5).',cult:'Culture: MRSA, TMP-SMX S, doxycycline S, clindamycin R (D-test +).',
+  s:[Q('','Essential first intervention?','Incision and drainage|IV vancomycin only|Oral cephalexin only|Topical mupirocin only',0,'I&D is the cornerstone; antibiotics adjunctive.'),
+     Q('','Best oral agent?','TMP-SMX or doxycycline|Clindamycin|Cephalexin|Amoxicillin',0,'Clindamycin is resistant (D-test +); cephalexin lacks MRSA activity.'),
+     Q('','Which finding would change management to IV therapy?','SIRS/systemic toxicity or failure of drainage|Mild pain|Presence of a drain|Penicillin allergy label',0,'IDSA: systemic illness or failure of I&D.')]},
+ {id:'men',t:'Bacterial meningitis',v:'55-year-old alcoholic man with fever, neck stiffness and confusion. CSF: WBC 2400 (95 % PMN), glucose 18, protein 280. Gram stain: GPC in pairs.',cult:'CSF culture: S. pneumoniae, penicillin MIC 0.03, ceftriaxone S.',
+  s:[Q('','Best empiric regimen?','Vancomycin + ceftriaxone + ampicillin + dexamethasone|Ceftriaxone alone|Azithromycin|Gentamicin|',0,'Age > 50 / alcoholism → add ampicillin for Listeria; dexamethasone before or with first antibiotic dose.'),
+     Q('','Culture shows PCN-susceptible pneumococcus. De-escalate to:','Penicillin G or ceftriaxone alone; stop vancomycin and ampicillin|Continue all three|Add rifampin|Switch to meropenem',0,'Narrow to the best active agent; dexamethasone continued for 4 days.'),
+     Q('','Total duration for pneumococcal meningitis?','10–14 days|3 days|5 days|6 weeks',0,'Typically 10–14 days.')]},
+ {id:'cre',t:'CRE bacteremia',v:'70-year-old man in ICU with central line. Fever, hypotension, lactate 4.5. Prior carbapenem exposure; rectal swab positive for CRE earlier this admission. SCr 1.8 (CrCl 38).',cult:'Blood: K. pneumoniae. Meropenem R (MIC 16), ertapenem R, ceftriaxone R, ceftazidime-avibactam S, colistin S, tigecycline I. Molecular: blaKPC detected, NDM negative.',
+  s:[Q('','Best therapy for KPC-producing K. pneumoniae?','Ceftazidime-avibactam (renally adjusted)|Meropenem standard dose|Ertapenem|Ceftriaxone + gentamicin',0,'IDSA AMR guidance: ceftazidime-avibactam, meropenem-vaborbactam, or imipenem-relebactam preferred over polymyxins.'),
+     Q('','Why avoid tigecycline as the main drug?','Low serum levels and a boxed mortality warning|It is not active vs Gram-negative organisms|It requires dialysis|It is nephrotoxic',0,'Tigecycline is a poor choice in bloodstream infection.'),
+     Q('','Which additional intervention is critical?','Remove/replace the central line and infection control isolation|Add an antifungal|Stop all antibiotics|Switch to oral therapy immediately',0,'Source control and contact precautions limit spread.')]}
+];
+/* ============ MATCHING ============ */
+const MATCH={
+ 'Drug → Class':[['Vancomycin','Glycopeptide'],['Aztreonam','Monobactam'],['Meropenem','Carbapenem'],['Linezolid','Oxazolidinone'],['Daptomycin','Lipopeptide'],['Gentamicin','Aminoglycoside'],['Levofloxacin','Fluoroquinolone'],['Doxycycline','Tetracycline'],['Metronidazole','Nitroimidazole'],['Colistin','Polymyxin'],['Rifampin','Rifamycin'],['Azithromycin','Macrolide'],['Nafcillin','Penicillin'],['Ceftriaxone','Cephalosporin']],
+ 'Drug → Mechanism':[['Penicillin','Binds PBPs, blocks peptidoglycan cross-linking'],['Vancomycin','Binds D-Ala-D-Ala'],['Gentamicin','Irreversibly binds 30S, misreading'],['Doxycycline','Blocks tRNA at 30S A-site'],['Azithromycin','Binds 50S exit tunnel'],['Linezolid','Blocks 70S initiation complex'],['Ciprofloxacin','Inhibits DNA gyrase / topo IV'],['Rifampin','Inhibits RNA polymerase β-subunit'],['TMP-SMX','Sequential folate blockade'],['Daptomycin','Depolarizes Gram+ membrane (Ca²⁺)'],['Colistin','Disrupts LPS / outer membrane'],['Metronidazole','Radical DNA damage in anaerobes']],
+ 'Drug → Key Toxicity':[['Gentamicin','Nephro- and ototoxicity'],['Linezolid','Thrombocytopenia, serotonin syndrome'],['Daptomycin','CPK elevation / myopathy'],['Levofloxacin','Tendon rupture, QT, CNS'],['Cefepime','Encephalopathy in renal failure'],['TMP-SMX','Hyperkalemia, SJS, ↑SCr'],['Vancomycin','Nephrotoxicity, infusion reaction'],['Clindamycin','C. difficile colitis'],['Tigecycline','Increased mortality'],['Rifampin','CYP450 induction'],['Metronidazole','Neuropathy, ↑INR with warfarin'],['Doxycycline','Photosensitivity, teeth staining']],
+ 'Organism → Drug of Choice':[['MRSA bacteremia','Vancomycin (AUC) or daptomycin'],['VRE faecium','Linezolid / daptomycin'],['MSSA bacteremia','Cefazolin or nafcillin'],['ESBL E. coli','Meropenem'],['KPC-Klebsiella','Ceftazidime-avibactam'],['Syphilis','Benzathine penicillin G'],['Legionella','Azithromycin or levofloxacin'],['Stenotrophomonas','TMP-SMX'],['B. fragilis','Metronidazole'],['Listeria','Ampicillin'],['C. difficile (initial)','Fidaxomicin / oral vancomycin'],['Pseudomonas (susceptible)','Cefepime or pip-tazo']]
+};
+/* ============ DECISION TREES ============ */
+const TREES={
+ sepsis:{t:'Empiric therapy for sepsis (unknown source)',start:'a',nodes:{
+  a:{q:'Is the patient in septic shock or severely unstable?',o:[['Yes: shock / organ dysfunction','b'],['No: stable sepsis','c']]},
+  b:{q:'Any MRSA risk (prior MRSA, IV drug use, indwelling catheter, MRSA colonization)?',o:[['Yes','d'],['No','e']]},
+  c:{q:'Any MDR risk (IV antibiotics in 90 d, prior ESBL/CRE, long-term care)?',o:[['Yes','f'],['No','g']]},
+  d:{q:'Prior ESBL or Pseudomonas / high local resistance?',o:[['Yes','h'],['No','i']]},
+  e:{q:'Prior ESBL or Pseudomonas / high local resistance?',o:[['Yes','j'],['No','k']]},
+  f:{q:'Prior ESBL colonization or infection?',o:[['Yes','j'],['No','l']]},
+  g:{end:1,rec:'Ceftriaxone ± source-directed therapy (ceftriaxone + metronidazole for abdominal source).',why:'Narrowest effective empiric choice; obtain cultures first, reassess at 48–72 h.',pearl:'Do not add vancomycin or antipseudomonal agents without a risk factor.'},
+  h:{end:1,rec:'Vancomycin (AUC-guided) + meropenem.',why:'Covers MRSA, ESBL and Pseudomonas in shock.',pearl:'Stop vancomycin early if MRSA PCR is negative; narrow with cultures.'},
+  i:{end:1,rec:'Vancomycin + cefepime (or pip-tazo).',why:'Covers MRSA and most Gram-negatives including Pseudomonas.',pearl:'Avoid vancomycin + pip-tazo when possible (AKI); prefer cefepime.'},
+  j:{end:1,rec:'Meropenem (add vancomycin only if MRSA risk).',why:'ESBL risk: carbapenem is drug of choice.',pearl:'Ertapenem is an option if Pseudomonas is not a concern and the patient is stable.'},
+  k:{end:1,rec:'Cefepime (or pip-tazo) ± vancomycin only if an MRSA source is suspected.',why:'Broad Gram-negative coverage including Pseudomonas without a carbapenem.',pearl:'Give the first dose within 1 hour; use extended infusion in severe sepsis.'},
+  l:{end:1,rec:'Cefepime or pip-tazo; consider adding vancomycin if skin/line source.',why:'MDR risk without ESBL history: antipseudomonal β-lactam.',pearl:'De-escalate once cultures return.'}}},
+ allergy:{t:'Penicillin allergy evaluation',start:'a',nodes:{
+  a:{q:'Was the reaction a severe cutaneous reaction (SJS/TEN/DRESS) or organ injury (hepatitis, nephritis, hemolysis)?',o:[['Yes','b'],['No','c']]},
+  b:{end:1,rec:'Avoid penicillins; do not rechallenge. Refer to allergy; cephalosporins with dissimilar side chains may be considered with specialist input.',why:'Delayed severe reactions are contraindications to rechallenge.',pearl:'Document the reaction clearly in the EHR.'},
+  c:{q:'Anaphylaxis, angioedema, or reaction within the past 5 years requiring treatment?',o:[['Yes','d'],['No','e']]},
+  d:{q:'Does the patient need a β-lactam during this admission?',o:[['Yes','f'],['No','g']]},
+  e:{q:'PEN-FAST score < 3 (low risk)?',o:[['Yes, low risk','h'],['No, ≥ 3','i']]},
+  f:{end:1,rec:'Use a β-lactam with a dissimilar side chain (e.g., cefazolin has unique R1; ceftriaxone is dissimilar to amoxicillin) or aztreonam; refer for testing.',why:'Cross-reactivity depends on side-chain similarity, not the β-lactam ring.',pearl:'Do NOT use ceftazidime with aztreonam in ceftazidime allergy.'},
+  g:{end:1,rec:'Outpatient allergy referral for skin testing / graded challenge.',why:'Most patients (> 90 %) are not truly allergic on evaluation.',pearl:'Delabel after negative challenge to reduce use of broad-spectrum alternatives.'},
+  h:{end:1,rec:'Direct oral amoxicillin challenge (supervised).',why:'< 5 % risk of positive testing.',pearl:'Remove allergy label from the chart if tolerated.'},
+  i:{end:1,rec:'Skin testing (penicilloyl-polylysine and penicillin G) followed by oral challenge.',why:'Moderate/high risk requires allergist-driven testing.',pearl:'Use non-β-lactam alternatives until testing is completed.'}}},
+ sab:{t:'Staphylococcus aureus bloodstream infection',start:'a',nodes:{
+  a:{q:'Rapid PCR / susceptibility result?',o:[['MSSA (mecA negative)','b'],['MRSA (mecA positive)','c'],['Pending','d']]},
+  d:{end:1,rec:'Start vancomycin empirically until PCR/cultures finalize; switch to cefazolin/nafcillin if MSSA.',why:'Delay increases mortality.',pearl:'Repeat blood cultures q24–48 h until negative; remove lines.'},
+  b:{q:'Complicated disease: persistent bacteremia > 72 h, endocarditis, implanted device, metastatic infection, or no defervescence?',o:[['Yes','e'],['No','f']]},
+  c:{q:'Complicated disease: persistent bacteremia > 72 h, endocarditis, implanted device, metastatic infection, or no defervescence?',o:[['Yes','g'],['No','h']]},
+  e:{end:1,rec:'Cefazolin or nafcillin/oxacillin for 4–6 weeks; echocardiography; ID consult.',why:'β-lactams are superior to vancomycin for MSSA.',pearl:'Cefazolin has fewer adverse effects than nafcillin.'},
+  f:{end:1,rec:'Cefazolin or nafcillin for at least 14 days from first negative culture.',why:'Uncomplicated SAB with negative follow-up cultures and echocardiogram.',pearl:'Do not shorten without full exclusion of complications.'},
+  g:{end:1,rec:'Vancomycin (AUC 400–600) or daptomycin 8–10 mg/kg for 4–6 weeks; TEE; source control.',why:'Persistent MRSA bacteremia → consider combination or switch.',pearl:'Daptomycin is not for pneumonia.'},
+  h:{end:1,rec:'Vancomycin or daptomycin for ≥ 14 days from first negative culture.',why:'Uncomplicated MRSA bacteremia with all criteria met.',pearl:'Obtain echocardiogram; document clearance.'}}},
+ uti:{t:'Urinary tract infection',start:'a',nodes:{
+  a:{q:'Does the patient have urinary or systemic symptoms?',o:[['No, only positive urine culture/UA','b'],['Yes','c']]},
+  b:{end:1,rec:'Do not treat asymptomatic bacteriuria (exceptions: pregnancy, before urologic procedures with mucosal bleeding).',why:'Treatment adds resistance and CDI without benefit.',pearl:'Avoid urine testing without symptoms.'},
+  c:{q:'Fever, flank pain, sepsis, male sex, catheter, pregnancy or obstruction?',o:[['No (uncomplicated cystitis)','d'],['Yes (complicated / pyelonephritis)','e']]},
+  d:{end:1,rec:'Nitrofurantoin 100 mg BID × 5 d (CrCl ≥ 30), TMP-SMX × 3 d if local resistance < 20 %, or fosfomycin 3 g × 1.',why:'IDSA: narrow, low-collateral-damage agents first.',pearl:'Avoid FQs for uncomplicated cystitis.'},
+  e:{q:'Risk of ESBL / MDR (prior ESBL, recent antibiotics, travel)?',o:[['Yes','f'],['No','g']]},
+  f:{end:1,rec:'Ertapenem or meropenem (if septic or Pseudomonas risk); oral step-down per susceptibilities (TMP-SMX or FQ).',why:'ESBL needs a carbapenem initially.',pearl:'Duration 7 days if prompt response.'},
+  g:{end:1,rec:'Ceftriaxone IV (or FQ if local resistance < 10 %); step down to oral per culture; 7 days.',why:'Typical Enterobacterales susceptible to ceftriaxone.',pearl:'Obtain cultures before antibiotics; image if no response in 48–72 h.'}}}
+};
+/* ============ STEWARDSHIP ============ */
+const POL=[
+ {id:'paf',n:'Prospective audit & feedback',c:3,d:'Pharmacist/ID review of broad-spectrum use with real-time recommendations',e:{dot:-.09,cdi:-.12,res:-.05,sp:-.08,ap:7}},
+ {id:'pre',n:'Preauthorization (restricted agents)',c:2,d:'Approval needed for carbapenems, linezolid, daptomycin, etc.',e:{dot:-.06,cdi:-.05,res:-.04,sp:-.12,ap:1}},
+ {id:'rdt',n:'Rapid diagnostics (MRSA PCR, blood culture ID)',c:3,d:'Species/resistance gene ID in ~ 1–2 hours',e:{dot:-.07,cdi:-.03,res:-.03,sp:.03,ap:8}},
+ {id:'to',n:'48–72 h antibiotic time-out',c:1,d:'Mandatory reassessment: stop, narrow, PO switch, or continue',e:{dot:-.08,cdi:-.06,res:-.03,sp:-.05,ap:4}},
+ {id:'ivpo',n:'IV-to-PO conversion',c:1,d:'Criteria-based switch for highly bioavailable agents',e:{dot:0,cdi:0,res:0,sp:-.06,ap:1}},
+ {id:'pen',n:'Penicillin allergy delabeling',c:2,d:'PEN-FAST triage and direct oral challenges',e:{dot:-.03,cdi:-.05,res:-.03,sp:-.03,ap:5}},
+ {id:'dur',n:'Duration pathways & order sets',c:1,d:'Default short courses (CAP 5 d, cUTI 7 d, IAI 4 d)',e:{dot:-.08,cdi:-.05,res:-.02,sp:-.04,ap:4}},
+ {id:'edu',n:'Education / prescriber feedback',c:1,d:'Lectures, antibiogram distribution, peer comparison',e:{dot:-.02,cdi:-.01,res:-.01,sp:-.01,ap:1}}
+];
+const CONSULT=[
+ {t:'Day 3 vancomycin for pneumonia. MRSA nasal PCR is negative, sputum shows normal flora, patient improving.',o:[['Discontinue vancomycin',2,'MRSA nares PCR has NPV >95% for MRSA pneumonia, so stop.'],['Continue 7 days',0,'Unnecessary exposure; nephrotoxicity risk.'],['Switch to linezolid',0,'Still unnecessary MRSA coverage.']]},
+ {t:'84-year-old nursing home resident, afebrile, no urinary symptoms. UA positive (foul-smelling). Started on ciprofloxacin.',o:[['Stop antibiotics (asymptomatic bacteriuria)',2,'ASB is not treated in non-pregnant patients without urologic procedures.'],['Change to nitrofurantoin',0,'Still treating ASB.'],['Complete 3 days',0,'No benefit and risk of harm.']]},
+ {t:'Cellulitis improving on IV cefazolin day 3. Afebrile, eating, WBC normalized.',o:[['Switch to oral cephalexin',2,'Highly bioavailable oral agent; shorten IV exposure.'],['Continue IV 10 days',0,'Unnecessary line days.'],['Add vancomycin',0,'No MRSA evidence; non-purulent cellulitis.']]},
+ {t:'Laparoscopic cholecystectomy (low risk). Orders: cefazolin q8h × 72 h post-op.',o:[['Single pre-op dose (≤ 24 h)',2,'Prophylaxis within 60 min before incision, stop ≤ 24 h.'],['Continue until drains out',0,'No evidence.'],['Change to pip-tazo',0,'Unnecessarily broad.']]},
+ {t:'1 of 2 blood culture sets grows coagulase-negative staph at 36 h. Patient afebrile, no hardware. Vancomycin started.',o:[['Likely contaminant: stop vancomycin',2,'Single-set CoNS without risk factors is usually contamination.'],['Treat 14 days',0,'Not indicated.'],['Switch to linezolid',0,'Not indicated.']]},
+ {t:'C. difficile PCR ordered in a patient on lactulose with formed stool.',o:[['Cancel test; test only for ≥ 3 unformed stools/24 h without laxatives',2,'Avoid false-positive colonization diagnoses.'],['Test and treat with metronidazole if positive',0,'Colonization risk; also metronidazole is not first-line.'],['Start empiric oral vancomycin',0,'Not indicated.']]},
+ {t:'MSSA bacteremia in a patient labeled "penicillin allergy (rash, age 6)". Vancomycin ordered.',o:[['Evaluate allergy (PEN-FAST); use cefazolin or delabel',2,'Low-risk history; β-lactams are superior to vancomycin for MSSA.'],['Continue vancomycin',0,'Inferior outcomes versus β-lactams.'],['Add rifampin',0,'No indication.']]},
+ {t:'CAP day 3: on pip-tazo + vancomycin, cultures negative, PCT 0.1, afebrile, WBC normal.',o:[['De-escalate to ceftriaxone / oral amoxicillin and plan stop date',2,'No MDR risk; narrow and shorten.'],['Continue both for 10 days',0,'Excess exposure.'],['Escalate to meropenem',0,'No indication.']]}
+];
+/* ============ SVG BUILDERS ============ */
+const TG={wall:[200,58,200,8],p30:[175,142,175,8],p50:[225,138,225,8],dna:[200,108,200,8],rna:[258,150,258,8],fol:[135,168,135,8],memb:[332,130,392,130]};
+function cellSVG(key,label){
+  const t=TG[key];let parts='';
+  if(t)for(let i=0;i<5;i++){const o=(i-2)*12;const sx=key==='memb'?t[2]:t[2]+o,sy=key==='memb'?t[3]+o:t[3],ex=key==='memb'?t[0]:t[0]+(i-2)*3,ey=key==='memb'?t[1]+(i-2)*3:t[1];
+    parts+=`<circle class="dp" r="5" opacity="0"><animateMotion dur="3.2s" begin="${i*.55}s" repeatCount="indefinite" path="M${sx},${sy} L${ex},${ey}"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.15;.85;1" dur="3.2s" begin="${i*.55}s" repeatCount="indefinite"/></circle>`}
+  return `<svg viewBox="0 0 400 260" data-k="${key||''}" role="img" aria-label="${label||'Bacterial cell with antibiotic targets'}">
+  <g class="cellbody"><rect class="cwall" x="60" y="55" width="280" height="150" rx="75"/><rect class="cmemb" x="70" y="65" width="260" height="130" rx="65"/><rect class="cmemb2" x="70" y="65" width="260" height="130" rx="65" fill="none" stroke="none"/>
+  <path class="cdna" d="M168 100c14-18 28 0 42-8s26 10 34 4 8 20-8 24-28-6-40 0-30 4-34-8 6-12 6-12z"/>
+  <g class="cr50"><circle cx="225" cy="138" r="8"/></g><g class="cr30"><circle cx="225" cy="129" r="5"/></g>
+  <g class="cr50"><circle cx="175" cy="142" r="8"/></g><g class="cr30"><circle cx="175" cy="133" r="5"/></g>
+  <g class="cr50"><circle cx="150" cy="118" r="8"/></g><g class="cr30"><circle cx="150" cy="109" r="5"/></g>
+  <ellipse class="crna" cx="258" cy="150" rx="11" ry="8"/><rect class="cfol" x="118" y="160" width="34" height="16" rx="8"/></g>
+  <g font-size="9" text-anchor="middle"><text x="200" y="48">cell wall</text><text x="258" y="170">RNA pol</text><text x="135" y="190">folate path</text><text x="200" y="88">DNA</text><text x="200" y="165">70S ribosomes</text><text x="332" y="95">membrane</text></g>${parts}</svg>`;
+}
+function P(path,n,cls,dur,begin=0,fade=true){let s='';for(let i=0;i<n;i++)s+=`<circle class="${cls}" r="5" opacity="0"><animateMotion dur="${dur}s" begin="${begin+i*.5}s" repeatCount="indefinite" path="${path.replace(/\{o\}/g,(i-1)*12)}"/>${fade?`<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.1;.85;1" dur="${dur}s" begin="${begin+i*.5}s" repeatCount="indefinite"/>`:''}</circle>`;return s}
+function sceneSVG(type,mode){
+  const ok=mode==='over';
+  const bact=`<rect x="250" y="35" width="160" height="150" rx="55" fill="var(--accent-soft)" stroke="#8a6d3b" stroke-width="7"/>`;
+  let body='',cap='';
+  const drug=(path,n=3,begin=0)=>P(path,n,'dp',3.4,begin),alt=(path,n=3,begin=0)=>`<g>${P(path,n,'alt',3.4,begin)}</g>`;
+  const css='<style>.alt{fill:#16a34a;stroke:var(--surface);stroke-width:1}</style>';
+  if(type==='enzyme'){
+    body=bact+`<path d="M272 110 l26 -16 a30 30 0 1 0 0 32z" transform="translate(0,0)" fill="${ok?'#9ca3af':'#f97316'}" opacity=".95"/><text x="285" y="150" font-size="10" text-anchor="middle">enzyme</text>
+    <rect x="338" y="92" width="22" height="36" rx="6" fill="${ok?'var(--bad)':'var(--good)'}"/><text x="349" y="148" font-size="10" text-anchor="middle">PBP</text>`;
+    if(ok){body+=alt('M20,{o}70 L275,110',2)+drug('M20,150 L330,110',3,.8);cap='Inhibitor (green) occupies the enzyme; intact drug (blue) reaches the PBP: wall synthesis is blocked.'}
+    else{body+=drug('M20,{o}110 L275,110',4)+`<text x="285" y="78" font-size="16" text-anchor="middle">✂</text>`;cap='Enzyme cleaves the drug before the PBP. The cell keeps building its wall.'}
+  }else if(type==='target'){
+    body=bact+`<path d="M340 90 l10 10 -10 10 10 10 -10 10 10 10" fill="none" stroke="${ok?'var(--good)':'var(--bad)'}" stroke-width="6"/><text x="350" y="148" font-size="10" text-anchor="middle">${ok?'alt. drug fits':'altered target'}</text>`;
+    if(ok){body+=alt('M20,{o}110 L335,112',4);cap='A drug that recognises the altered target (e.g., ceftaroline-PBP2a, linezolid-ribosome) still binds.'}
+    else{body+=`<g>`+P('M20,{o}110 L335,112 L300,70 L20,40',4,'dp',3.6)+`</g>`;cap='Mutated or remodelled target (PBP2a, D-Ala-D-Lac, gyrA) no longer binds drug; the drug bounces off.'}
+  }else if(type==='efflux'){
+    body=bact+`<rect x="246" y="92" width="14" height="40" rx="5" fill="${ok?'#9ca3af':'#7c3aed'}"/><text x="253" y="150" font-size="10" text-anchor="middle">pump</text><rect x="345" y="90" width="22" height="36" rx="6" fill="var(--good)"/>`;
+    if(ok){body+=alt('M20,{o}110 L350,110',4);cap='A non-substrate drug (or pump inhibitor) accumulates to inhibitory concentrations.'}
+    else{body+=P('M20,{o}110 L300,110 L253,60 L253,12 L100,12',4,'dp',4);cap='Drug enters, then the pump exports it, so intracellular concentration stays below MIC.'}
+  }else if(type==='perm'){
+    body=bact+`<rect x="246" y="100" width="12" height="${ok?10:34}" rx="4" fill="${ok?'#16a34a':'var(--bad)'}"/><text x="252" y="156" font-size="10" text-anchor="middle">${ok?'siderophore route':'porin lost'}</text><rect x="345" y="90" width="22" height="36" rx="6" fill="var(--good)"/>`;
+    if(ok){body+=drug('M20,{o}110 L240,110 L240,122',3)+alt('M20,70 L246,70 L330,112',3,.8)+'';cap='Cefiderocol hitches a ride through iron-uptake channels, bypassing the lost porin.'}
+    else{body+=P('M20,{o}110 L240,110 L215,80 L20,60',4,'dp',3.4);cap='Without OprD/OmpK porins the hydrophilic drug cannot cross the outer membrane.'}
+  }else{
+    let blobs='';for(let i=0;i<(ok?6:22);i++){const a=i*2.4,r=18+(i%5)*5;blobs+=`<circle cx="${330+Math.cos(a)*(95+r)*.9}" cy="${110+Math.sin(a)*(68+r)}" r="${10+i%4*2}" fill="#a855f7" opacity=".28"/>`}
+    body=blobs+bact+`<rect x="320" y="92" width="22" height="36" rx="6" fill="var(--good)"/>`;
+    if(ok){body+=alt('M20,{o}110 L325,110',4);cap='Device removal / debridement and penetrant agents (rifampin + partner) reach cells in a thinner matrix.'}
+    else{body+=P('M20,{o}110 L200,110',4,'dp',3.2);cap='The matrix binds and slows the drug; deep cells are dormant "persisters".'}
+  }
+  return `<svg viewBox="0 0 420 200" role="img" aria-label="${type} resistance scene">${css}${body}</svg><p class="crumb" style="margin:6px 4px">${cap}</p>`;
+}
+/* ============ ROUTER / DASHBOARD ============ */
+function touch(mod,key,goal){S.res[mod]=S.res[mod]||{};if(!S.res[mod][key]){S.res[mod][key]=1;save();addXP(1)}}
+const prog=m=>clamp(Object.keys(S.res[m.id]||{}).length/m.goal,0,1);
+const MODS=[
+ {id:'classes',n:'Antibiotic Classes Explorer',ic:'🧪',d:'15 classes with mechanisms, spectra, warnings and resistance.',goal:15,render:mClasses},
+ {id:'moa',n:'Mechanism of Action Laboratory',ic:'🔬',d:'Activate each target in an animated bacterial cell.',goal:7,render:mMoa},
+ {id:'battle',n:'Bacterial Cell Battle Simulator',ic:'⚔️',d:'Pick a bug and a drug. Watch kill, regrowth and resistance.',goal:9,render:mBattle},
+ {id:'spectrum',n:'Antimicrobial Spectrum Visualizer',ic:'🌡️',d:'Compare three antibiotics on a live heat map and radar.',goal:6,render:mSpectrum},
+ {id:'resist',n:'Resistance Mechanisms Center',ic:'🧬',d:'See how resistance arises, defeats therapy, and is overcome.',goal:8,render:mResist},
+ {id:'pkpd',n:'PK/PD Antibiotic Simulator',ic:'📈',d:'Concentration-time curves, targets and dose optimization.',goal:6,render:mPkpd},
+ {id:'steward',n:'Hospital Stewardship Command Center',ic:'🏥',d:'Allocate your ASP budget and answer consults.',goal:8,render:mSteward},
+ {id:'cases',n:'Infectious Disease Case Challenge',ic:'🩺',d:'8 multi-step cases from empiric to targeted therapy.',goal:8,render:mCases},
+ {id:'match',n:'Antibiotic Matching Game',ic:'🧩',d:'Timed pairing of drugs, classes, MOA and toxicities.',goal:4,render:mMatch},
+ {id:'tree',n:'Clinical Decision Tree',ic:'🌳',d:'Walk through empiric, allergy, S. aureus and UTI pathways.',goal:4,render:mTree},
+ {id:'quiz',n:'Mega Quiz Bank',ic:'📝',d:`${BANK.length}+ NAPLEX-style questions with explanations.`,goal:40,render:mQuiz},
+ {id:'stats',n:'Performance Analytics',ic:'📊',d:'Accuracy by topic, badges, weak areas and export.',goal:1,render:mStats}
+];
+let cleanups=[];const onLeave=f=>cleanups.push(f);
+function route(){
+  cleanups.forEach(f=>{try{f()}catch(e){}});cleanups=[];
+  const id=(location.hash||'').replace(/^#\/?/,'');const m=MODS.find(x=>x.id===id);const app=$('#app');
+  app.innerHTML='';const v=document.createElement('div');v.className='view';app.appendChild(v);
+  if(!m){renderHome(v);document.title='Antibiotics Pharmacology & Stewardship Simulator'}
+  else{const first=!S.visited[id];S.visited[id]=1;if(m.id==='stats')S.res.stats={a:1};save();if(first)addXP(10);
+    v.innerHTML=`<div class="mhead"><button class="btn ghost sm" id="back">← Dashboard</button><h2>${m.ic} ${m.n}</h2></div><div id="mbody"></div>`;
+    $('#back',v).onclick=()=>{location.hash='#/'};m.render($('#mbody',v));document.title=m.n+' · Antibiotics Simulator'}
+  applyAnim();window.scrollTo(0,0);live(m?m.n:'Dashboard')
+}
+function renderHome(v){
+  const done=Object.values(S.visited).length,acc=S.answered?Math.round(S.correct/S.answered*100):0;
+  v.innerHTML=`<section class="hero"><div><h1>Advanced Antibiotics Pharmacology &amp; Antimicrobial Stewardship Simulator</h1><p class="byline" style="margin:-4px 0 10px;font-weight:600;color:var(--ink)">Hafeez Faridi, Ph.D.</p>
+  <p>Explore mechanisms, spectrum, resistance, PK/PD and stewardship through interactive labs, cases and board-style questions. Progress saves automatically in this browser and works fully offline.</p></div>
+  <div class="stats"><div class="stat"><b>${done}/12</b><span>Modules visited</span></div><div class="stat"><b>${acc}%</b><span>Quiz accuracy</span></div><div class="stat"><b>${Object.keys(S.badges).length}/${BADGES.length}</b><span>Badges</span></div></div></section>
+  <div class="grid">${MODS.map((m,i)=>`<button class="dcard" data-id="${m.id}" style="animation-delay:${i*45}ms"><span class="n">${String(i+1).padStart(2,'0')}</span><div class="ic" aria-hidden="true">${m.ic}</div><h3>${m.n}</h3><p>${m.d}</p><div class="prog" role="progressbar" aria-valuenow="${Math.round(prog(m)*100)}" aria-valuemin="0" aria-valuemax="100" aria-label="Progress"><i style="width:${prog(m)*100}%"></i></div></button>`).join('')}</div>
+  <div class="card" style="margin-top:20px"><h3>Learning objectives</h3><div class="row"><ul class="tight col"><li>Classify antibiotics and identify mechanisms</li><li>Differentiate bactericidal vs bacteriostatic agents</li><li>Match drugs to microbial targets</li><li>Explain resistance mechanisms</li><li>Select empiric and targeted therapy</li></ul><ul class="tight col"><li>Interpret culture and susceptibility data</li><li>Apply and optimize PK/PD</li><li>Recognize toxicities and interactions</li><li>Apply antimicrobial stewardship principles</li><li>Practise NAPLEX-style questions</li></ul></div></div>`;
+  $$('.dcard',v).forEach(b=>b.onclick=()=>{location.hash='#/'+b.dataset.id})
+}
+/* ============ MODULE 1 ============ */
+function mClasses(el){
+  let sel='pen',tab='Mechanism';const TABS=['Mechanism','Clinical','Spectrum','Safety','Resistance','Practice'];
+  const draw=()=>{const c=CLS.find(x=>x.id===sel),M=MECH[c.m];touch('classes',c.id);
+    const body={
+     Mechanism:`<div class="row"><div class="col svgbox">${cellSVG(c.m)}</div><div class="col"><h3>${M.n}</h3><p><b>Target:</b> ${M.target}</p><p><b>Effect:</b> ${M.out}</p><ol class="tight">${M.steps.map(s=>`<li>${s}</li>`).join('')}</ol></div></div>`,
+     Clinical:`<p><b>Examples:</b> ${c.ex}</p><p><b>Indications:</b> ${c.ind}</p><div class="row"><div class="col callout good"><b>Advantages</b><br>${c.adv}</div><div class="col callout warn"><b>Limitations</b><br>${c.lim}</div></div>`,
+     Spectrum:`<p>Representative coverage across the class (agent-specific coverage varies; compare agents in the Spectrum Visualizer).</p>${c.sp.map((v,i)=>`<div class="bar2"><span class="lbl">${CATS[i]}</span><div class="prog"><i style="width:${v/3*100}%;background:var(--h${Math.max(v,1)>2?3:2})"></i></div><b style="width:70px">${LV[v]}</b></div>`).join('')}`,
+     Safety:`<div class="callout bad"><b>Black box / key warnings</b><br>${c.bbw}</div><p><b>Limitations:</b> ${c.lim}</p>`,
+     Resistance:`<div class="callout warn"><b>Resistance patterns</b><br>${c.res}</div><p>Open the <a href="#/resist">Resistance Mechanisms Center</a> to watch these mechanisms in action.</p>`,
+     Practice:`<div id="pq"></div>`}[tab];
+    $('#cdet').innerHTML=`<div class="mhead"><h3 style="margin:0">${c.n}</h3><span class="tag info">${c.g}</span><span class="tag ${c.cidal?'good':'warn'}">${c.cidal?'Bactericidal':'Bacteriostatic'}</span></div>
+     <div class="tabs" role="tablist">${TABS.map(t=>`<button class="tab" role="tab" aria-selected="${t===tab}" data-t="${t}">${t}</button>`).join('')}</div>${body}`;
+    $$('#cdet .tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t;draw()});
+    if(tab==='Practice')renderQ($('#pq'),c.q,ok=>{S.answered++;if(ok){S.correct++;S.classQ[c.id]=true;addXP(5)}recordCat(c.q.c,ok);save()});
+    applyAnim()};
+  el.innerHTML=`<p>Select a drug class. Each detail page includes an animated mechanism diagram, spectrum, safety, resistance and a practice question.</p>
+   <div id="cchips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px"></div><div class="card" id="cdet"></div>`;
+  const chips=()=>{$('#cchips').innerHTML=CLS.map(c=>`<button class="chip" aria-pressed="${c.id===sel}" data-id="${c.id}">${c.n}${S.classQ[c.id]?' ✓':''}</button>`).join('');$$('#cchips .chip').forEach(b=>b.onclick=()=>{sel=b.dataset.id;tab='Mechanism';chips();draw()})};
+  chips();draw();
+}
+function recordCat(cat,ok){const c=S.quiz[cat]=S.quiz[cat]||{c:0,t:0};c.t++;if(ok)c.c++}
+/* ============ MODULE 2 ============ */
+function mMoa(el){
+  let key='wall',step=-1,timer=null;
+  const keys=Object.keys(MECH);
+  const draw=()=>{const M=MECH[key];touch('moa',key);
+    $('#mbody2').innerHTML=`<div class="row"><div class="col"><div class="svgbox">${cellSVG(key)}</div><div class="legend"><span><i style="background:var(--drug)"></i>Drug</span><span><i style="background:var(--bad)"></i>Inhibited target</span></div>
+      <p style="margin-top:10px"><button class="btn sm" id="play">▶ Step through</button> <button class="btn sm ghost" id="reset">Reset</button></p></div>
+     <div class="col"><h3>${M.n}</h3><p><b>Drugs:</b> ${M.drugs}</p><p><b>Target structure:</b> ${M.target}</p><h4>Consequences</h4><ol class="tight" id="steps">${M.steps.map((s,i)=>`<li data-i="${i}" style="${i===step?'font-weight:700;color:var(--accent)':''}">${s}</li>`).join('')}</ol>
+      <div class="callout"><b>Outcome:</b> ${M.out}</div><div class="callout good"><b>Clinical outcome:</b> ${M.clin}</div></div></div>`;
+    $('#play').onclick=()=>{clearInterval(timer);step=-1;timer=setInterval(()=>{step++;if(step>=M.steps.length){clearInterval(timer);return}$$('#steps li').forEach((li,i)=>{li.style.fontWeight=i===step?'700':'';li.style.color=i===step?'var(--accent)':''});live(M.steps[step])},1700)};
+    $('#reset').onclick=()=>{clearInterval(timer);step=-1;draw()};applyAnim()};
+  onLeave(()=>clearInterval(timer));
+  el.innerHTML=`<p>Choose a mechanism, then watch drug particles reach their target and trigger consequences in the bacterial cell.</p><div id="mchips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px"></div><div class="card" id="mbody2"></div>`;
+  const chips=()=>{$('#mchips').innerHTML=keys.map(k=>`<button class="chip" aria-pressed="${k===key}" data-k="${k}">${MECH[k].n}</button>`).join('');$$('#mchips .chip').forEach(b=>b.onclick=()=>{clearInterval(timer);key=b.dataset.k;step=-1;chips();draw()})};
+  chips();draw();
+}
+/* ============ MODULE 3 ============ */
+const KILL=[0,.3,.6,.9],GR=.25;
+const susOf=(bug,d)=>bug.o[d.id]!==undefined?bug.o[d.id]:d.cov[bug.cat];
+function simulate(bug,ds){
+  const ss=ds.map(d=>susOf(bug,d)),best=Math.max(...ss),bi=ss.indexOf(best),prim=ds[bi];
+  const combo=ds.length>1,other=combo?ds[1-bi]:null,osus=combo?ss[1-bi]:0;
+  let mu=[0,1e-10,3e-9,1e-6][prim.rr]*(best===1?10:best===0?0:1);if(combo&&osus>=2)mu*=1e-3;
+  const kS=Math.min(.95,KILL[best]+(combo&&best>=1&&osus>=1?.12:0)),kR=combo&&osus>=2?KILL[osus]*.9:KILL[best]*.05,IMM=.1;
+  let S=1e8*(1-mu),R=1e8*mu;const N0=1e8,out=[{S,R}];
+  for(let h=1;h<=72;h++){const tot=S+R,g=tot>1e10?0:GR,Sb=S;
+    S=Sb*Math.exp(g-kS-IMM);R=R*Math.exp(g-kR-IMM)+mu*Sb*g*(best>0?1:0);if(S<.5)S=0;if(R<1e-6)R=0;out.push({S,R})}
+  const f=out[72],tot=f.S+f.R;const score=tot>=N0?0:clamp(Math.round(100*(1-Math.log10(Math.max(tot,100)/100)/6)),0,100);
+  const resist=f.R>f.S&&f.R>1e3;
+  return {out,score,resist,best,prim,win:score>=90&&!resist};
+}
+function mBattle(el){
+  let bug=BUGS[0],sel=[],raf=0;
+  const shape=b=>b.sh==='rod'?'<rect x="8" y="12" width="38" height="16" rx="8" fill="var(--bug)"/>':b.sh==='pleo'?'<ellipse cx="27" cy="20" rx="14" ry="12" fill="var(--bug)"/><circle cx="14" cy="16" r="3" fill="var(--bug)"/>':'<circle cx="19" cy="20" r="9" fill="var(--bug)"/><circle cx="33" cy="20" r="9" fill="var(--bug)"/>';
+  el.innerHTML=`<div class="row"><div class="col"><div class="card"><h3>1. Choose pathogen</h3><div class="bugs" id="bugs"></div><div class="callout" id="bdesc"></div></div>
+   <div class="card"><h3>2. Choose antibiotic <small style="font-weight:400;color:var(--muted)">(1 or 2 for combination)</small></h3><div class="druglist" id="dl"></div><p id="seltxt" class="crumb"></p><button class="btn" id="go" disabled>Treat for 72 h</button></div></div>
+   <div class="col"><div class="card"><h3>Population over time</h3><canvas id="cv" width="600" height="300" aria-label="Bacterial population graph (log CFU)"></canvas><div class="legend"><span><i style="background:#2563eb"></i>Susceptible</span><span><i style="background:#7c3aed"></i>Resistant mutants</span></div>
+   <div class="row" style="margin-top:10px;align-items:center"><div class="dots" id="dots" aria-hidden="true"></div><div class="col"><div class="score" id="sc">–</div><div class="crumb">Eradication score</div><div id="verdict"></div></div></div></div><div id="res"></div></div></div>`;
+  const bugs=()=>{$('#bugs').innerHTML=BUGS.map(b=>`<button class="bugb" aria-pressed="${b===bug}" data-id="${b.id}"><svg viewBox="0 0 54 40" aria-hidden="true">${shape(b)}</svg><b>${b.n}</b></button>`).join('');
+    $$('#bugs .bugb').forEach(x=>x.onclick=()=>{bug=BUGS.find(b=>b.id===x.dataset.id);sel=[];bugs();upd();touch('battle',bug.id);S.battle.seen[bug.id]=1;save()});
+    $('#bdesc').innerHTML=`<b>${bug.n}</b>: ${bug.d}`};
+  const dl=()=>{$('#dl').innerHTML=DRUGS.map(d=>`<button class="chip" aria-pressed="${sel.includes(d)}" data-id="${d.id}">${d.n}</button>`).join('');
+    $$('#dl .chip').forEach(x=>x.onclick=()=>{const d=DR[x.dataset.id];sel=sel.includes(d)?sel.filter(y=>y!==d):[...sel,d].slice(-2);dl();upd()})};
+  const upd=()=>{$('#go').disabled=!sel.length;$('#seltxt').textContent=sel.length?'Selected: '+sel.map(d=>d.n).join(' + '):'Select an antibiotic';};
+  const cv=$('#cv'),ctx=cv.getContext('2d');
+  const col=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  function plot(sim,upTo){const W=cv.width,H=cv.height,pad=38;ctx.clearRect(0,0,W,H);ctx.font='12px sans-serif';ctx.fillStyle=col('--muted');ctx.strokeStyle=col('--line');
+    for(let y=0;y<=10;y+=2){const yy=H-pad-(y/10)*(H-2*pad);ctx.beginPath();ctx.moveTo(pad,yy);ctx.lineTo(W-10,yy);ctx.stroke();ctx.fillText('10^'+y,2,yy+4)}
+    [0,24,48,72].forEach(h=>{const x=pad+h/72*(W-pad-10);ctx.fillText(h+'h',x-8,H-14)});
+    if(!sim)return;const line=(k,c)=>{ctx.beginPath();ctx.strokeStyle=c;ctx.lineWidth=2.5;let started=false;for(let h=0;h<=upTo;h++){const v=sim.out[h][k];const l=v>=1?Math.log10(v):0;const x=pad+h/72*(W-pad-10),y=H-pad-clamp(l,0,10)/10*(H-2*pad);started?ctx.lineTo(x,y):ctx.moveTo(x,y);started=true}ctx.stroke()};line('S','#2563eb');line('R','#7c3aed')}
+  function dots(sim,h){const f=sim.out[h],tot=f.S+f.R,alive=Math.round(100*clamp(Math.log10(Math.max(tot,1))/10,0,1)),rfrac=tot?f.R/tot:0,ra=Math.round(alive*rfrac);
+    $('#dots').innerHTML=Array.from({length:100},(_,i)=>`<i class="${i<ra?'r':''}" style="opacity:${i<alive?1:.12}"></i>`).join('')}
+  $('#go').onclick=()=>{cancelAnimationFrame(raf);const sim=simulate(bug,sel);let h=0;$('#go').disabled=true;$('#verdict').innerHTML='';$('#res').innerHTML='';
+    const fast=document.body.classList.contains('noanim');
+    const step=()=>{h=fast?72:Math.min(72,h+1);plot(sim,h);dots(sim,h);if(h<72)raf=setTimeout(step,70);else finish(sim)};step()};
+  function finish(sim){$('#go').disabled=false;$('#sc').textContent=sim.score;
+    const txt=sim.win?['good','Clinical cure: effective bacterial eradication.']:sim.resist?['bad','Resistance emerged: mutants overtook the susceptible population (treatment failure).']:sim.score>=60?['warn','Partial response: suboptimal kill; consider a more active agent or combination.']:['bad','Treatment failure: organism regrew.'];
+    $('#verdict').innerHTML=`<span class="tag ${txt[0]}">${txt[1]}</span>`;
+    S.battle.runs++;if(sim.win){S.battle.wins++;if(bug.id==='cre')S.battle.seen.cre_win=1}else S.battle.fails++;if(sim.resist)S.battle.resist++;
+    const rows=sel.map(d=>{const s=susOf(bug,d);return `<tr><td>${d.n}</td><td><span class="tag ${s>=2?'good':s===1?'warn':'bad'}">${LV[s]}</span></td><td>${{T:'Time-dependent (fT>MIC)',AUC:'AUC/MIC',CMAX:'Cmax/MIC'}[d.pk]}</td><td>${d.tox}</td></tr>`}).join('');
+    $('#res').innerHTML=`<div class="card"><h3>Debrief</h3><div class="scroll"><table><tr><th>Drug</th><th>Activity</th><th>PK/PD</th><th>Key toxicity</th></tr>${rows}</table></div><div class="callout"><b>Teaching point:</b> ${bug.tip}</div>${sel.length===1&&sel[0].rr>=2?'<div class="callout warn">This agent selects resistance quickly. Avoid monotherapy for high-inoculum infections.</div>':''}</div>`;
+    addXP(sim.win?12:3);save();live('Eradication score '+sim.score)}
+  onLeave(()=>clearTimeout(raf));
+  bugs();dl();upd();plot(null,0);dots({out:[{S:1e8,R:0}]},0);touch('battle',bug.id);S.battle.seen[bug.id]=1;
+}
+/* ============ MODULE 4 ============ */
+function mSpectrum(el){
+  let pick=['pzt','van','mem'];const COL=['#2563eb','#d97706','#059669'];
+  el.innerHTML=`<div class="card"><div class="row">${[0,1,2].map(i=>`<div style="flex:1 1 200px"><label for="sp${i}">Antibiotic ${'ABC'[i]}</label><select id="sp${i}" style="width:100%">${DRUGS.map(d=>`<option value="${d.id}">${d.n}</option>`).join('')}</select></div>`).join('')}</div></div>
+   <div class="row"><div class="col card" id="hm"></div><div class="col card"><h3>Coverage radar</h3><div id="radar" class="svgbox"></div></div></div><div id="gap"></div>
+   <div class="card"><h3>Full coverage table</h3><div class="scroll" id="full"></div></div>`;
+  const draw=()=>{const ds=pick.map(i=>DR[i]);ds.forEach(d=>touch('spectrum',d.id));
+    const comb=CATS.map((_,j)=>Math.max(...ds.map(d=>d.cov[j])));
+    let h=`<h3>Heat map</h3><div class="scroll"><div class="heat" style="grid-template-columns:110px repeat(7,1fr);min-width:560px"><span></span>${CATS.map(c=>`<span class="hl" style="justify-content:center;text-align:center">${c}</span>`).join('')}`;
+    ds.forEach((d,i)=>{h+=`<span class="hl" style="color:${COL[i]}">${'ABC'[i]}: ${d.n}</span>`+d.cov.map((v,j)=>`<span class="hc l${v}" title="${d.n} vs ${CATS[j]}: ${LV[v]}" aria-label="${d.n}, ${CATS[j]}: ${LV[v]}">${LS[v]}</span>`).join('')});
+    h+=`<span class="hl"><b>Combined</b></span>`+comb.map(v=>`<span class="hc l${v}" style="outline:2px dashed var(--ink);outline-offset:-2px">${LS[v]}</span>`).join('')+`</div></div><div class="legend">${[0,1,2,3].map(v=>`<span><i class="hc l${v}" style="min-height:14px;padding:0"></i>${LS[v]} ${LV[v]}</span>`).join('')}</div>`;
+    $('#hm').innerHTML=h;
+    const cx=150,cy=150,R=105,pt=(v,j)=>{const a=-Math.PI/2+j*2*Math.PI/7,r=R*v/3;return [cx+Math.cos(a)*r,cy+Math.sin(a)*r]};
+    let r='<svg viewBox="0 0 300 300" role="img" aria-label="Radar chart of coverage">';
+    [1,2,3].forEach(k=>{r+=`<polygon points="${CATS.map((_,j)=>pt(k,j).join(',')).join(' ')}" fill="none" stroke="var(--line)"/>`});
+    CATS.forEach((c,j)=>{const [x,y]=pt(3.45,j);r+=`<line x1="${cx}" y1="${cy}" x2="${pt(3,j)[0]}" y2="${pt(3,j)[1]}" stroke="var(--line)"/><text x="${x}" y="${y}" font-size="9.5" text-anchor="middle">${c}</text>`});
+    ds.forEach((d,i)=>{r+=`<polygon points="${d.cov.map((v,j)=>pt(v,j).join(',')).join(' ')}" fill="${COL[i]}" fill-opacity=".18" stroke="${COL[i]}" stroke-width="2.4" stroke-dasharray="${i===1?'6 3':i===2?'2 3':''}"/>`});
+    $('#radar').innerHTML=r+'</svg><div class="legend">'+ds.map((d,i)=>`<span><i style="background:${COL[i]}"></i>${d.n}</span>`).join('')+'</div>';
+    const gaps=CATS.filter((_,j)=>comb[j]<2),good=CATS.filter((_,j)=>comb[j]>=2);
+    $('#gap').innerHTML=`<div class="callout ${gaps.length?'warn':'good'}"><b>Combination analysis:</b> reliable coverage (≥ Good) for ${good.join(', ')||'none'}. ${gaps.length?`<b>Gaps:</b> ${gaps.join(', ')}.`:'No gaps across these categories.'} Remember that coverage is a generalisation; always use local susceptibility data.</div>`;
+    $('#full').innerHTML=`<table><tr><th>Drug</th>${CATS.map(c=>`<th>${c}</th>`).join('')}</tr>${DRUGS.map(d=>`<tr><td>${d.n}</td>${d.cov.map(v=>`<td><span class="tag ${v>=2?'good':v===1?'warn':'bad'}">${LS[v]}</span></td>`).join('')}</tr>`).join('')}</table>`;applyAnim()};
+  [0,1,2].forEach(i=>{const s=$('#sp'+i);s.value=pick[i];s.onchange=()=>{pick[i]=s.value;draw()}});draw();
+}
+/* ============ MODULE 5 ============ */
+function mResist(el){
+  let id='bl',mode='fail',raf=null,pressure=.6;
+  el.innerHTML=`<div id="rchips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px"></div><div class="card" id="rbody"></div>
+  <div class="card"><h3>How resistance develops: selection pressure</h3><p>Each generation, antibiotic exposure kills susceptible cells (blue). The few resistant mutants (orange) survive and refill the space.</p>
+  <div class="sl"><div class="lab"><label for="pr">Antibiotic pressure</label><b id="prv"></b></div><input id="pr" type="range" min="0" max="100" value="60"></div>
+  <div class="row" style="align-items:center"><div class="dots" style="grid-template-columns:repeat(20,1fr)" id="pop"></div><div><button class="btn sm" id="evo">▶ Run 12 generations</button> <button class="btn sm ghost" id="evr">Reset</button><p id="gen" class="crumb"></p></div></div></div>`;
+  const chips=()=>{$('#rchips').innerHTML=RES.map(r=>`<button class="chip" aria-pressed="${r.id===id}" data-id="${r.id}">${r.n}</button>`).join('');$$('#rchips .chip').forEach(b=>b.onclick=()=>{id=b.dataset.id;mode='fail';chips();draw()})};
+  const draw=()=>{const r=RES.find(x=>x.id===id);touch('resist',id);
+    $('#rbody').innerHTML=`<div class="row"><div class="col"><div class="tabs"><button class="tab" role="tab" aria-selected="${mode==='fail'}" data-m="fail">Therapy fails</button><button class="tab" role="tab" aria-selected="${mode==='over'}" data-m="over">Overcoming resistance</button></div><div class="svgbox">${sceneSVG(r.type,mode)}</div></div>
+     <div class="col"><h3>${r.n}</h3><p><b>How it develops:</b> ${r.how}</p><div class="callout bad"><b>Why therapy fails:</b> ${r.fail}</div><div class="callout good"><b>What overcomes it:</b> ${r.over}</div><p class="crumb"><b>Examples:</b> ${r.ex}</p></div></div>`;
+    $$('#rbody .tab').forEach(b=>b.onclick=()=>{mode=b.dataset.m;draw()});applyAnim()};
+  /* evolution */
+  let pop=[];const N=100;const init=()=>{pop=Array.from({length:N},(_,i)=>i<3?1:0);gen=0;rd()};let gen=0;
+  const rd=()=>{$('#pop').innerHTML=pop.map(v=>`<i class="${v?'':'s'}" style="background:${v?'#f97316':'#2563eb'};opacity:${v===2?.1:1}"></i>`).join('');const r=pop.filter(v=>v===1).length;$('#gen').textContent=`Generation ${gen} · resistant ${Math.round(r/N*100)}%`};
+  const next=()=>{const p=pressure;pop=pop.map(v=>v===0&&Math.random()<p?2:v);const alive=pop.filter(v=>v!==2);const out=[];for(let i=0;i<N;i++){const from=alive.length?alive[Math.floor(Math.random()*alive.length)]:1;out.push(from)}
+    pop=out.map(v=>v===0&&Math.random()<.002?1:v);gen++;rd()};
+  $('#pr').oninput=e=>{pressure=e.target.value/100;$('#prv').textContent=e.target.value+'%'};$('#prv').textContent='60%';
+  $('#evo').onclick=()=>{clearInterval(raf);let k=0;raf=setInterval(()=>{next();if(++k>=12)clearInterval(raf)},350)};$('#evr').onclick=()=>{clearInterval(raf);init()};
+  onLeave(()=>clearInterval(raf));chips();draw();init();
+}
+/* ============ MODULE 6 ============ */
+function pkSim(p,crcl,vdm){
+  const vd=p.vd*vdm,cl=p.cl*((1-p.fr)+p.fr*crcl/100),ke=cl/vd,tinf=Math.min(p.tinf,p.tau),R=p.dose/tinf,th=Math.LN2/ke;
+  const N=clamp(Math.ceil(5*th/p.tau)+1,3,10),T=N*p.tau,dt=Math.max(T/1200,.02);
+  const conc=t=>{let c=0;for(let i=0;i<N;i++){const s=t-i*p.tau;if(s<0)continue;c+=s<=tinf?R/cl*(1-Math.exp(-ke*s)):R/cl*(1-Math.exp(-ke*tinf))*Math.exp(-ke*(s-tinf))}return c};
+  const pts=[];for(let t=0;t<=T+1e-9;t+=dt)pts.push([t,conc(t)]);
+  const t0=(N-1)*p.tau;let cmax=0,auc=0,above=0,n=0,prev=null;
+  for(let t=t0;t<=T;t+=dt){const c=conc(t);cmax=Math.max(cmax,c);if(prev!==null)auc+=(c+prev)/2*dt;prev=c;n++;if(p.fu*c>p.mic)above++}
+  const cmin=conc(T-1e-6),auc24=auc*24/p.tau;
+  return {pts,T,N,th,cl,ke,cmax,cmin,auc24,ft:above/n*100,cmaxMic:p.fu*cmax/p.mic,aucMic:p.fu*auc24/p.mic,ss:5*th/p.tau<=N-1};
+}
+function mPkpd(el){
+  let k='mem',P={...PKD.mem},crcl=100,vdm=1,raf=0;const MICS=[.125,.25,.5,1,2,4,8,16,32,64,128];
+  el.innerHTML=`<div class="row"><div class="col" style="flex:0 1 340px"><div class="card"><h3>Controls</h3><label for="pkd">Antibiotic</label><select id="pkd" style="width:100%">${Object.keys(PKD).map(x=>`<option value="${x}">${PKD[x].n}</option>`).join('')}</select>
+   <div class="sl"><div class="lab"><label for="sd">Dose (mg)</label><b id="vd"></b></div><input type="range" id="sd"></div>
+   <div class="sl"><div class="lab"><label for="sf">Dosing interval (h)</label><b id="vf"></b></div><input type="range" id="sf" min="0" max="5"></div>
+   <div class="sl"><div class="lab"><label for="si">Infusion duration (h)</label><b id="vi"></b></div><input type="range" id="si" min="0.5" max="24" step="0.5"></div>
+   <div class="sl"><div class="lab"><label for="sc2">Renal function CrCl (mL/min)</label><b id="vc"></b></div><input type="range" id="sc2" min="10" max="150" step="5" value="100"></div>
+   <div class="sl"><div class="lab"><label for="sv">Volume of distribution (× normal)</label><b id="vv"></b></div><input type="range" id="sv" min="70" max="200" step="5" value="100"></div>
+   <div class="sl"><div class="lab"><label for="sm">Pathogen MIC (mg/L)</label><b id="vm"></b></div><input type="range" id="sm" min="0" max="10"></div>
+   <p class="crumb">Scenarios: septic fluid loading raises Vd; renal failure lowers clearance and extends half-life.</p></div></div>
+   <div class="col"><div class="card"><h3>Concentration-time profile</h3><canvas id="pc" width="760" height="360" aria-label="Concentration time graph"></canvas>
+   <div class="legend"><span><i style="background:var(--drug)"></i>Free-drug concentration</span><span><i style="background:var(--bad)"></i>MIC</span><span><i style="background:var(--good);opacity:.4"></i>Time above MIC</span></div></div>
+   <div class="card"><div class="metrics" id="pm"></div><div id="pa"></div></div></div></div>`;
+  const INT=[4,6,8,12,24,48];
+  const cv=$('#pc'),ctx=cv.getContext('2d'),col=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  let last=null;
+  function plot(frac){const s=last,W=cv.width,H=cv.height,L=54,B=34,T=14,Rr=12;ctx.clearRect(0,0,W,H);
+    const cm=Math.max(...s.pts.map(x=>x[1]*P.fu),P.mic*1.3)*1.1;const X=t=>L+t/s.T*(W-L-Rr),Y=c=>H-B-c/cm*(H-B-T);
+    ctx.font='12px sans-serif';ctx.fillStyle=col('--muted');ctx.strokeStyle=col('--line');ctx.lineWidth=1;
+    for(let i=0;i<=4;i++){const c=cm*i/4,y=Y(c);ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(W-Rr,y);ctx.stroke();ctx.fillText(c.toFixed(c<10?1:0),6,y+4)}
+    const step=s.T>96?24:s.T>48?12:s.T>24?6:2;for(let t=0;t<=s.T;t+=step)ctx.fillText(t+'h',X(t)-8,H-12);ctx.fillText('mg/L',6,10);
+    const n=Math.floor(s.pts.length*frac);
+    ctx.fillStyle=col('--good');ctx.globalAlpha=.22;for(let i=1;i<n;i++){const c=P.fu*s.pts[i][1];if(c>P.mic){const x0=X(s.pts[i-1][0]),x1=X(s.pts[i][0]);ctx.fillRect(x0,Y(c),x1-x0+.6,Y(P.mic)-Y(c))}}
+    ctx.globalAlpha=1;
+    ctx.strokeStyle=col('--bad');ctx.setLineDash([6,4]);ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(L,Y(P.mic));ctx.lineTo(W-Rr,Y(P.mic));ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=col('--bad');ctx.fillText('MIC '+P.mic,W-80,Y(P.mic)-5);
+    ctx.beginPath();ctx.strokeStyle=col('--drug');ctx.lineWidth=2.8;s.pts.slice(0,n).forEach(([t,c],i)=>{const x=X(t),y=Y(c*P.fu);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();
+    // time-above-MIC band along the axis
+    ctx.fillStyle=col('--good');ctx.globalAlpha=.55;for(let i=1;i<n;i++)if(P.fu*s.pts[i][1]>P.mic)ctx.fillRect(X(s.pts[i-1][0]),H-B+2,X(s.pts[i][0])-X(s.pts[i-1][0])+.6,5);ctx.globalAlpha=1}
+  function metrics(){const s=last;const aucT=P.type==='AUC'?(k==='van'?[400,600]:[125,1e9]):null;
+    let ok,txt;
+    if(P.type==='T'){ok=s.ft>=70?2:s.ft>=50?1:0;txt=`Time-dependent killing: fT>MIC is ${fmt(s.ft,0)}% of the interval. ${ok===2?'Target attained (≥70%).':ok===1?'Minimum target (≥50%) met but consider ≥100% for severe infection.':'Target missed.'}`}
+    else if(P.type==='CMAX'){ok=s.cmaxMic>=10?2:s.cmaxMic>=8?1:0;txt=`Concentration-dependent killing: Cmax/MIC is ${fmt(s.cmaxMic,1)} (goal ≥ 8–10).`;if(k==='gen'){txt+=s.cmin>=1?' Trough ≥ 1 mg/L: toxicity risk. Extend the interval or reduce dose.':' Trough < 1 mg/L: appropriate drug-free interval.'}}
+    else{ok=s.aucMic>=aucT[0]&&s.aucMic<=aucT[1]?2:s.aucMic<aucT[0]?0:1;txt=`AUC-driven: AUC24/MIC is ${fmt(s.aucMic,0)} (goal ${k==='van'?'400–600':'≥ 125'}). ${s.aucMic>aucT[1]?'Above the range: toxicity risk (AKI for vancomycin).':s.aucMic<aucT[0]?'Below target: increase dose or shorten interval.':'Target attained.'}`}
+    $('#pm').innerHTML=[['Cmax (ss)',fmt(s.cmax,1)+' mg/L'],['Trough',fmt(s.cmin,1)+' mg/L'],['Half-life',fmt(s.th,1)+' h'],['Clearance',fmt(s.cl,1)+' L/h'],['AUC24',fmt(s.auc24,0)],['fT>MIC',fmt(s.ft,0)+' %'],['Cmax/MIC',fmt(s.cmaxMic,1)],['AUC24/MIC',fmt(s.aucMic,0)]].map(m=>`<div class="metric"><span>${m[0]}</span><b>${m[1]}</b></div>`).join('');
+    $('#pa').innerHTML=`<div class="callout ${ok===2?'good':ok===1?'warn':'bad'}" style="margin-top:12px"><b>${['Target not met','Borderline','Target met'][ok]}.</b> ${txt}<br><small>Goal: ${P.tgt}. ${P.note}</small></div>${s.ss?'':'<div class="callout warn">Drug is still accumulating (half-life long relative to interval): reassess dosing, especially in renal impairment.</div>'}`;}
+  function run(){last=pkSim(P,crcl,vdm);metrics();cancelAnimationFrame(raf);if(document.body.classList.contains('noanim')){plot(1);return}let t0=performance.now();const f=now=>{const fr=Math.min(1,(now-t0)/700);plot(fr);if(fr<1)raf=requestAnimationFrame(f)};raf=requestAnimationFrame(f)}
+  function labels(){$('#vd').textContent=P.dose+' mg';$('#vf').textContent='q'+P.tau+'h';$('#vi').textContent=P.tinf+' h';$('#vc').textContent=crcl;$('#vv').textContent=vdm.toFixed(2)+'×';$('#vm').textContent=P.mic}
+  function setup(){P={...PKD[k]};$('#sd').min=Math.round(P.dose*.25);$('#sd').max=Math.round(P.dose*2);$('#sd').step=Math.max(10,Math.round(P.dose/50));$('#sd').value=P.dose;
+    $('#sf').value=Math.max(0,INT.indexOf(P.tau));$('#si').max=P.tau;$('#si').value=P.tinf;$('#sm').value=Math.max(0,MICS.indexOf(P.mic));labels();run()}
+  const bump=()=>{S.pkpd.moves++;if(S.pkpd.moves%5===0){save();addXP(1)}};
+  $('#pkd').onchange=e=>{k=e.target.value;touch('pkpd',k);setup()};
+  $('#sd').oninput=e=>{P.dose=+e.target.value;labels();bump();run()};
+  $('#sf').oninput=e=>{P.tau=INT[+e.target.value];if(P.tinf>P.tau){P.tinf=P.tau;$('#si').value=P.tinf}$('#si').max=P.tau;labels();bump();run()};
+  $('#si').oninput=e=>{P.tinf=Math.min(+e.target.value,P.tau);labels();bump();run()};
+  $('#sc2').oninput=e=>{crcl=+e.target.value;labels();bump();run()};
+  $('#sv').oninput=e=>{vdm=e.target.value/100;labels();bump();run()};
+  $('#sm').oninput=e=>{P.mic=MICS[+e.target.value];labels();bump();run()};
+  onLeave(()=>cancelAnimationFrame(raf));touch('pkpd',k);setup();
+}
+/* ============ MODULE 7 ============ */
+function mSteward(el){
+  const BASE={dot:780,cdi:9,res:22,sp:2.4,ap:71},BUDGET=8;let on=new Set(JSON.parse(JSON.stringify(S.stew.pol||[])));
+  const calc=()=>{const ps=POL.filter(p=>on.has(p.id)),n=ps.length,ov=Math.max(.55,1-.07*Math.max(0,n-2));const sum=k=>ps.reduce((a,p)=>a+p.e[k],0)*ov;
+    return {dot:BASE.dot*(1+Math.max(-.4,sum('dot'))),cdi:BASE.cdi*(1+Math.max(-.45,sum('cdi'))),res:BASE.res*(1+Math.max(-.3,sum('res'))),sp:BASE.sp*(1+Math.max(-.35,sum('sp'))),ap:Math.min(96,BASE.ap+ps.reduce((a,p)=>a+p.e.ap,0)*ov),cost:ps.reduce((a,p)=>a+p.c,0)}};
+  const pscore=m=>Math.round(clamp(100*(.3*((BASE.dot-m.dot)/BASE.dot/.3)+.25*((BASE.cdi-m.cdi)/BASE.cdi/.3)+.2*((BASE.sp-m.sp)/BASE.sp/.2)+.25*((m.ap-BASE.ap)/22)),0,100));
+  const cscore=()=>{const a=Object.values(S.stew.consults);return Math.round(a.reduce((x,y)=>x+y.pts,0)/(CONSULT.length*2)*100)};
+  el.innerHTML=`<p>You lead the antimicrobial stewardship program. Spend <b>${BUDGET} capacity points</b> on interventions, watch the 12-month projections, then answer pharmacist consults. Final score = 60 % policy impact + 40 % consult decisions.</p>
+  <div class="row"><div class="col"><div class="card"><h3>Interventions <span class="tag info" id="bud"></span></h3><div id="pols"></div></div></div>
+  <div class="col"><div class="card"><h3>Hospital dashboard</h3><div class="metrics" id="mt"></div><canvas id="sc" width="640" height="240" aria-label="12-month projection chart" style="margin-top:12px"></canvas><div class="legend"><span><i style="background:#2563eb"></i>Antibiotic use (DOT)</span><span><i style="background:#d97706"></i>C. difficile</span><span><i style="background:#7c3aed"></i>MDR resistance</span></div></div>
+  <div class="card"><h3>Stewardship score</h3><div class="score" id="fs">0</div><div class="crumb" id="fsd"></div></div></div></div>
+  <div class="card"><h3>Pharmacist consult queue</h3><div id="cons"></div><button class="btn ghost sm" id="rc">Reset consults</button></div>`;
+  const cv=$('#sc'),ctx=cv.getContext('2d'),col=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  function chart(m){const W=cv.width,H=cv.height,L=40,B=26;ctx.clearRect(0,0,W,H);ctx.font='11px sans-serif';ctx.fillStyle=col('--muted');ctx.strokeStyle=col('--line');
+    for(let i=0;i<=4;i++){const y=14+i*(H-B-14)/4;ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(W-8,y);ctx.stroke();ctx.fillText((120-i*10)+'%',2,y+4)}
+    for(let mo=0;mo<=12;mo+=3)ctx.fillText('M'+mo,L+mo/12*(W-L-8)-8,H-8);
+    const X=mo=>L+mo/12*(W-L-8),Y=p=>14+(120-p)/40*(H-B-14);
+    [['dot','#2563eb',4],['cdi','#d97706',5],['res','#7c3aed',9]].forEach(([k,c,tau])=>{ctx.beginPath();ctx.strokeStyle=c;ctx.lineWidth=2.4;for(let mo=0;mo<=12;mo+=.5){const f=1-Math.exp(-mo/tau),v=100*(1+(m[k]/BASE[k]-1)*f);mo?ctx.lineTo(X(mo),Y(v)):ctx.moveTo(X(mo),Y(v))}ctx.stroke()})}
+  function upd(){const m=calc(),ps=$('#pols');
+    ps.innerHTML=POL.map(p=>{const a=on.has(p.id),dis=!a&&m.cost+p.c>BUDGET;return `<button class="pol" aria-pressed="${a}" ${dis?'disabled style="opacity:.45"':''} data-id="${p.id}"><span><b>${p.n}</b><br><small>${p.d}</small></span><span class="cost">${p.c} pt</span></button>`}).join('');
+    $$('.pol',ps).forEach(b=>b.onclick=()=>{on.has(b.dataset.id)?on.delete(b.dataset.id):on.add(b.dataset.id);S.stew.pol=[...on];save();upd();touch('steward','p'+b.dataset.id)});
+    $('#bud').textContent=`${m.cost}/${BUDGET} points used`;
+    const d=(v,b,inv)=>{const p=(v/b-1)*100;return `<small class="${(inv?p>0:p<0)?'dn':'up'}">${p>0?'+':''}${p.toFixed(0)}% vs baseline</small>`};
+    $('#mt').innerHTML=`<div class="metric"><span>DOT / 1000 pt-days</span><b>${m.dot.toFixed(0)}</b>${d(m.dot,BASE.dot)}</div><div class="metric"><span>C. diff / 10k pt-days</span><b>${m.cdi.toFixed(1)}</b>${d(m.cdi,BASE.cdi)}</div><div class="metric"><span>MDR GNR %</span><b>${m.res.toFixed(1)}</b>${d(m.res,BASE.res)}</div><div class="metric"><span>Drug spend ($M)</span><b>${m.sp.toFixed(2)}</b>${d(m.sp,BASE.sp)}</div><div class="metric"><span>Appropriate therapy %</span><b>${m.ap.toFixed(0)}</b>${d(m.ap,BASE.ap,1)}</div>`;
+    chart(m);score(m)}
+  function score(m){const p=pscore(m),c=cscore(),tot=Math.round(.6*p+.4*c);$('#fs').textContent=tot;$('#fsd').textContent=`Policy impact ${p}/100 · Consults ${c}/100`;if(tot>S.stew.best){S.stew.best=tot;save();addXP(0)}}
+  function consults(){$('#cons').innerHTML=CONSULT.map((c,i)=>{const a=S.stew.consults[i];return `<div class="q"><p class="stem">Consult ${i+1}: ${c.t}</p>${c.o.map((o,j)=>`<button class="opt ${a?(j===a.j?(o[1]===2?'ok':'no'):(o[1]===2?'ok':'')):''}" data-i="${i}" data-j="${j}" ${a?'disabled':''}>${o[0]}</button>`).join('')}${a?`<div class="exp"><span class="tag ${a.pts===2?'good':'bad'}">${a.pts===2?'Best answer':'Not ideal'}</span> ${c.o[a.j][2]}</div>`:''}</div>`}).join('');
+    $$('#cons .opt').forEach(b=>b.onclick=()=>{const i=+b.dataset.i,j=+b.dataset.j;S.stew.consults[i]={j,pts:CONSULT[i].o[j][1]};S.stew.runs++;save();addXP(CONSULT[i].o[j][1]?4:1);touch('steward','c'+i);consults();score(calc())})}
+  $('#rc').onclick=()=>{S.stew.consults={};save();consults();score(calc())};
+  upd();consults();
+}
+/* ============ MODULE 8 ============ */
+function mCases(el){
+  const home=()=>{el.innerHTML=`<p>Work through each case: empiric choice → culture interpretation → targeted therapy & duration.</p><div class="grid">${CASES.map(c=>{const r=S.cases[c.id];return `<button class="dcard" data-id="${c.id}" style="animation-delay:0s"><h3>${c.t}</h3><p>${c.v.slice(0,110)}…</p>${r?`<span class="tag ${r.score===r.max?'good':'warn'}">Best ${r.score}/${r.max}</span>`:'<span class="tag info">Not started</span>'}</button>`}).join('')}</div>`;$$('.dcard',el).forEach(b=>b.onclick=()=>play(CASES.find(c=>c.id===b.dataset.id)))};
+  function play(c){let i=0,score=0;
+    const show=()=>{const s=c.s[i];el.innerHTML=`<div class="card"><button class="btn ghost sm" id="bk">← Cases</button><h3 style="margin-top:10px">${c.t}</h3><div class="callout"><b>Patient:</b> ${c.v}</div>${c.cult&&i>=1?`<div class="callout warn"><b>Microbiology / data:</b> ${c.cult}</div>`:''}
+      <div class="prog" style="margin:10px 0"><i style="width:${i/c.s.length*100}%"></i></div><h4>Step ${i+1} of ${c.s.length}</h4><div id="qq"></div><div id="nx"></div></div>`;
+      $('#bk').onclick=home;renderQ($('#qq'),s,ok=>{if(ok)score++;S.answered++;if(ok)S.correct++;recordCat('Clinical cases',ok);save();addXP(ok?4:1);
+        $('#nx').innerHTML=`<button class="btn" id="nb">${i<c.s.length-1?'Next step →':'Finish case'}</button>`;$('#nb').onclick=()=>{i++;i<c.s.length?show():fin()}})};
+    const fin=()=>{const prev=S.cases[c.id];if(!prev||score>prev.score)S.cases[c.id]={score,max:c.s.length};save();touch('cases',c.id);addXP(score*3);
+      el.innerHTML=`<div class="card"><h3>Case complete: ${c.t}</h3><div class="score">${score}/${c.s.length}</div><p>${score===c.s.length?'Excellent decision-making.':'Review explanations and retry to improve your best score.'}</p><button class="btn" id="rt">Retry</button> <button class="btn ghost" id="hm">All cases</button></div>`;$('#rt').onclick=()=>play(c);$('#hm').onclick=home};
+    show()}
+  home();
+}
+/* ============ MODULE 9 ============ */
+function mMatch(el){
+  let mode=Object.keys(MATCH)[0],timer=null;onLeave(()=>clearInterval(timer));
+  el.innerHTML=`<p>Select a left item, then its matching right item. Six pairs per round. Faster and cleaner rounds earn more XP.</p><div id="mm" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div><div class="card" id="mg"></div>`;
+  const chips=()=>{$('#mm').innerHTML=Object.keys(MATCH).map(m=>`<button class="chip" aria-pressed="${m===mode}" data-m="${m}">${m}${S.match.best[m]?` · best ${S.match.best[m]}s`:''}</button>`).join('');$$('#mm .chip').forEach(b=>b.onclick=()=>{mode=b.dataset.m;chips();round()})};
+  function round(){clearInterval(timer);touch('match',mode);const pairs=shuffle(MATCH[mode]).slice(0,6);let sel=null,done=0,miss=0,t=0;
+    const L=shuffle(pairs.map((p,i)=>({i,t:p[0]}))),Rr=shuffle(pairs.map((p,i)=>({i,t:p[1]})));
+    $('#mg').innerHTML=`<div class="mhead"><b id="tm">0s</b><span class="crumb" id="ms">Matched 0/6 · Mistakes 0</span></div><div class="mgrid"><div style="display:grid;gap:8px">${L.map(x=>`<button class="mcell" data-s="l" data-i="${x.i}">${x.t}</button>`).join('')}</div><div style="display:grid;gap:8px">${Rr.map(x=>`<button class="mcell" data-s="r" data-i="${x.i}">${x.t}</button>`).join('')}</div></div><div id="mf"></div>`;
+    timer=setInterval(()=>{t++;$('#tm').textContent=t+'s'},1000);
+    $$('#mg .mcell').forEach(b=>b.onclick=()=>{if(b.classList.contains('done'))return;
+      if(b.dataset.s==='l'){$$('#mg .mcell[data-s=l]').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');sel=b;return}
+      if(!sel){live('Select a left item first');return}
+      if(sel.dataset.i===b.dataset.i){sel.classList.remove('sel');sel.classList.add('done');b.classList.add('done');sel=null;done++;
+        $('#ms').textContent=`Matched ${done}/6 · Mistakes ${miss}`;
+        if(done===6){clearInterval(timer);const xp=Math.max(3,12-miss*2-Math.floor(t/20));S.match.rounds++;if(!S.match.best[mode]||t<S.match.best[mode])S.match.best[mode]=t;save();addXP(xp);chips();
+          $('#mf').innerHTML=`<div class="callout good"><b>Round complete in ${t}s with ${miss} mistake(s).</b> +${xp} XP <button class="btn sm" id="again" style="margin-left:10px">New round</button></div>`;$('#again').onclick=round}}
+      else{miss++;b.classList.add('wrong');setTimeout(()=>b.classList.remove('wrong'),400);$('#ms').textContent=`Matched ${done}/6 · Mistakes ${miss}`}})}
+  chips();round();
+}
+/* ============ MODULE 10 ============ */
+function mTree(el){
+  let key='sepsis',cur,path=[];
+  el.innerHTML=`<p>Make stepwise decisions. Each pathway ends with a recommendation, rationale and a stewardship pearl.</p><div id="tc" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div><div class="card" id="tb"></div>`;
+  const chips=()=>{$('#tc').innerHTML=Object.keys(TREES).map(k=>`<button class="chip" aria-pressed="${k===key}" data-k="${k}">${TREES[k].t}${S.tree[k]?' ✓':''}</button>`).join('');$$('#tc .chip').forEach(b=>b.onclick=()=>{key=b.dataset.k;start();chips()})};
+  function start(){cur=TREES[key].start;path=[];draw()}
+  function draw(){const T=TREES[key],n=T.nodes[cur];touch('tree',key);
+    const crumbs=path.length?`<div class="path">${path.map(p=>`<span>${p}</span>`).join('')}</div>`:'';
+    if(n.end){if(!S.tree[key]){S.tree[key]=1;save();addXP(8)}$('#tb').innerHTML=`<h3>${T.t}</h3>${crumbs}<div class="node"><div class="callout good"><b>Recommendation:</b> ${n.rec}</div><p><b>Rationale:</b> ${n.why}</p><div class="callout warn"><b>Stewardship pearl:</b> ${n.pearl}</div><button class="btn" id="rs">Restart pathway</button></div>`;$('#rs').onclick=start;chips();return}
+    $('#tb').innerHTML=`<h3>${T.t}</h3>${crumbs}<div class="node"><p style="font-size:1.1rem"><b>${n.q}</b></p>${n.o.map((o,i)=>`<button class="opt" data-i="${i}">${o[0]}</button>`).join('')}${path.length?'<button class="btn ghost sm" id="ub">← Back</button>':''}</div>`;
+    $$('#tb .opt').forEach(b=>b.onclick=()=>{const o=n.o[+b.dataset.i];path.push(o[0]);hist.push(cur);cur=o[1];draw()});
+    const ub=$('#ub');if(ub)ub.onclick=()=>{path.pop();cur=hist.pop();draw()};applyAnim()}
+  const hist=[];const origStart=start;start=function(){hist.length=0;origStart()};
+  chips();start();
+}
+/* ============ MODULE 11 ============ */
+function mQuiz(el){
+  const cats=['All',...new Set(BANK.map(q=>q.c))];let timer=null;onLeave(()=>clearInterval(timer));
+  const setup=()=>{el.innerHTML=`<div class="card"><h3>Build a quiz</h3><div class="row"><div><label for="qc">Category</label><select id="qc">${cats.map(c=>`<option>${c}</option>`).join('')}</select></div><div><label for="qn">Questions</label><select id="qn"><option>10</option><option>20</option><option>40</option></select></div><div><label for="qm">Mode</label><select id="qm"><option value="p">Practice (instant feedback)</option><option value="e">NAPLEX exam (timed, review at end)</option></select></div></div>
+    <p style="margin-top:14px"><button class="btn" id="st">Start quiz</button> <button class="btn ghost" id="sw" ${S.wrong.length?'':'disabled'}>Review missed (${S.wrong.length})</button></p></div>
+    <div class="card"><h3>Bank</h3><p>${BANK.length} questions across ${cats.length-1} categories: ${cats.slice(1).map(c=>`${c} (${BANK.filter(q=>q.c===c).length})`).join(' · ')}</p></div>`;
+    $('#st').onclick=()=>{let pool=BANK.filter(q=>$('#qc').value==='All'||q.c===$('#qc').value);run(shuffle(pool).slice(0,+$('#qn').value),$('#qm').value==='e')};
+    $('#sw').onclick=()=>run(shuffle(BANK.filter(q=>S.wrong.includes(q.id))),false)};
+  function record(q,ok){S.answered++;if(ok){S.correct++;S.wrong=S.wrong.filter(x=>x!==q.id)}else if(!S.wrong.includes(q.id))S.wrong.push(q.id);recordCat(q.c,ok);touch('quiz',q.id);save();addXP(ok?2:0)}
+  function run(qs,exam){if(!qs.length){setup();return}let i=0,right=0,miss=[],left=Math.round(qs.length*72);
+    const done=()=>{clearInterval(timer);const pct=Math.round(right/qs.length*100);addXP(Math.round(pct/10));
+      el.innerHTML=`<div class="card"><h3>Quiz complete</h3><div class="score">${right}/${qs.length}</div><p>${pct}% ${pct>=75?'· passing range (NAPLEX scaled ≥ 75).':'· keep practising: review the explanations below.'}</p>${miss.length?`<h4>Missed questions</h4>${miss.map(q=>`<div class="q"><p class="stem">${q.q}</p><p><span class="tag good">Answer</span> ${q.o[q.a]}</p><p class="exp">${q.e}</p></div>`).join('')}`:'<div class="callout good">Perfect score!</div>'}<button class="btn" id="ag">Back to builder</button></div>`;$('#ag').onclick=setup};
+    const show=()=>{const q=qs[i];el.innerHTML=`<div class="card"><div class="mhead"><span class="tag info">${q.c}</span><span class="crumb">Question ${i+1}/${qs.length}</span>${exam?'<b id="tl" style="margin-left:auto"></b>':''}</div><div class="prog"><i style="width:${i/qs.length*100}%"></i></div><div id="qb"></div><div id="qn2"></div></div>`;
+      if(exam){const tl=()=>{const m=Math.floor(left/60),s=left%60;const e=$('#tl');if(e)e.textContent=`⏱ ${m}:${String(s).padStart(2,'0')}`};tl();clearInterval(timer);timer=setInterval(()=>{left--;tl();if(left<=0)done()},1000)}
+      if(exam){const order=shuffle(q.o.map((t,k)=>k));$('#qb').innerHTML=`<div class="q"><p class="stem">${q.q}</p>${order.map((k,j)=>`<button class="opt" data-i="${k}"><b>${'ABCDE'[j]}.</b> ${q.o[k]}</button>`).join('')}</div>`;
+        $$('#qb .opt').forEach(b=>b.onclick=()=>{const ok=+b.dataset.i===q.a;if(ok)right++;else miss.push(q);record(q,ok);i++;i<qs.length?show():done()})}
+      else renderQ($('#qb'),q,ok=>{if(ok)right++;else miss.push(q);record(q,ok);$('#qn2').innerHTML=`<button class="btn" id="nx">${i<qs.length-1?'Next →':'Finish'}</button>`;$('#nx').onclick=()=>{i++;i<qs.length?show():done()}})};
+    show()}
+  setup();
+}
+/* ============ MODULE 12 ============ */
+function mStats(el){
+  const acc=S.answered?Math.round(S.correct/S.answered*100):0,L=level();
+  const cats=Object.entries(S.quiz).map(([k,v])=>({k,p:Math.round(v.c/v.t*100),t:v.t}));const weak=cats.filter(c=>c.t>=2).sort((a,b)=>a.p-b.p).slice(0,3);
+  const untested=[...new Set(BANK.map(q=>q.c))].filter(c=>!S.quiz[c]);
+  el.innerHTML=`<div class="metrics"><div class="metric"><span>Level</span><b>${L}</b><small>${S.xp} XP</small></div><div class="metric"><span>Questions answered</span><b>${S.answered}</b><small>${acc}% correct</small></div><div class="metric"><span>Battles won</span><b>${S.battle.wins}/${S.battle.runs}</b><small>${S.battle.resist} resistance events</small></div><div class="metric"><span>Cases completed</span><b>${Object.keys(S.cases).length}/${CASES.length}</b></div><div class="metric"><span>Stewardship best</span><b>${S.stew.best}</b></div><div class="metric"><span>Matching rounds</span><b>${S.match.rounds}</b></div></div>
+  <div class="row" style="margin-top:16px"><div class="col card"><h3>Accuracy by topic</h3>${cats.length?cats.sort((a,b)=>a.k.localeCompare(b.k)).map(c=>`<div class="bar2"><span class="lbl">${c.k}</span><div class="prog"><i style="width:${c.p}%;background:${c.p>=75?'var(--good)':c.p>=50?'var(--warn)':'var(--bad)'}"></i></div><b style="width:78px">${c.p}% <small>(${c.t})</small></b></div>`).join(''):'<p>No quiz data yet. Try the Mega Quiz Bank.</p>'}</div>
+  <div class="col card"><h3>Recommended focus</h3>${weak.length?weak.map(w=>`<div class="callout bad"><b>${w.k}</b> accuracy ${w.p}%. Review related modules.</div>`).join(''):'<p>Answer more questions to see weak areas.</p>'}${untested.length?`<div class="callout"><b>Not yet tested:</b> ${untested.join(', ')}</div>`:''}${S.wrong.length?`<p>${S.wrong.length} missed question(s) are queued for review in the Quiz Bank.</p>`:''}</div></div>
+  <div class="card"><h3>Module progress</h3>${MODS.map(m=>`<div class="bar2"><span class="lbl" style="width:230px">${m.ic} ${m.n}</span><div class="prog"><i style="width:${prog(m)*100}%"></i></div><b style="width:42px">${Math.round(prog(m)*100)}%</b></div>`).join('')}</div>
+  <div class="card"><h3>Case results</h3>${Object.keys(S.cases).length?`<table><tr><th>Case</th><th>Best</th></tr>${CASES.filter(c=>S.cases[c.id]).map(c=>`<tr><td>${c.t}</td><td>${S.cases[c.id].score}/${S.cases[c.id].max}</td></tr>`).join('')}</table>`:'<p>No cases completed yet.</p>'}</div>
+  <div class="card"><h3>Badges</h3>${BADGES.map(b=>`<span class="badge ${S.badges[b[0]]?'':'locked'}" title="${b[3]}"><span style="font-size:1.4rem">${b[1]}</span><span><b>${b[2]}</b><br><small>${b[3]}</small></span></span>`).join('')}</div>
+  <div class="card"><h3>Your data</h3><button class="btn ghost" id="ex">Download progress (JSON)</button> <button class="btn ghost" id="rs" style="color:var(--bad);border-color:var(--bad)">Reset all progress</button><p class="crumb">Progress is stored only in this browser (localStorage).</p></div>`;
+  $('#ex').onclick=()=>{const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='abx-sim-progress.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+  $('#rs').onclick=()=>{if(confirm('Reset all progress? This cannot be undone.')){const t=S.theme;S=Object.assign(defaults(),{theme:t});save();renderLvl();route()}};
+}
+/* ============ INIT ============ */
+function init(){
+  applyTheme();applyAnim();renderLvl();
+  $('#themeBtn').onclick=()=>{S.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';save();applyTheme();route()};
+  $('#animBtn').onclick=()=>{S.anim=!S.anim;save();applyAnim()};
+  $('#homeBtn').onclick=()=>{location.hash='#/'};
+  addEventListener('hashchange',route);route();
+}
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
