@@ -1,0 +1,843 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>ANS Interactive Learning Hub</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<style>
+/* Layout: sticky header, two-column workspace (body map + organ zoom | detail card), fixed pharmacology bar, quiz as second tab. Sympathetic = amber/red, parasympathetic = teal/blue. */
+:root{
+  --bg:#f2f5f8; --surface:#ffffff; --surface2:#e8edf2; --fg:#13202c; --muted:#506271; --line:#d3dbe3;
+  --sym:#c2410c; --sym-soft:#fde9dc; --sym-line:#f2b896;
+  --para:#0b7285; --para-soft:#d9f0f4; --para-line:#8fd0db;
+  --good:#15803d; --good-soft:#dcf5e4; --bad:#b91c1c; --bad-soft:#fde3e3;
+  --font-display:'Space Grotesk',system-ui,sans-serif; --font-body:'Inter',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d141b; --surface:#141e28; --surface2:#1b2835; --fg:#e7edf2; --muted:#9aaab8; --line:#283645;
+  --sym:#fb923c; --sym-soft:#3a2314; --sym-line:#7a4220;
+  --para:#38c7d8; --para-soft:#0f3037; --para-line:#1f6672;
+  --good:#4ade80; --good-soft:#12301d; --bad:#f87171; --bad-soft:#3a1717; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d141b; --surface:#141e28; --surface2:#1b2835; --fg:#e7edf2; --muted:#9aaab8; --line:#283645;
+  --sym:#fb923c; --sym-soft:#3a2314; --sym-line:#7a4220;
+  --para:#38c7d8; --para-soft:#0f3037; --para-line:#1f6672;
+  --good:#4ade80; --good-soft:#12301d; --bad:#f87171; --bad-soft:#3a1717; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.55;
+  padding-block:0 190px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3,.disp{font-family:var(--font-display);letter-spacing:-0.01em;text-wrap:balance}
+.wrap{max-width:1180px;margin:0 auto}
+.surface{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.muted{color:var(--muted)} .sym{color:var(--sym)} .para{color:var(--para)}
+.label{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.hdr{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:10px;padding:7px 12px;font-weight:500;font-size:13px;cursor:pointer;transition:background .15s,border-color .15s}
+.btn:hover{background:var(--surface2)}
+button:focus-visible,[role=tab]:focus-visible,.hot:focus-visible{outline:3px solid var(--para);outline-offset:2px}
+.tab{padding:8px 14px;border-radius:10px;font-weight:600;font-size:14px;color:var(--muted);cursor:pointer;border:1px solid transparent;background:none}
+.tab[aria-selected=true]{background:var(--surface);color:var(--fg);border-color:var(--line)}
+.pill{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.pill.s[aria-pressed=true]{background:var(--sym);border-color:var(--sym);color:#fff}
+.pill.p[aria-pressed=true]{background:var(--para);border-color:var(--para);color:#fff}
+:root[data-contrast="high"],:root[data-contrast="high"][data-theme="light"]{
+  --bg:#ffffff; --surface:#ffffff; --surface2:#e4e4e4; --fg:#000000; --muted:#1a1a1a; --line:#000000;
+  --sym:#8a1c00; --sym-soft:#ffffff; --sym-line:#8a1c00;
+  --para:#004a5a; --para-soft:#ffffff; --para-line:#004a5a;
+  --good:#005a1f; --good-soft:#ffffff; --bad:#a00000; --bad-soft:#ffffff; color-scheme:light}
+@media (prefers-color-scheme: dark){:root[data-contrast="high"]:not([data-theme="light"]){
+  --bg:#000000; --surface:#000000; --surface2:#2a2a2a; --fg:#ffffff; --muted:#f0f0f0; --line:#ffffff;
+  --sym:#ffb070; --sym-soft:#000000; --sym-line:#ffb070;
+  --para:#7fe3f0; --para-soft:#000000; --para-line:#7fe3f0;
+  --good:#7dffa0; --good-soft:#000000; --bad:#ff9a9a; --bad-soft:#000000; color-scheme:dark}}
+:root[data-contrast="high"][data-theme="dark"]{
+  --bg:#000000; --surface:#000000; --surface2:#2a2a2a; --fg:#ffffff; --muted:#f0f0f0; --line:#ffffff;
+  --sym:#ffb070; --sym-soft:#000000; --sym-line:#ffb070;
+  --para:#7fe3f0; --para-soft:#000000; --para-line:#7fe3f0;
+  --good:#7dffa0; --good-soft:#000000; --bad:#ff9a9a; --bad-soft:#000000; color-scheme:dark}
+[data-contrast="high"] .surface{border:2px solid var(--fg)}
+[data-contrast="high"] .card-s,[data-contrast="high"] .card-p{border-width:2px}
+[data-contrast="high"] .btn,[data-contrast="high"] .opt,[data-contrast="high"] .pill{border:2px solid var(--fg)!important}
+[data-contrast="high"] .btn{background:var(--surface)!important;color:var(--fg)!important}
+[data-contrast="high"] .pill{color:var(--fg)}
+[data-contrast="high"] .pill[aria-pressed=true]{background:var(--fg)!important;color:var(--bg)!important;box-shadow:0 0 0 2px var(--bg),0 0 0 5px var(--para)}
+[data-contrast="high"] .pill.s[aria-pressed=true]{box-shadow:0 0 0 2px var(--bg),0 0 0 5px var(--sym)}
+[data-contrast="high"] .opt.ok{border-width:4px;border-color:var(--good)}
+[data-contrast="high"] .opt.no{border-width:4px;border-color:var(--bad);border-style:dashed}
+[data-contrast="high"] .opt.sel{border-width:4px}
+[data-contrast="high"] .tab[aria-selected=true]{border:2px solid var(--fg)}
+[data-contrast="high"] .meter{border:2px solid var(--fg);background:var(--bg)}
+[data-contrast="high"] .chip{border:1.5px solid currentColor}
+[data-contrast="high"] button:focus-visible,[data-contrast="high"] [role=tab]:focus-visible,[data-contrast="high"] .hot:focus-visible,[data-contrast="high"] select:focus-visible,[data-contrast="high"] input:focus-visible{outline:4px solid var(--fg);outline-offset:3px}
+[data-contrast="high"] .hdr,[data-contrast="high"] .bar{border-color:var(--fg)}
+.dark-on-accent{color:#0d141b}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--line);
+  padding:10px max(16px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px))}
+.chip{display:inline-block;border-radius:8px;padding:2px 8px;font-size:12px;font-weight:600}
+.chip.s{background:var(--sym-soft);color:var(--sym)} .chip.p{background:var(--para-soft);color:var(--para)}
+.hot{cursor:pointer} .hot .ring{fill:var(--surface);stroke:var(--line);stroke-width:2;transition:all .2s}
+.hot:hover .ring{stroke:var(--para)} .hot[aria-pressed=true] .ring{stroke:var(--fg);stroke-width:3;fill:var(--surface2)}
+.card-s{background:var(--sym-soft);border:1px solid var(--sym-line);border-radius:12px}
+.card-p{background:var(--para-soft);border:1px solid var(--para-line);border-radius:12px}
+.fade{animation:fade .35s ease both} @keyframes fade{from{opacity:.0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.opt{width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;cursor:pointer;color:var(--fg);transition:all .15s}
+.opt:hover:not(:disabled){background:var(--surface2)}
+.opt.sel{background:var(--surface2);border-color:var(--fg)}
+.opt.ok{background:var(--good-soft);border-color:var(--good)} .opt.no{background:var(--bad-soft);border-color:var(--bad)}
+.meter{height:10px;border-radius:99px;background:var(--surface2);overflow:hidden}
+.meter>i{display:block;height:100%;border-radius:99px;transition:width .5s ease,background .4s}
+.pop{animation:pop .6s ease both}@keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+.conf{position:fixed;top:-12px;width:9px;height:14px;border-radius:2px;animation:fall 2.4s linear forwards;z-index:40;pointer-events:none}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.9}}
+@keyframes beat{0%,100%{transform:scale(1)}15%{transform:scale(1.09)}30%{transform:scale(.98)}45%{transform:scale(1.05)}}
+@keyframes wave{from{stroke-dashoffset:0}to{stroke-dashoffset:-40}}
+@keyframes breathe{0%,100%{transform:scale(.96)}50%{transform:scale(1.04)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+svg text{font-family:var(--font-body)}
+</style>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<script type="text/babel" data-presets="react">
+const { useState, useMemo, useEffect, useRef } = React;
+const clamp = (v) => Math.max(0, Math.min(100, v));
+const MODES = ['normal', 'agonist', 'antagonist'];
+const MODE_LABEL = { normal: 'Normal', agonist: 'Agonist', antagonist: 'Antagonist' };
+const DRUG_CLASS = {
+  sagonist: 'Sympathomimetics (adrenergic agonists)',
+  santagonist: 'Sympatholytics (adrenergic antagonists)',
+  pagonist: 'Parasympathomimetics (cholinergic agonists)',
+  pantagonist: 'Anticholinergics (antimuscarinics)',
+};
+
+const ORGANS = [
+  {
+    id: 'eyes', name: 'Eyes', sub: 'Pupil and ciliary muscle', metric: 'Pupil diameter', unit: 'mm',
+    fmt: (v) => (1 + 0.065 * v).toFixed(1), baseline: 50,
+    sEff: { antagonist: -8, normal: 0, agonist: 30 }, pEff: { antagonist: 35, normal: 0, agonist: -35 },
+    sym: { receptor: 'α₁', nt: 'Norepinephrine (NE)', effect: 'Contracts the radial muscle (dilator pupillae) causing mydriasis, tuned for far vision and fight-or-flight scanning.' },
+    para: { receptor: 'M₃', nt: 'Acetylcholine (ACh)', effect: 'Contracts the circular muscle (sphincter pupillae) causing miosis, and contracts the ciliary muscle for accommodation (near vision).' },
+    pearl: 'Pilocarpine opens the trabecular meshwork by pulling on the ciliary muscle. Atropine and tropicamide give mydriasis plus cycloplegia (blurred near vision).',
+    drugs: {
+      sagonist: { ex: 'Phenylephrine drops (α₁)', out: 'Mydriasis without cycloplegia. Used for fundus exams; accommodation stays intact.' },
+      santagonist: { ex: 'Tamsulosin, other α₁ blockers', out: 'Mild miosis. Intraoperative floppy iris syndrome is a known cataract-surgery hazard.' },
+      pagonist: { ex: 'Pilocarpine (M agonist)', out: 'Miosis, ciliary spasm, lower intraocular pressure in open-angle glaucoma.' },
+      pantagonist: { ex: 'Atropine, tropicamide', out: 'Mydriasis and cycloplegia. Can precipitate acute angle-closure glaucoma in a narrow angle.' },
+    },
+  },
+  {
+    id: 'heart', name: 'Heart', sub: 'SA node, AV node, myocardium', metric: 'Heart rate', unit: 'bpm',
+    fmt: (v) => Math.round(25 + 0.9 * v), baseline: 50,
+    sEff: { antagonist: -12, normal: 0, agonist: 40 }, pEff: { antagonist: 25, normal: 0, agonist: -28 },
+    sym: { receptor: 'β₁', nt: 'Norepinephrine (NE)', effect: 'Raises heart rate and contractility (positive chronotropy and inotropy) and speeds AV conduction.' },
+    para: { receptor: 'M₂', nt: 'Acetylcholine (ACh)', effect: 'Lowers heart rate (negative chronotropy) and slows AV node conduction. Little direct effect on ventricular force.' },
+    pearl: 'At rest, vagal tone dominates the SA node. That is why atropine raises heart rate in a healthy adult.',
+    drugs: {
+      sagonist: { ex: 'Dobutamine (β₁), epinephrine', out: 'Higher heart rate and contractility, higher cardiac output. Watch for tachyarrhythmia and ischemia.' },
+      santagonist: { ex: 'Metoprolol (β₁-selective)', out: 'Lower heart rate, contractility and AV conduction. Used in hypertension, heart failure, post-MI and AF rate control.' },
+      pagonist: { ex: 'Systemic ACh excess, neostigmine, organophosphates', out: 'Bradycardia and AV block.' },
+      pantagonist: { ex: 'Atropine', out: 'Higher heart rate; treats symptomatic bradycardia. Very low doses can cause a paradoxical slowing.' },
+    },
+  },
+  {
+    id: 'lungs', name: 'Lungs', sub: 'Bronchial smooth muscle and glands', metric: 'Airway caliber', unit: '% of baseline',
+    fmt: (v) => Math.round(40 + 1.2 * v), baseline: 50,
+    sEff: { antagonist: -15, normal: 0, agonist: 35 }, pEff: { antagonist: 25, normal: 0, agonist: -30 },
+    sym: { receptor: 'β₂', nt: 'Epinephrine (circulating) / NE', effect: 'Relaxes bronchial smooth muscle, so the airways widen for more airflow.' },
+    para: { receptor: 'M₃', nt: 'Acetylcholine (ACh)', effect: 'Contracts bronchial smooth muscle (bronchoconstriction) and increases mucus secretion.' },
+    pearl: 'Human airway smooth muscle has sparse sympathetic nerve supply. β₂ receptors respond mainly to circulating epinephrine.',
+    drugs: {
+      sagonist: { ex: 'Albuterol (β₂)', out: 'Bronchodilation, the rescue therapy in asthma. Tremor and tachycardia are the usual side effects.' },
+      santagonist: { ex: 'Propranolol (nonselective β)', out: 'Bronchoconstriction risk. Avoid in asthma; use cardioselective agents with caution in COPD.' },
+      pagonist: { ex: 'Methacholine challenge, bethanechol', out: 'Bronchoconstriction and more secretions. Methacholine is used diagnostically to unmask asthma.' },
+      pantagonist: { ex: 'Ipratropium, tiotropium', out: 'Bronchodilation and drier secretions. First-line maintenance in COPD.' },
+    },
+  },
+  {
+    id: 'gi', name: 'GI tract & glands', sub: 'Gut wall, sphincters, secretions', metric: 'GI motility', unit: '% of baseline',
+    fmt: (v) => Math.round(2 * v), baseline: 50,
+    sEff: { antagonist: 10, normal: 0, agonist: -30 }, pEff: { antagonist: -30, normal: 0, agonist: 35 },
+    sym: { receptor: 'α₁, β₂', nt: 'Norepinephrine (NE)', effect: 'Decreases motility, contracts sphincters, and inhibits digestion and glandular secretion.' },
+    para: { receptor: 'M₃', nt: 'Acetylcholine (ACh)', effect: 'Increases motility, relaxes sphincters, and stimulates digestion plus salivary and gastric secretions.' },
+    pearl: 'Muscarinic blockade gives the classic "dry mouth, constipation" pair. Cholinergic excess gives cramps and diarrhea.',
+    drugs: {
+      sagonist: { ex: 'Epinephrine, norepinephrine', out: 'Slower motility, tighter sphincters, splanchnic vasoconstriction. High-dose pressors can cause ileus.' },
+      santagonist: { ex: 'β-blockers, α₁ blockers', out: 'Little direct clinical GI effect. Loosened sympathetic brake can mean cramping or loose stools.' },
+      pagonist: { ex: 'Bethanechol, neostigmine', out: 'More motility, salivation, cramping, diarrhea. Neostigmine treats acute colonic pseudo-obstruction.' },
+      pantagonist: { ex: 'Glycopyrrolate, hyoscyamine, dicyclomine', out: 'Less motility and secretion: dry mouth, constipation. Relieves visceral spasm in IBS.' },
+    },
+  },
+  {
+    id: 'gu', name: 'Genitourinary tract', sub: 'Bladder, urethral sphincter, sexual organs', metric: 'Urinary outflow', unit: '% of baseline',
+    fmt: (v) => Math.round(2 * v), baseline: 50,
+    sEff: { antagonist: 20, normal: 0, agonist: -30 }, pEff: { antagonist: -30, normal: 0, agonist: 35 },
+    sym: { receptor: 'β₂ and α₁', nt: 'Norepinephrine (NE)', effect: 'Relaxes the detrusor (β) and contracts the internal urethral sphincter (α₁), promoting storage and retention. Mediates ejaculation.' },
+    para: { receptor: 'M₃', nt: 'Acetylcholine (ACh)', effect: 'Contracts the detrusor and relaxes the internal sphincter, promoting micturition. Mediates erection.' },
+    pearl: 'Parasympathetic points, sympathetic shoots. In humans, detrusor relaxation is mostly β₃, the target of mirabegron.',
+    drugs: {
+      sagonist: { ex: 'Phenylephrine, pseudoephedrine', out: 'Tighter bladder neck and prostate. Can cause urinary retention, especially in men with BPH.' },
+      santagonist: { ex: 'Tamsulosin (α₁A-selective)', out: 'Relaxes bladder neck and prostate, so flow improves in BPH. Side effects: orthostasis and retrograde or absent ejaculation.' },
+      pagonist: { ex: 'Bethanechol', out: 'Detrusor contraction for postoperative or neurogenic retention. Contraindicated with mechanical obstruction.' },
+      pantagonist: { ex: 'Oxybutynin, tolterodine', out: 'Relaxes the detrusor, easing urgency and incontinence in overactive bladder. Risks: retention, dry mouth, confusion in older adults.' },
+    },
+  },
+  {
+    id: 'vessels', name: 'Blood vessels', sub: 'Vascular smooth muscle', metric: 'Vascular tone', unit: '% of baseline',
+    fmt: (v) => Math.round(2 * v), baseline: 50,
+    sEff: { antagonist: -22, normal: 0, agonist: 35 }, pEff: { antagonist: 0, normal: 0, agonist: -8 },
+    sym: { receptor: 'α₁ (constrict) and β₂ (dilate)', nt: 'Norepinephrine (NE) / epinephrine', effect: 'α₁ constricts skin, mucosal and visceral vessels. β₂ dilates skeletal-muscle vessels.' },
+    para: { receptor: 'Minimal direct control', nt: 'ACh (via endothelium only if given exogenously)', effect: 'Most vessels have no parasympathetic supply. Resting vascular tone comes from sympathetic vasomotor outflow.' },
+    pearl: 'Circulating ACh can dilate vessels through endothelial M₃ and nitric oxide, even though vessels are not parasympathetically innervated.',
+    drugs: {
+      sagonist: { ex: 'Phenylephrine, norepinephrine (α₁)', out: 'Vasoconstriction and higher blood pressure. Phenylephrine often triggers reflex bradycardia.' },
+      santagonist: { ex: 'Prazosin, doxazosin, tamsulosin', out: 'Vasodilation and lower blood pressure. First-dose orthostatic hypotension, reflex tachycardia.' },
+      pagonist: { ex: 'Methacholine, cholinesterase inhibitors', out: 'Modest vasodilation and flushing through endothelial NO. Small net effect on vascular tone.' },
+      pantagonist: { ex: 'Atropine', out: 'No direct effect on tone. Toxic doses cause cutaneous flushing ("red as a beet").' },
+    },
+  },
+];
+
+const stateValue = (o, s, p) => clamp(o.baseline + o.sEff[s] + o.pEff[p]);
+
+const QUIZ = [
+  { q: 'A patient is given an α₁ antagonist such as tamsulosin. How does this change urinary outflow?', o: ['Outflow improves as bladder neck and prostatic smooth muscle relax', 'Outflow worsens as the detrusor relaxes', 'Outflow is unchanged because α₁ is not found in the GU tract', 'Outflow worsens as the external sphincter contracts'], a: 0, why: 'α₁ receptors contract the internal urethral sphincter and prostate. Blocking them lowers outlet resistance, which is why tamsulosin helps BPH.' },
+  { q: 'An antimuscarinic drug is given. What happens to the pupil and the bladder?', o: ['Miosis; bladder contracts', 'Mydriasis; detrusor relaxes, risk of retention', 'Mydriasis; bladder contracts', 'No change in pupil; bladder empties faster'], a: 1, why: 'Blocking M₃ relaxes the iris sphincter (mydriasis) and the detrusor (retention risk).' },
+  { q: 'Which receptor mediates the vagal slowing of heart rate?', o: ['β₁', 'M₃', 'M₂', 'α₁'], a: 2, why: 'ACh acts on M₂ receptors at the SA and AV nodes. β₁ is the sympathetic accelerator.' },
+  { q: 'A postoperative patient has non-obstructive urinary retention. Which drug is the best match?', o: ['Oxybutynin', 'Bethanechol', 'Phenylephrine', 'Atropine'], a: 1, why: 'Bethanechol is a direct muscarinic agonist that contracts the detrusor. Confirm there is no mechanical obstruction first.' },
+  { q: 'Pilocarpine is used in open-angle glaucoma. What is its eye effect?', o: ['Mydriasis and cycloplegia', 'Miosis with ciliary muscle contraction, improving aqueous outflow', 'Mydriasis only', 'Relaxation of the ciliary muscle'], a: 1, why: 'Pilocarpine stimulates M₃ on the iris sphincter and ciliary muscle, which opens the trabecular meshwork.' },
+  { q: 'Atropine is given for symptomatic bradycardia. What is the mechanism?', o: ['Stimulates β₁ in the SA node', 'Blocks M₂ receptors, removing vagal tone', 'Blocks β₂ in vessels', 'Stimulates M₃ in the ventricle'], a: 1, why: 'Antimuscarinics remove vagal brake on the SA node and speed AV conduction.' },
+  { q: 'Phenylephrine eye drops are used for a dilated fundus exam. Why is the pupil dilation different from atropine?', o: ['It acts through M₃, so accommodation is lost', 'It acts through α₁ on the radial muscle without paralyzing accommodation', 'It acts through β₂ on the ciliary muscle', 'It blocks the iris sphincter and ciliary muscle'], a: 1, why: 'α₁ stimulation contracts the radial dilator muscle. The ciliary muscle (M₃) is untouched.' },
+  { q: 'A patient with asthma is started on propranolol. What is the main concern?', o: ['Bronchoconstriction from β₂ blockade', 'Bronchodilation from α₁ blockade', 'Excess mucus from M₃ stimulation', 'Bradycardia from M₂ stimulation'], a: 0, why: 'Nonselective β-blockers block bronchial β₂ receptors and can trigger bronchospasm.' },
+  { q: 'A man with BPH takes an over-the-counter decongestant containing pseudoephedrine and develops urinary hesitancy. Why?', o: ['It relaxes the detrusor through M₃', 'It stimulates α₁, raising bladder neck and prostate tone', 'It blocks β₂ in the detrusor', 'It stimulates M₂ in the bladder'], a: 1, why: 'Sympathomimetic α₁ activity tightens the outlet, worsening obstruction.' },
+  { q: 'Which structure has little or no parasympathetic innervation?', o: ['Bronchial smooth muscle', 'Detrusor muscle', 'Systemic blood vessels', 'Iris sphincter'], a: 2, why: 'Most vascular smooth muscle is controlled by sympathetic vasomotor tone alone.' },
+  { q: 'What is the sympathetic effect on the GI tract?', o: ['Increased motility and relaxed sphincters', 'Decreased motility, contracted sphincters, reduced secretions', 'Increased gastric acid secretion', 'Increased salivary flow'], a: 1, why: 'Sympathetic output prioritizes fight or flight, so digestion is suppressed (α₁ and β₂).' },
+  { q: 'An older adult on oxybutynin for overactive bladder is brought in. Which complaint fits the drug?', o: ['Diarrhea and drooling', 'Dry mouth, constipation and urinary retention', 'Bradycardia and miosis', 'Bronchospasm'], a: 1, why: 'Oxybutynin blocks muscarinic receptors broadly. Confusion is a further risk in older patients.' },
+  { q: 'Which sexual function is mediated by each division?', o: ['Erection: sympathetic; ejaculation: parasympathetic', 'Erection: parasympathetic; ejaculation: sympathetic', 'Both are sympathetic', 'Both are parasympathetic'], a: 1, why: 'Parasympathetic points, sympathetic shoots. Tamsulosin can impair ejaculation through α₁ blockade.' },
+  { q: 'Metoprolol lowers heart rate by blocking which receptor?', o: ['M₂', 'α₁', 'β₁', 'β₂ only'], a: 2, why: 'Metoprolol is β₁-selective, so it reduces SA node rate and contractility.' },
+  { q: 'After a drug overdose a patient is drooling, tearing, has diarrhea, bradycardia and bronchospasm. Which antidote reverses the muscarinic effects?', o: ['Phenylephrine', 'Atropine', 'Propranolol', 'Albuterol'], a: 1, why: 'Atropine blocks muscarinic receptors. It treats cholinergic excess such as organophosphate poisoning.' },
+  { q: 'Prazosin is started at bedtime for hypertension. Which first-dose effect is expected?', o: ['Orthostatic hypotension from α₁ blockade', 'Bronchoconstriction from β₂ blockade', 'Bradycardia from M₂ stimulation', 'Urinary retention'], a: 0, why: 'α₁ blockade dilates arterioles and veins, so standing can drop blood pressure.' },
+];
+const S = (cat, q, o, a, why) => ({ cat, type: 'single', q, o, a, why });
+const M = (cat, q, o, a, why) => ({ cat, type: 'multi', q, o, a, why });
+const CATS = ['Receptors & physiology', 'Cholinergic agents', 'Anticholinergics', 'Adrenergic agonists', 'Adrenergic antagonists', 'Toxicology & cases'];
+const OLD_CATS = [4, 2, 0, 1, 1, 2, 3, 4, 3, 0, 0, 2, 0, 4, 5, 4];
+QUIZ.forEach((q, i) => { q.cat = CATS[OLD_CATS[i]]; q.type = 'single'; });
+const R = CATS[0], C = CATS[1], A = CATS[2];
+QUIZ.push(
+  S(R, 'A patient develops profuse sweating during a panic attack. Which neurotransmitter and receptor mediate eccrine sweating?', ['Norepinephrine at α₁ receptors', 'Acetylcholine at muscarinic receptors, released by sympathetic postganglionic fibers', 'Acetylcholine at nicotinic receptors', 'Epinephrine at β₂ receptors'], 1, 'Eccrine sweat glands are a sympathetic exception: postganglionic fibers release ACh onto muscarinic receptors.'),
+  M(R, 'Select all effects produced by sympathetic activation.', ['Mydriasis', 'Bronchodilation', 'Increased GI motility', 'Contraction of the internal urethral sphincter', 'Increased bronchial mucus secretion'], [0, 1, 3], 'Sympathetic output dilates pupils and airways and tightens the urinary sphincter. Motility and mucus are parasympathetic effects.'),
+  S(R, 'Preganglionic neurons of both autonomic divisions release which transmitter onto which receptor?', ['ACh onto nicotinic (Nn) receptors in ganglia', 'ACh onto M₁ receptors', 'NE onto α₁ receptors', 'ACh onto neuromuscular (Nm) receptors'], 0, 'Every autonomic ganglion uses ACh at neuronal nicotinic receptors. Nm receptors are at the skeletal neuromuscular junction.'),
+  S(R, 'The adrenal medulla is innervated by which fibers, and what does it release mainly?', ['Preganglionic sympathetic fibers; mainly epinephrine', 'Postganglionic sympathetic fibers; mainly norepinephrine', 'Parasympathetic fibers; mainly epinephrine', 'Preganglionic sympathetic fibers; mainly dopamine'], 0, 'Chromaffin cells act like postganglionic neurons. ACh from preganglionic fibers triggers release of mostly epinephrine.'),
+  S(R, 'IV acetylcholine lowers blood pressure even though most vessels lack parasympathetic nerves. Which pathway explains this?', ['Endothelial M₃ receptors causing nitric oxide release', 'Smooth-muscle M₂ receptors causing contraction', 'β₁ receptors on the endothelium', 'Nicotinic receptors on vascular smooth muscle'], 0, 'Circulating ACh stimulates endothelial M₃, which makes NO and relaxes smooth muscle.'),
+  S(C, 'Which cholinesterase inhibitor crosses the blood-brain barrier and can be used for severe anticholinergic delirium?', ['Neostigmine', 'Physostigmine', 'Pyridostigmine', 'Edrophonium'], 1, 'Physostigmine is a tertiary amine. Neostigmine and pyridostigmine are quaternary amines that stay out of the CNS.'),
+  S(C, 'Which agent is used orally for long-term symptom control in myasthenia gravis?', ['Pyridostigmine', 'Bethanechol', 'Physostigmine', 'Pilocarpine'], 0, 'Pyridostigmine raises ACh at the neuromuscular junction. Edrophonium is the short-acting diagnostic agent.'),
+  S(C, 'A patient with Sjogren syndrome starts oral pilocarpine for dry mouth. Which adverse effect is most expected?', ['Sweating', 'Constipation', 'Mydriasis', 'Urinary retention'], 0, 'Pilocarpine stimulates muscarinic receptors in sweat glands. Nausea, flushing and urinary frequency also occur.'),
+  M(C, 'Select the contraindications to bethanechol.', ['Mechanical bladder outlet obstruction', 'Active asthma', 'Postoperative non-obstructive urinary retention', 'Bradycardia or AV block', 'Type 2 diabetes'], [0, 1, 3], 'Bethanechol can worsen obstruction, bronchospasm and bradycardia. Non-obstructive retention is its indication.'),
+  S(C, 'After organophosphate exposure, which drug reactivates acetylcholinesterase if given early?', ['Pralidoxime', 'Atropine', 'Physostigmine', 'Neostigmine'], 0, 'Oximes reverse phosphorylation before the enzyme "ages". Atropine blocks muscarinic effects but does not restore the enzyme.'),
+  S(C, 'Neostigmine is given to reverse rocuronium. Which drug is usually co-administered to blunt the muscarinic effects?', ['Glycopyrrolate', 'Pyridostigmine', 'Bethanechol', 'Edrophonium'], 0, 'Glycopyrrolate (or atropine) blocks bradycardia and secretions without stopping the nicotinic effect at the neuromuscular junction.'),
+  S(A, 'A patient on haloperidol develops acute dystonia. Which agent is appropriate?', ['Benztropine', 'Bethanechol', 'Neostigmine', 'Pilocarpine'], 0, 'Antimuscarinics restore the cholinergic-dopamine balance in the striatum. Diphenhydramine is an alternative.'),
+  S(A, 'A transdermal scopolamine patch is used for motion sickness. Which adverse effects should the patient expect?', ['Drowsiness and dry mouth', 'Diarrhea and salivation', 'Miosis and bradycardia', 'Bronchospasm'], 0, 'Scopolamine crosses the CNS and blocks muscarinic receptors broadly.'),
+  M(A, 'Select all findings of the anticholinergic toxidrome.', ['Dry, flushed skin', 'Mydriasis', 'Urinary retention', 'Hyperactive bowel sounds', 'Diaphoresis'], [0, 1, 2], 'Think "dry as a bone, red as a beet, blind as a bat". Bowel sounds fall and sweating stops.'),
+  S(A, 'Why is tiotropium convenient for COPD maintenance compared with ipratropium?', ['Longer duration allows once-daily dosing', 'It is a β₂ agonist', 'It acts at nicotinic receptors', 'It crosses into the CNS'], 0, 'Both block M₃ in the airways. Tiotropium dissociates slowly, so one dose lasts about 24 hours.'),
+  S(A, 'A 78-year-old man with BPH develops urinary retention after taking diphenhydramine for sleep. What is the mechanism?', ['Blockade of detrusor M₃ receptors', 'Stimulation of α₁ receptors in the bladder', 'Stimulation of β₃ receptors', 'Blockade of nicotinic receptors in the ganglia'], 0, 'First-generation antihistamines are strongly anticholinergic and are avoided in older adults.'),
+  S(A, 'Which patient should avoid atropine eye drops?', ['One with a narrow anterior chamber angle', 'One with a corneal abrasion', 'One with myopia', 'One with presbyopia'], 0, 'Mydriasis crowds the angle and can precipitate acute angle-closure glaucoma.'),
+);
+const AG = CATS[3], AN = CATS[4], TX = CATS[5];
+QUIZ.push(
+  S(AG, 'Phenylephrine is infused for hypotension and the heart rate falls. Why?', ['Baroreceptor reflex raises vagal tone as blood pressure rises', 'Direct M₂ stimulation', 'Direct β₁ blockade', 'Release of acetylcholine from the adrenal medulla'], 0, 'Phenylephrine is a pure α₁ agonist with little β₁ activity, so the reflex vagal slowing is unopposed.'),
+  S(AG, 'Why is epinephrine first-line for anaphylaxis?', ['α₁ vasoconstriction, β₁ inotropy and β₂ bronchodilation address several features at once', 'It is a selective β₂ agonist', 'It blocks histamine H₁ receptors', 'It acts only on bronchial smooth muscle'], 0, 'Epinephrine reverses hypotension, bronchospasm and mucosal edema together.'),
+  S(AG, 'Which selective β₁ agonist is used for acute decompensated heart failure and pharmacologic stress testing?', ['Dobutamine', 'Albuterol', 'Phenylephrine', 'Clonidine'], 0, 'Dobutamine raises contractility with relatively less vasoconstriction.'),
+  S(AG, 'Which laboratory change is expected after repeated high-dose albuterol?', ['Hypokalemia', 'Hyperkalemia', 'Hypernatremia', 'Hypocalcemia'], 0, 'β₂ stimulation drives potassium into cells through Na-K-ATPase.'),
+  S(AG, 'Which vasopressor is first-line in septic shock after fluid resuscitation?', ['Norepinephrine', 'Phenylephrine', 'Dobutamine', 'Albuterol'], 0, 'Norepinephrine raises mean arterial pressure through α₁ with some β₁ support.'),
+  S(AG, 'A patient on clonidine stops it abruptly. What is the main risk?', ['Rebound hypertension', 'Hypoglycemia', 'Bronchospasm', 'Urinary retention'], 0, 'Clonidine is a central α₂ agonist. Withdrawal releases sympathetic outflow, producing rebound hypertension.'),
+  S(AN, 'Which beta-blocker also blocks α₁ receptors, adding vasodilation and orthostatic hypotension risk?', ['Carvedilol', 'Metoprolol', 'Atenolol', 'Propranolol'], 0, 'Carvedilol and labetalol combine β and α₁ blockade.'),
+  M(AN, 'Select the effects expected from beta-blockers.', ['Decreased renin release', 'Masked tachycardia during hypoglycemia', 'Increased AV nodal conduction', 'Increased contractility', 'Bronchoconstriction with nonselective agents'], [0, 1, 4], 'β₁ blockade lowers renin, rate and conduction. Nonselective agents also block bronchial β₂.'),
+  S(AN, 'Before beta-blockade in pheochromocytoma, which drug must be started first?', ['An α-blocker such as phenoxybenzamine', 'Albuterol', 'Atropine', 'Neostigmine'], 0, 'A beta-blocker alone leaves α₁ unopposed and can cause a hypertensive crisis.'),
+  S(AN, 'Why is tamsulosin less likely than doxazosin to cause orthostatic hypotension?', ['Greater selectivity for α₁A in prostate and bladder neck over vascular α₁B', 'It blocks β₁ receptors', 'It does not reach the bladder', 'It is a muscarinic antagonist'], 0, 'Uroselectivity limits vascular effects, though orthostasis can still occur.'),
+  S(AN, 'A patient stops propranolol abruptly after years of therapy. Which problem is most likely?', ['Rebound tachycardia, hypertension or angina', 'Bradycardia', 'Hypotension', 'Bronchodilation'], 0, 'Chronic β blockade upregulates receptors. Taper to avoid rebound.'),
+  S(AN, 'A patient scheduled for cataract surgery takes tamsulosin. What should the surgeon know?', ['Risk of intraoperative floppy iris syndrome', 'Risk of angle-closure glaucoma', 'It prevents mydriasis completely', 'It causes corneal edema'], 0, 'Tamsulosin affects iris dilator muscle tone, causing a flaccid iris during surgery.'),
+  S(TX, 'A forager eats wild mushrooms and develops salivation, lacrimation, sweating and bradycardia. Which treatment is most appropriate?', ['Atropine', 'Physostigmine', 'Epinephrine', 'Propranolol'], 0, 'Muscarine-containing mushrooms cause a cholinergic syndrome. Atropine blocks the muscarinic effects.'),
+  S(TX, 'A young adult presents after eating jimsonweed: hyperthermia, dry skin, mydriasis, delirium and urinary retention. Which antidote may be used?', ['Physostigmine', 'Atropine', 'Neostigmine', 'Pralidoxime'], 0, 'Physostigmine crosses the CNS and can reverse severe anticholinergic delirium, with caution for seizures and arrhythmia.'),
+  S(TX, 'A patient on phenelzine (an MAOI) eats aged cheese and develops severe headache and BP 230/130. What is the mechanism?', ['Tyramine displaces stored norepinephrine, causing massive release', 'Direct α₁ blockade', 'Muscarinic stimulation', 'β₂-mediated vasodilation'], 0, 'MAO inhibition lets tyramine reach nerve terminals and trigger a hypertensive crisis. Phentolamine is a treatment.'),
+  S(TX, 'Anaphylaxis is unresponsive to epinephrine in a patient taking metoprolol. Which agent is the next choice?', ['Glucagon', 'Atropine', 'Phenylephrine only', 'Neostigmine'], 0, 'Glucagon raises cAMP through a receptor that bypasses the blocked β receptors.'),
+  S(TX, 'A man taking tamsulosin is prescribed sildenafil. What should the pharmacist counsel?', ['Additive hypotension and dizziness; start low and watch for orthostasis', 'No interaction exists', 'Sildenafil blocks tamsulosin absorption', 'Both cause urinary retention'], 0, 'α₁ blockade and PDE5 inhibition both lower blood pressure.'),
+  S(TX, 'Which is a better overactive bladder choice for an older adult with cognitive impairment?', ['Mirabegron (β₃ agonist)', 'Oxybutynin', 'Bethanechol', 'Benztropine'], 0, 'Mirabegron relaxes the detrusor without anticholinergic CNS burden. Oxybutynin is a Beers list drug.'),
+);
+const st = (o) => o;
+function OrganVisual({ organ, v }) {
+  const val = parseFloat(organ.fmt(v));
+  const sTone = { fill: 'var(--sym-soft)', stroke: 'var(--sym)' };
+  const pTone = { fill: 'var(--para-soft)', stroke: 'var(--para)' };
+  if (organ.id === 'eyes') {
+    const r = Math.min(54, val * 7.5);
+    return (
+      <svg viewBox="0 0 300 190" className="w-full" role="img" aria-label={`Eye with pupil diameter ${val} millimetres`}>
+        <path d="M20 95 Q150 -15 280 95 Q150 205 20 95Z" style={{ fill: 'var(--surface)', stroke: 'var(--line)', strokeWidth: 3 }} />
+        <circle cx="150" cy="95" r="64" style={{ fill: 'var(--para)', opacity: 0.85 }} />
+        <circle cx="150" cy="95" r="64" style={{ fill: 'none', stroke: 'var(--fg)', strokeWidth: 1.5, opacity: 0.4 }} />
+        <circle cx="150" cy="95" r={r} style={{ fill: '#0a0f14', transition: 'r .6s ease' }} />
+        <circle cx="132" cy="78" r="7" style={{ fill: '#fff', opacity: 0.7 }} />
+        <text x="150" y="182" textAnchor="middle" fontSize="12" style={{ fill: 'var(--muted)' }}>{val < 2.5 ? 'Miosis' : val > 6 ? 'Mydriasis' : 'Normal size'}</text>
+      </svg>
+    );
+  }
+  if (organ.id === 'heart') {
+    const dur = (60 / val).toFixed(2);
+    return (
+      <svg viewBox="0 0 300 200" className="w-full" role="img" aria-label={`Heart beating at ${val} beats per minute`}>
+        <g style={{ transformOrigin: '150px 95px', animation: `beat ${dur}s ease-in-out infinite` }}>
+          <path d="M150 170 C60 110 40 60 85 38 C115 24 142 40 150 62 C158 40 185 24 215 38 C260 60 240 110 150 170Z" style={{ fill: 'var(--sym-soft)', stroke: 'var(--sym)', strokeWidth: 4 }} />
+          <path d="M150 62 C150 100 138 120 118 140" style={{ fill: 'none', stroke: 'var(--para)', strokeWidth: 3, strokeDasharray: '4 5' }} />
+        </g>
+        <polyline points="10,188 70,188 80,176 92,198 104,188 290,188" style={{ fill: 'none', stroke: 'var(--muted)', strokeWidth: 1.5, opacity: 0.6 }} />
+        <text x="150" y="22" textAnchor="middle" fontSize="13" style={{ fill: 'var(--muted)' }}>Beat interval {dur} s</text>
+      </svg>
+    );
+  }
+  if (organ.id === 'lungs') {
+    const w = Math.max(2, Math.min(13, val / 11));
+    const bro = { fill: 'none', stroke: 'var(--fg)', strokeLinecap: 'round', strokeWidth: w, transition: 'stroke-width .6s ease' };
+    const scale = 0.94 + Math.min(0.1, (val - 100) / 600);
+    return (
+      <svg viewBox="0 0 300 210" className="w-full" role="img" aria-label={`Bronchi at ${val} percent of baseline caliber`}>
+        <g style={{ transformOrigin: '150px 120px', transform: `scale(${scale})`, transition: 'transform .6s ease' }}>
+          <path d="M138 70 C70 60 38 120 48 175 C54 200 105 200 128 172 C140 150 138 110 138 70Z" style={{ fill: 'var(--para-soft)', stroke: 'var(--para)', strokeWidth: 2.5 }} />
+          <path d="M162 70 C230 60 262 120 252 175 C246 200 195 200 172 172 C160 150 162 110 162 70Z" style={{ fill: 'var(--para-soft)', stroke: 'var(--para)', strokeWidth: 2.5 }} />
+        </g>
+        <path d="M150 12 L150 66" style={{ ...bro, strokeWidth: w + 3 }} />
+        <path d="M150 66 L112 100 L92 140 M112 100 L120 150 M150 66 L188 100 L208 140 M188 100 L180 150" style={bro} />
+        <text x="150" y="203" textAnchor="middle" fontSize="12" style={{ fill: 'var(--muted)' }}>{val < 80 ? 'Bronchoconstriction' : val > 125 ? 'Bronchodilation' : 'Resting caliber'}</text>
+      </svg>
+    );
+  }
+  if (organ.id === 'gi') {
+    const spd = val < 8 ? 0 : (3 / (val / 100)).toFixed(2);
+    const gap = Math.max(2, Math.min(14, val / 14));
+    return (
+      <svg viewBox="0 0 300 200" className="w-full" role="img" aria-label={`Gut motility at ${val} percent of baseline`}>
+        <path d="M60 30 C140 20 250 30 250 70 C250 105 90 100 70 130 C55 160 130 175 240 165" style={{ fill: 'none', stroke: 'var(--surface2)', strokeWidth: 34, strokeLinecap: 'round' }} />
+        <path d="M60 30 C140 20 250 30 250 70 C250 105 90 100 70 130 C55 160 130 175 240 165" style={{ fill: 'none', stroke: 'var(--para)', strokeWidth: gap + 8, strokeLinecap: 'round', strokeDasharray: '14 26', animation: spd ? `wave ${spd}s linear infinite` : 'none', opacity: 0.9 }} />
+        <circle cx="60" cy="30" r="10" style={{ fill: 'var(--sym)' }} /><circle cx="240" cy="165" r="10" style={{ fill: 'var(--sym)' }} />
+        <text x="150" y="196" textAnchor="middle" fontSize="12" style={{ fill: 'var(--muted)' }}>{val < 40 ? 'Hypomotility, risk of ileus' : val > 140 ? 'Hypermotility, cramping' : 'Normal peristalsis'} (orange dots: sphincters)</text>
+      </svg>
+    );
+  }
+  if (organ.id === 'gu') {
+    const gap = Math.max(2, Math.min(26, val * 0.14));
+    const flow = val > 110;
+    return (
+      <svg viewBox="0 0 300 210" className="w-full" role="img" aria-label={`Urinary outflow at ${val} percent of baseline`}>
+        <ellipse cx="150" cy="80" rx="66" ry="56" style={{ fill: 'var(--para-soft)', stroke: 'var(--para)', strokeWidth: 3 }} />
+        <ellipse cx="150" cy="92" rx="50" ry="38" style={{ fill: 'var(--surface)', stroke: 'var(--line)', strokeWidth: 2, opacity: 0.8 }} />
+        <path d={`M${150 - gap - 4} 138 L${150 - gap - 4} 190 M${150 + gap + 4} 138 L${150 + gap + 4} 190`} style={{ stroke: 'var(--fg)', strokeWidth: 3, fill: 'none', transition: 'all .6s ease' }} />
+        <rect x={150 - gap - 12} y="132" width="12" height="12" rx="3" style={{ fill: 'var(--sym)', transition: 'all .6s ease' }} />
+        <rect x={150 + gap} y="132" width="12" height="12" rx="3" style={{ fill: 'var(--sym)', transition: 'all .6s ease' }} />
+        {flow && [0, 1, 2].map((i) => <circle key={i} cx="150" cy={160 + i * 14} r="3.5" style={{ fill: 'var(--para)' }} />)}
+        <text x="150" y="206" textAnchor="middle" fontSize="12" style={{ fill: 'var(--muted)' }}>{val < 55 ? 'Retention: storage favored' : val > 130 ? 'Voiding favored' : 'Storage and voiding balanced'}</text>
+      </svg>
+    );
+  }
+  const lumen = Math.max(14, Math.min(72, 112 - val * 0.4));
+  const wall = 22;
+  return (
+    <svg viewBox="0 0 300 200" className="w-full" role="img" aria-label={`Vascular tone at ${val} percent of baseline`}>
+      <rect x="20" y={100 - lumen / 2 - wall} width="260" height={lumen + wall * 2} rx="12" style={{ fill: 'var(--sym-soft)', stroke: 'var(--sym)', strokeWidth: 3, transition: 'all .6s ease' }} />
+      <rect x="20" y={100 - lumen / 2} width="260" height={lumen} style={{ fill: 'var(--surface)', transition: 'all .6s ease' }} />
+      {[50, 110, 170, 230].map((x) => <circle key={x} cx={x} cy="100" r={Math.min(8, lumen / 3)} style={{ fill: 'var(--bad)' }} />)}
+      <text x="150" y="190" textAnchor="middle" fontSize="12" style={{ fill: 'var(--muted)' }}>{val < 65 ? 'Vasodilation, lower resistance' : val > 130 ? 'Vasoconstriction, higher resistance' : 'Resting vasomotor tone'}</text>
+    </svg>
+  );
+}
+
+const SPOTS = [
+  { id: 'eyes', x: 110, y: 44, tag: 'Ey', lx: 150, ly: 48 },
+  { id: 'lungs', x: 78, y: 112, tag: 'Lg', lx: 20, ly: 116 },
+  { id: 'heart', x: 124, y: 134, tag: 'Ht', lx: 150, ly: 138 },
+  { id: 'gi', x: 110, y: 196, tag: 'GI', lx: 150, ly: 200 },
+  { id: 'gu', x: 110, y: 262, tag: 'GU', lx: 150, ly: 266 },
+  { id: 'vessels', x: 182, y: 214, tag: 'BV', lx: 204, ly: 218 },
+];
+
+function BodyMap({ sel, onSelect, s, p }) {
+  const ring = s !== 'normal' && p !== 'normal' ? 'var(--fg)' : s !== 'normal' ? 'var(--sym)' : p !== 'normal' ? 'var(--para)' : null;
+  return (
+    <svg viewBox="0 0 250 420" className="w-full" style={{ maxHeight: 460 }} role="group" aria-label="Body map. Select an organ system.">
+      <g style={{ fill: 'var(--surface2)', stroke: 'var(--line)', strokeWidth: 2 }}>
+        <circle cx="110" cy="44" r="30" />
+        <path d="M94 72 L94 88 L60 98 C38 106 36 130 40 170 L48 240 L64 238 L66 150 L78 150 L78 262 L74 400 L102 404 L110 300 L118 404 L146 400 L142 262 L142 150 L154 150 L156 238 L172 240 L180 170 C184 130 182 106 160 98 L126 88 L126 72Z" />
+      </g>
+      <path d="M176 130 C190 160 186 190 182 232" style={{ fill: 'none', stroke: 'var(--sym)', strokeWidth: 3, strokeDasharray: '2 6', strokeLinecap: 'round' }} />
+      {SPOTS.map((sp) => {
+        const on = sel === sp.id;
+        return (
+          <g key={sp.id} className="hot" role="button" tabIndex={0} aria-pressed={on} aria-label={ORGANS.find((o) => o.id === sp.id).name}
+            onClick={() => onSelect(sp.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(sp.id); } }}>
+            <circle className="ring" cx={sp.x} cy={sp.y} r="17" style={ring && on ? { stroke: ring } : undefined} />
+            <text x={sp.x} y={sp.y + 4} textAnchor="middle" fontSize="11" fontWeight="700" style={{ fill: 'var(--fg)', pointerEvents: 'none' }}>{sp.tag}</text>
+            {on && <circle cx={sp.x} cy={sp.y} r="24" style={{ fill: 'none', stroke: 'var(--para)', strokeWidth: 2, opacity: 0.6 }} />}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+function Meter({ v, baseline }) {
+  const color = v > baseline + 3 ? 'var(--sym)' : v < baseline - 3 ? 'var(--para)' : 'var(--muted)';
+  return (
+    <div className="meter" aria-hidden="true" style={{ position: 'relative' }}>
+      <i style={{ width: v + '%', background: color }} />
+      <span style={{ position: 'absolute', left: baseline + '%', top: 0, bottom: 0, width: 2, background: 'var(--fg)', opacity: 0.55 }} />
+    </div>
+  );
+}
+
+function DetailCard({ organ, s, p }) {
+  const v = stateValue(organ, s, p);
+  const base = organ.fmt(organ.baseline);
+  const now = organ.fmt(v);
+  const active = [];
+  if (s === 'agonist') active.push(['s', 'Sympathomimetic', organ.drugs.sagonist]);
+  if (s === 'antagonist') active.push(['s', 'Sympatholytic', organ.drugs.santagonist]);
+  if (p === 'agonist') active.push(['p', 'Parasympathomimetic', organ.drugs.pagonist]);
+  if (p === 'antagonist') active.push(['p', 'Anticholinergic', organ.drugs.pantagonist]);
+  return (
+    <div className="surface p-4 sm:p-5 fade" key={organ.id} style={{ minWidth: 0 }}>
+      <div className="flex items-baseline justify-between gap-3 flex-wrap">
+        <h2 className="text-xl font-semibold">{organ.name}</h2>
+        <span className="label">{organ.sub}</span>
+      </div>
+      <div className="grid gap-3 mt-4">
+        <section className="card-s p-3" aria-label="Sympathetic innervation">
+          <div className="flex items-center gap-2 flex-wrap"><span className="chip s">Sympathetic</span><span className="chip s">{organ.sym.receptor}</span><span className="text-sm muted">{organ.sym.nt}</span></div>
+          <p className="mt-2 text-sm">{organ.sym.effect}</p>
+        </section>
+        <section className="card-p p-3" aria-label="Parasympathetic innervation">
+          <div className="flex items-center gap-2 flex-wrap"><span className="chip p">Parasympathetic</span><span className="chip p">{organ.para.receptor}</span><span className="text-sm muted">{organ.para.nt}</span></div>
+          <p className="mt-2 text-sm">{organ.para.effect}</p>
+        </section>
+      </div>
+      <div className="mt-4" aria-live="polite">
+        <div className="flex items-end justify-between gap-3">
+          <div><div className="label">{organ.metric}</div><div className="disp text-3xl font-semibold" style={{ fontVariantNumeric: 'tabular-nums' }}>{now} <span className="text-sm muted font-normal">{organ.unit}</span></div></div>
+          <div className="text-right text-sm muted">Baseline {base}<br />{s === 'normal' && p === 'normal' ? 'Normal physiology' : 'Drug effect applied'}</div>
+        </div>
+        <div className="mt-2"><Meter v={v} baseline={organ.baseline} /></div>
+      </div>
+      {active.length > 0 && (
+        <div className="mt-4 grid gap-2">
+          <div className="label">Active drug effects</div>
+          {active.map(([k, cls, d]) => (
+            <div key={cls} className={(k === 's' ? 'card-s' : 'card-p') + ' p-3 fade'}>
+              <div className={'text-sm font-semibold ' + (k === 's' ? 'sym' : 'para')}>{cls}: {d.ex}</div>
+              <p className="text-sm mt-1">{d.out}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="mt-4 text-sm muted"><span className="font-semibold" style={{ color: 'var(--fg)' }}>Clinical pearl. </span>{organ.pearl}</p>
+    </div>
+  );
+}
+
+function ControlBar({ s, p, setS, setP }) {
+  const Row = ({ kind, value, set, title }) => (
+    <div className="flex items-center gap-2 flex-wrap">
+      <span className={'label w-28 shrink-0 ' + (kind === 's' ? 'sym' : 'para')}>{title}</span>
+      <div className="flex gap-2 flex-wrap" role="group" aria-label={title}>
+        {MODES.map((m) => (
+          <button key={m} className={'pill ' + kind} aria-pressed={value === m} onClick={() => set(m)}>{MODE_LABEL[m]}</button>
+        ))}
+      </div>
+    </div>
+  );
+  const note = [s === 'agonist' && DRUG_CLASS.sagonist, s === 'antagonist' && DRUG_CLASS.santagonist, p === 'agonist' && DRUG_CLASS.pagonist, p === 'antagonist' && DRUG_CLASS.pantagonist].filter(Boolean).join(' + ');
+  return (
+    <div className="bar">
+      <div className="wrap grid gap-2">
+        <Row kind="s" value={s} set={setS} title="Sympathetic" />
+        <Row kind="p" value={p} set={setP} title="Parasympathetic" />
+        <div className="text-xs muted" aria-live="polite">{note || 'No drug given. Showing normal resting autonomic tone.'}</div>
+      </div>
+    </div>
+  );
+}
+
+function Explorer({ sel, setSel, s, p }) {
+  const organ = ORGANS.find((o) => o.id === sel);
+  const v = stateValue(organ, s, p);
+  return (
+    <div className="grid gap-4 lg:grid-cols-5 items-start">
+      <div className="lg:col-span-3 grid gap-4 md:grid-cols-[210px_minmax(0,1fr)]" style={{ minWidth: 0 }}>
+        <div className="surface p-3" style={{ minWidth: 0 }}>
+          <div className="label mb-1">Body map</div>
+          <div style={{ maxWidth: 220, margin: '0 auto' }}><BodyMap sel={sel} onSelect={setSel} s={s} p={p} /></div>
+          <p className="text-xs muted mt-2">Ey eyes, Lg lungs, Ht heart, GI gut, GU genitourinary, BV blood vessels.</p>
+        </div>
+        <div className="surface p-3 sm:p-4" style={{ minWidth: 0 }}>
+          <div className="flex items-baseline justify-between gap-2"><div className="label">Organ view</div><span className="text-sm font-semibold">{organ.name}</span></div>
+          <div className="mt-2"><OrganVisual organ={organ} v={v} /></div>
+          <div className="flex gap-2 flex-wrap mt-2">
+            {ORGANS.map((o) => <button key={o.id} className="btn" style={o.id === sel ? { background: 'var(--surface2)', borderColor: 'var(--fg)' } : undefined} onClick={() => setSel(o.id)}>{o.name.split(' ')[0]}</button>)}
+          </div>
+        </div>
+      </div>
+      <div className="lg:col-span-2" style={{ minWidth: 0 }}><DetailCard organ={organ} s={s} p={p} /></div>
+    </div>
+  );
+}
+const DRUGS = [
+  { id: 'phenylephrine', name: 'Phenylephrine', cls: 'α₁ agonist', k: 's', d: { eyes: 25, heart: -10, lungs: 0, gi: -10, gu: -25, vessels: 35 } },
+  { id: 'epinephrine', name: 'Epinephrine', cls: 'α/β agonist', k: 's', d: { eyes: 20, heart: 35, lungs: 30, gi: -25, gu: -15, vessels: 12 } },
+  { id: 'albuterol', name: 'Albuterol', cls: 'β₂ agonist', k: 's', d: { eyes: 0, heart: 8, lungs: 35, gi: -5, gu: -5, vessels: -8 } },
+  { id: 'tamsulosin', name: 'Tamsulosin', cls: 'α₁A antagonist', k: 's', d: { eyes: -3, heart: 3, lungs: 0, gi: 0, gu: 20, vessels: -8 } },
+  { id: 'metoprolol', name: 'Metoprolol', cls: 'β₁ antagonist', k: 's', d: { eyes: 0, heart: -14, lungs: -3, gi: 3, gu: 0, vessels: -5 } },
+  { id: 'propranolol', name: 'Propranolol', cls: 'Nonselective β antagonist', k: 's', d: { eyes: 0, heart: -14, lungs: -15, gi: 3, gu: 0, vessels: -4 } },
+  { id: 'bethanechol', name: 'Bethanechol', cls: 'Muscarinic agonist', k: 'p', d: { eyes: -8, heart: -10, lungs: -12, gi: 30, gu: 35, vessels: -5 } },
+  { id: 'pilocarpine', name: 'Pilocarpine', cls: 'Muscarinic agonist', k: 'p', d: { eyes: -35, heart: -4, lungs: -6, gi: 8, gu: 8, vessels: -2 } },
+  { id: 'neostigmine', name: 'Neostigmine', cls: 'Cholinesterase inhibitor', k: 'p', d: { eyes: -10, heart: -18, lungs: -18, gi: 35, gu: 30, vessels: -4 } },
+  { id: 'atropine', name: 'Atropine', cls: 'Antimuscarinic', k: 'p', d: { eyes: 35, heart: 25, lungs: 15, gi: -30, gu: -25, vessels: 0 } },
+  { id: 'oxybutynin', name: 'Oxybutynin', cls: 'Antimuscarinic', k: 'p', d: { eyes: 10, heart: 5, lungs: 5, gi: -15, gu: -35, vessels: 0 } },
+  { id: 'ipratropium', name: 'Ipratropium', cls: 'Inhaled antimuscarinic', k: 'p', d: { eyes: 2, heart: 2, lungs: 25, gi: -2, gu: -2, vessels: 0 } },
+];
+
+const PAIR_NOTES = {
+  'atropine|bethanechol': ['Opposing', 'Direct competition at M₃ and M₂. Atropine overrides bethanechol, which is the logic behind atropine as the antidote for muscarinic excess.'],
+  'atropine|neostigmine': ['Therapeutic', 'Standard pairing to reverse neuromuscular blockade. The antimuscarinic blunts bradycardia and secretions while the nicotinic effect at the neuromuscular junction remains. Glycopyrrolate is often used instead.'],
+  'atropine|pilocarpine': ['Opposing', 'They compete at the iris sphincter and ciliary muscle. Atropine overrides pilocarpine, restoring a dilated pupil.'],
+  'bethanechol|oxybutynin': ['Opposing', 'Therapeutic cancellation at the detrusor: one drug contracts it, the other relaxes it. Avoid this combination.'],
+  'atropine|oxybutynin': ['Risk', 'Additive anticholinergic burden: dry mouth, constipation, urinary retention, tachycardia and confusion, especially in older adults.'],
+  'ipratropium|oxybutynin': ['Additive', 'Mostly additive anticholinergic effects. Inhaled ipratropium has little systemic exposure, but watch for retention and dry mouth.'],
+  'epinephrine|propranolol': ['Risk', 'Unopposed α₁: β₂ vasodilation is blocked, so epinephrine can cause severe hypertension with reflex bradycardia. Anaphylaxis may also respond poorly; glucagon is the rescue.'],
+  'albuterol|propranolol': ['Opposing', 'Pharmacologic antagonism at β₂. Bronchodilation is blunted and bronchospasm can be triggered in asthma.'],
+  'albuterol|metoprolol': ['Opposing', 'Cardioselective blockade spares most β₂ receptors, but selectivity fades at higher doses. Albuterol can still raise heart rate.'],
+  'metoprolol|propranolol': ['Risk', 'Therapeutic duplication. Expect additive bradycardia and AV block.'],
+  'phenylephrine|tamsulosin': ['Opposing', 'Direct opposition at α₁. The decongestant effect and bladder-neck tightening are blunted by tamsulosin.'],
+  'metoprolol|tamsulosin': ['Additive', 'Additive blood pressure lowering. Counsel on first-dose and orthostatic dizziness and fall risk.'],
+  'albuterol|epinephrine': ['Additive', 'Additive β₂ bronchodilation. Also additive tachycardia, tremor and hypokalemia.'],
+  'epinephrine|phenylephrine': ['Additive', 'Additive α₁ vasoconstriction. Watch for severe hypertension and reduced peripheral perfusion.'],
+  'neostigmine|pilocarpine': ['Risk', 'Additive cholinergic stimulation: salivation, sweating, bradycardia and bronchospasm.'],
+  'bethanechol|neostigmine': ['Risk', 'Additive cholinergic excess, a recipe for cholinergic crisis (SLUDGE, bradycardia, bronchospasm).'],
+  'metoprolol|pilocarpine': ['Risk', 'Additive slowing of conduction. Use caution with beta-blockers and cholinergic agonists.'],
+  'metoprolol|phenylephrine': ['Additive', 'Phenylephrine raises pressure and the vagal reflex slows the heart. Beta-blockade adds to the bradycardia.'],
+};
+const pairKey = (a, b) => [a, b].sort().join('|');
+const ORDER = ['eyes', 'heart', 'lungs', 'gi', 'gu', 'vessels'];
+const PRESETS = [['epinephrine', 'propranolol'], ['atropine', 'neostigmine'], ['bethanechol', 'oxybutynin'], ['tamsulosin', 'metoprolol'], ['atropine', 'oxybutynin']];
+
+function flagsFor(vals) {
+  const f = [];
+  if (vals.heart <= 28) f.push(['Marked bradycardia', 'p']);
+  if (vals.heart >= 82) f.push(['Tachycardia', 's']);
+  if (vals.vessels >= 80) f.push(['Hypertension risk', 's']);
+  if (vals.vessels <= 30) f.push(['Hypotension risk', 'p']);
+  if (vals.lungs <= 25) f.push(['Bronchospasm risk', 'p']);
+  if (vals.gu <= 25) f.push(['Urinary retention risk', 's']);
+  if (vals.gu >= 85) f.push(['Urgency or incontinence', 'p']);
+  if (vals.gi <= 25) f.push(['Constipation or ileus risk', 's']);
+  if (vals.gi >= 80) f.push(['Cramping or diarrhea', 'p']);
+  if (vals.eyes >= 80) f.push(['Marked mydriasis', 's']);
+  if (vals.eyes <= 20) f.push(['Marked miosis', 'p']);
+  return f;
+}
+
+function Interactions() {
+  const [ida, setIda] = useState('epinephrine');
+  const [idb, setIdb] = useState('propranolol');
+  const [fa, setFa] = useState(100);
+  const [fb, setFb] = useState(100);
+  const da = DRUGS.find((x) => x.id === ida), db = DRUGS.find((x) => x.id === idb);
+  const same = ida === idb;
+  const rows = ORDER.map((oid) => {
+    const o = ORGANS.find((x) => x.id === oid);
+    const a = da.d[oid] * fa / 100, b = db.d[oid] * fb / 100;
+    const va = clamp(50 + a), vb = clamp(50 + b), vc = clamp(50 + a + (same ? 0 : b));
+    return { o, a, b, va, vb, vc };
+  });
+  const vals = {}; rows.forEach((r) => { vals[r.o.id] = r.vc; });
+  const flags = flagsFor(vals);
+  const note = PAIR_NOTES[pairKey(ida, idb)];
+  let add = 0, opp = 0;
+  rows.forEach((r) => { if (Math.abs(r.a) >= 8 && Math.abs(r.b) >= 8) { if (r.a * r.b > 0) add++; else opp++; } });
+  const kind = same ? 'Same drug' : note ? note[0] : opp > add ? 'Opposing' : add > 0 ? 'Additive' : 'Largely independent';
+  const text = same ? 'Pick two different drugs to compare.' : note ? note[1] : opp > add ? `Their effects offset each other in ${opp} organ system${opp > 1 ? 's' : ''}.` : add > 0 ? `Their effects stack in ${add} organ system${add > 1 ? 's' : ''}. Watch the combined readouts below.` : 'They act on different organ systems, so little direct interaction is expected.';
+  const kc = { Opposing: 'p', Additive: 's', Risk: 's', Therapeutic: 'p' }[kind] || 'p';
+  const pick = ({ id, set, f, setF, label, tag }) => (
+    <div className="surface p-4" style={{ minWidth: 0 }}>
+      <label htmlFor={'sel-' + tag} className="label">{label}</label>
+      <select id={'sel-' + tag} value={id} onChange={(e) => set(e.target.value)} className="btn w-full mt-1" style={{ padding: '9px 10px' }}>
+        {DRUGS.map((x) => <option key={x.id} value={x.id}>{x.name} ({x.cls})</option>)}
+      </select>
+      <label htmlFor={'dose-' + tag} className="label mt-3 block">Dose intensity {f}%</label>
+      <input id={'dose-' + tag} type="range" min="50" max="150" step="25" value={f} onChange={(e) => setF(+e.target.value)} className="w-full" />
+    </div>
+  );
+  return (
+    <div className="grid gap-4 fade">
+      <div>
+        <h2 className="text-xl font-semibold">Combined-drug interactions</h2>
+        <p className="text-sm muted mt-1">Pick two drugs and compare each organ system alone and together. The model sums effects on the same scale as the explorer. Real interactions depend on dose, receptor reserve and the patient.</p>
+        <div className="flex gap-2 flex-wrap mt-3">
+          {PRESETS.map(([x, y]) => <button key={x + y} className="btn" onClick={() => { setIda(x); setIdb(y); setFa(100); setFb(100); }}>{DRUGS.find((d) => d.id === x).name} + {DRUGS.find((d) => d.id === y).name}</button>)}
+        </div>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {pick({ id: ida, set: setIda, f: fa, setF: setFa, label: "Drug A", tag: "a" })}
+        {pick({ id: idb, set: setIdb, f: fb, setF: setFb, label: "Drug B", tag: "b" })}
+      </div>
+      <div className={(kc === 's' ? 'card-s' : 'card-p') + ' p-4'} aria-live="polite">
+        <div className="flex items-center gap-2 flex-wrap"><span className={'chip ' + kc}>{kind}</span><span className="font-semibold">{da.name} + {db.name}</span></div>
+        <p className="text-sm mt-2">{text}</p>
+        {flags.length > 0 && !same && <div className="flex gap-2 flex-wrap mt-3">{flags.map(([t, k]) => <span key={t} className={'chip ' + k}>{t}</span>)}</div>}
+      </div>
+      <div className="surface" style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse', fontSize: 14 }}>
+          <thead><tr style={{ textAlign: 'left' }}>
+            {['Organ and readout', 'Baseline', da.name + ' alone', db.name + ' alone', 'Combined'].map((h) => <th key={h} className="label" style={{ padding: '10px 12px', borderBottom: '1px solid var(--line)' }}>{h}</th>)}
+          </tr></thead>
+          <tbody>
+            {rows.map((r) => {
+              const arrow = r.vc > 53 ? '▲' : r.vc < 47 ? '▼' : '●';
+              return (
+                <tr key={r.o.id} style={{ borderBottom: '1px solid var(--line)' }}>
+                  <td style={{ padding: '10px 12px' }}><div className="font-semibold">{r.o.name.split(' ')[0]}</div><div className="text-xs muted">{r.o.metric} ({r.o.unit})</div></td>
+                  <td style={{ padding: '10px 12px', fontVariantNumeric: 'tabular-nums' }} className="muted">{r.o.fmt(50)}</td>
+                  <td style={{ padding: '10px 12px', fontVariantNumeric: 'tabular-nums' }}>{r.o.fmt(r.va)}</td>
+                  <td style={{ padding: '10px 12px', fontVariantNumeric: 'tabular-nums' }}>{r.o.fmt(r.vb)}</td>
+                  <td style={{ padding: '10px 12px', minWidth: 130 }}>
+                    <div className="font-semibold" style={{ fontVariantNumeric: 'tabular-nums' }}>{arrow} {r.o.fmt(r.vc)}</div>
+                    <div className="mt-1"><Meter v={r.vc} baseline={50} /></div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+const shuffle = (arr) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const LENGTHS = [8, 15, 25];
+function buildRound(cats, n) {
+  return shuffle(QUIZ.filter((q) => cats.includes(q.cat))).slice(0, n).map((q) => {
+    const order = shuffle(q.o.map((_, i) => i));
+    const ans = (Array.isArray(q.a) ? q.a : [q.a]).map((i) => order.indexOf(i)).sort();
+    return { cat: q.cat, multi: q.type === 'multi', q: q.q, why: q.why, opts: order.map((i) => q.o[i]), a: ans };
+  });
+}
+function readBest() { try { return parseInt(localStorage.getItem('ans-hub-best-pct') || '0', 10); } catch (e) { return 0; } }
+function writeBest(n) { try { localStorage.setItem('ans-hub-best-pct', String(n)); } catch (e) {} }
+const sameSet = (x, y) => x.length === y.length && x.every((v, i) => v === y[i]);
+
+function Confetti({ burst }) {
+  if (!burst) return null;
+  const colors = ['var(--sym)', 'var(--para)', 'var(--good)', '#e2b93b'];
+  return <div aria-hidden="true">{Array.from({ length: 26 }).map((_, i) => <span key={burst + '-' + i} className="conf" style={{ left: (i * 3.9 + (i % 5)) + '%', background: colors[i % 4], animationDelay: (i % 7) * 0.08 + 's' }} />)}</div>;
+}
+
+function Quiz({ goExplore }) {
+  const [phase, setPhase] = useState('setup');
+  const [cats, setCats] = useState(CATS);
+  const [len, setLen] = useState(8);
+  const [mode, setMode] = useState('practice');
+  const [round, setRound] = useState([]);
+  const [i, setI] = useState(0);
+  const [sel, setSel] = useState([]);
+  const [locked, setLocked] = useState(false);
+  const [answers, setAnswers] = useState([]);
+  const [streak, setStreak] = useState(0);
+  const [best, setBest] = useState(readBest());
+  const [burst, setBurst] = useState(0);
+  useEffect(() => { if (!burst) return; const t = setTimeout(() => setBurst(0), 2800); return () => clearTimeout(t); }, [burst]);
+
+  const pool = QUIZ.filter((q) => cats.includes(q.cat)).length;
+  const n = Math.min(len, pool);
+  const toggleCat = (c) => setCats(cats.includes(c) ? cats.filter((x) => x !== c) : [...cats, c]);
+  const start = () => { setRound(buildRound(cats, n)); setI(0); setSel([]); setLocked(false); setAnswers([]); setStreak(0); setPhase('play'); };
+  const finish = (all) => {
+    const pct = Math.round((all.filter((x) => x.ok).length / all.length) * 100);
+    if (pct > best) { setBest(pct); writeBest(pct); }
+    if (pct >= 85) setBurst(Date.now());
+    setPhase('done');
+  };
+  const advance = (all) => { if (i + 1 >= round.length) finish(all); else { setI(i + 1); setSel([]); setLocked(false); } };
+  const submit = (picked) => {
+    if (locked || picked.length === 0) return;
+    const ok = sameSet(picked.slice().sort(), round[i].a);
+    const all = [...answers, { q: round[i], picked, ok }];
+    setAnswers(all);
+    if (mode === 'exam') { advance(all); return; }
+    setLocked(true);
+    if (ok) { const ns = streak + 1; setStreak(ns); if (ns % 3 === 0) setBurst(Date.now()); } else setStreak(0);
+  };
+  const choose = (k) => {
+    if (locked) return;
+    const cur = round[i];
+    if (cur.multi) setSel(sel.includes(k) ? sel.filter((x) => x !== k) : [...sel, k]);
+    else if (mode === 'practice') { setSel([k]); submit([k]); }
+    else setSel([k]);
+  };
+
+  if (phase === 'setup') {
+    return (
+      <div className="surface p-5 sm:p-8 fade" style={{ maxWidth: 680, margin: '0 auto' }}>
+        <h2 className="text-2xl font-semibold">Test your knowledge</h2>
+        <p className="mt-2 muted">A bank of {QUIZ.length} NAPLEX-style items, including select-all-that-apply. Best score so far: <strong style={{ color: 'var(--fg)' }}>{best}%</strong></p>
+        <div className="label mt-5 mb-2">Topics ({pool} questions)</div>
+        <div className="flex gap-2 flex-wrap">
+          {CATS.map((c) => <button key={c} className="pill p" aria-pressed={cats.includes(c)} onClick={() => toggleCat(c)}>{c}</button>)}
+        </div>
+        <div className="grid sm:grid-cols-2 gap-5 mt-5">
+          <div><div className="label mb-2">Round length</div>
+            <div className="flex gap-2">{LENGTHS.map((l) => <button key={l} className="pill p" aria-pressed={len === l} onClick={() => setLen(l)}>{l}</button>)}</div></div>
+          <div><div className="label mb-2">Mode</div>
+            <div className="flex gap-2 flex-wrap">
+              <button className="pill p" aria-pressed={mode === 'practice'} onClick={() => setMode('practice')}>Practice</button>
+              <button className="pill p" aria-pressed={mode === 'exam'} onClick={() => setMode('exam')}>Exam</button></div></div>
+        </div>
+        <p className="text-sm muted mt-3">{mode === 'practice' ? 'Instant feedback and an explanation after every question. A streak of 3 triggers a celebration.' : 'No feedback until the end, like the real exam. Review every miss afterward.'}</p>
+        <button className="btn mt-5" disabled={pool === 0} style={{ background: 'var(--para)', borderColor: 'var(--para)', color: '#fff', padding: '10px 18px', opacity: pool === 0 ? 0.5 : 1 }} onClick={start}>Start {n} questions</button>
+      </div>
+    );
+  }
+
+  if (phase === 'done') {
+    const right = answers.filter((x) => x.ok).length;
+    const pct = Math.round((right / answers.length) * 100);
+    const by = CATS.map((c) => { const xs = answers.filter((x) => x.q.cat === c); return { c, n: xs.length, r: xs.filter((x) => x.ok).length }; }).filter((x) => x.n);
+    const missed = answers.filter((x) => !x.ok);
+    const msg = pct >= 85 ? 'Board-ready. Outstanding autonomic reasoning.' : pct >= 70 ? 'Solid. Review the misses below.' : 'Keep going. Toggle each drug class in the explorer, then retry.';
+    return (
+      <div className="grid gap-4" style={{ maxWidth: 760, margin: '0 auto' }}>
+        <Confetti burst={burst} />
+        <div className="surface p-5 sm:p-8 text-center pop">
+          <div className="label">Round complete · {mode === 'exam' ? 'Exam' : 'Practice'}</div>
+          <div className="disp text-6xl font-bold mt-2" style={{ color: pct >= 70 ? 'var(--good)' : 'var(--sym)' }}>{right}/{answers.length}</div>
+          <p className="mt-2 muted">{pct}% · Best {best}%</p>
+          <p className="mt-2">{msg}</p>
+          <div className="flex gap-2 justify-center mt-4 flex-wrap">
+            <button className="btn" style={{ background: 'var(--para)', borderColor: 'var(--para)', color: '#fff' }} onClick={start}>Same settings again</button>
+            <button className="btn" onClick={() => setPhase('setup')}>Change settings</button>
+            <button className="btn" onClick={goExplore}>Back to explorer</button>
+          </div>
+        </div>
+        <div className="surface p-4 sm:p-5">
+          <div className="label mb-3">Accuracy by topic</div>
+          <div className="grid gap-3">{by.map((x) => (
+            <div key={x.c}><div className="flex justify-between text-sm"><span>{x.c}</span><span className="muted">{x.r}/{x.n}</span></div>
+              <div className="meter mt-1"><i style={{ width: (x.r / x.n) * 100 + '%', background: x.r / x.n >= 0.7 ? 'var(--good)' : 'var(--sym)' }} /></div></div>
+          ))}</div>
+        </div>
+        <div className="surface p-4 sm:p-5">
+          <div className="label mb-3">{missed.length ? `Review ${missed.length} missed` : 'No misses'}</div>
+          <div className="grid gap-3">{missed.map((x, k) => (
+            <div key={k} className="card-s p-3">
+              <div className="font-semibold text-sm">{x.q.q}</div>
+              <div className="text-sm mt-2"><span className="muted">Your answer: </span>{x.picked.map((p) => x.q.opts[p]).join('; ')}</div>
+              <div className="text-sm"><span className="muted">Correct: </span><strong>{x.q.a.map((p) => x.q.opts[p]).join('; ')}</strong></div>
+              <p className="text-sm mt-2">{x.q.why}</p>
+            </div>
+          ))}</div>
+        </div>
+      </div>
+    );
+  }
+
+  const cur = round[i];
+  const exam = mode === 'exam';
+  const cls = (k) => {
+    if (locked) { const right = cur.a.includes(k); const chosen = sel.includes(k); return right ? ' ok' : chosen ? ' no' : ''; }
+    return sel.includes(k) ? ' sel' : '';
+  };
+  const lastOk = locked && answers[answers.length - 1].ok;
+  return (
+    <div style={{ maxWidth: 720, margin: '0 auto' }}>
+      <Confetti burst={burst} />
+      <div className="flex items-center justify-between gap-3 text-sm mb-2">
+        <span className="label">Question {i + 1} of {round.length} · {cur.cat}</span>
+        <span className="muted">{exam ? 'Exam mode' : `Streak ${streak}${streak >= 3 ? ' (on fire)' : ''}`}</span>
+      </div>
+      <div className="meter mb-4" aria-hidden="true"><i style={{ width: (i / round.length) * 100 + '%', background: 'var(--para)' }} /></div>
+      <div className="surface p-4 sm:p-6 fade" key={i}>
+        {cur.multi && <span className="chip p">Select all that apply</span>}
+        <h2 className="text-lg sm:text-xl font-semibold mt-2">{cur.q}</h2>
+        <div className="grid gap-2 mt-4" role={cur.multi ? 'group' : 'radiogroup'} aria-label="Answer choices">
+          {cur.opts.map((t, k) => (
+            <button key={k} className={'opt' + cls(k)} disabled={locked} aria-pressed={sel.includes(k)} onClick={() => choose(k)}>
+              <span className="font-semibold mr-2">{cur.multi ? (sel.includes(k) ? '☑' : '☐') : 'ABCDE'[k] + '.'}</span>{t}
+            </button>
+          ))}
+        </div>
+        <div aria-live="polite">
+          {locked && (
+            <div className={'mt-4 p-3 fade ' + (lastOk ? 'card-p' : 'card-s')}>
+              <div className="font-semibold">{lastOk ? 'Correct.' : 'Not quite.'}</div>
+              <p className="text-sm mt-1">{cur.why}</p>
+            </div>
+          )}
+        </div>
+        <div className="flex gap-2 mt-4 flex-wrap">
+          {!locked && (cur.multi || exam) && <button className="btn" disabled={sel.length === 0} style={{ background: 'var(--fg)', color: 'var(--bg)', borderColor: 'var(--fg)', opacity: sel.length ? 1 : 0.5 }} onClick={() => submit(sel)}>{exam && i + 1 >= round.length ? 'Finish exam' : exam ? 'Submit and continue' : 'Submit answer'}</button>}
+          {locked && <button className="btn" style={{ background: 'var(--fg)', color: 'var(--bg)', borderColor: 'var(--fg)' }} onClick={() => advance(answers)}>{i + 1 >= round.length ? 'See results' : 'Next question'}</button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+function App() {
+  const [tab, setTab] = useState('explore');
+  const [sel, setSel] = useState('gu');
+  const [s, setS] = useState('normal');
+  const [p, setP] = useState('normal');
+  const [theme, setTheme] = useState(null);
+  const [hc, setHc] = useState(() => {
+    try { const v = localStorage.getItem('ans-hub-contrast'); if (v) return v === 'high'; } catch (e) {}
+    try { return window.matchMedia('(prefers-contrast: more)').matches; } catch (e) { return false; }
+  });
+  useEffect(() => {
+    if (hc) document.documentElement.setAttribute('data-contrast', 'high'); else document.documentElement.removeAttribute('data-contrast');
+    try { localStorage.setItem('ans-hub-contrast', hc ? 'high' : 'normal'); } catch (e) {}
+  }, [hc]);
+  const reset = () => { setS('normal'); setP('normal'); setSel('gu'); };
+  const toggleTheme = () => {
+    const dark = theme ? theme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const nt = dark ? 'light' : 'dark'; setTheme(nt); document.documentElement.setAttribute('data-theme', nt);
+  };
+  return (
+    <div>
+      <header className="hdr">
+        <div className="wrap flex items-center justify-between gap-3 flex-wrap py-3">
+          <div style={{ minWidth: 0 }}>
+            <h1 className="text-xl sm:text-2xl font-bold">ANS Interactive Learning Hub</h1>
+            <p className="text-sm font-semibold">Hafeez Faridi, Ph.D.</p>
+            <p className="text-sm muted">Fight or flight, rest and digest, and the drugs that tilt the balance.</p>
+          </div>
+          <div className="flex gap-2 items-center flex-wrap">
+            <div role="tablist" aria-label="Sections" className="flex gap-1">
+              <button role="tab" className="tab" aria-selected={tab === 'explore'} onClick={() => setTab('explore')}>Explorer</button>
+              <button role="tab" className="tab" aria-selected={tab === 'mix'} onClick={() => setTab('mix')}>Interactions</button>
+              <button role="tab" className="tab" aria-selected={tab === 'quiz'} onClick={() => setTab('quiz')}>Quiz</button>
+            </div>
+            <button className="btn" onClick={reset}>Reset state</button>
+            <button className="btn" onClick={toggleTheme} aria-label="Toggle light or dark theme">Theme</button>
+            <button className="btn" aria-pressed={hc} onClick={() => setHc(!hc)} aria-label="Toggle high contrast mode" style={hc ? { background: 'var(--fg)', color: 'var(--bg)', borderColor: 'var(--fg)' } : undefined}>High contrast: {hc ? 'On' : 'Off'}</button>
+          </div>
+        </div>
+      </header>
+      <main className="wrap pt-4">
+        {tab === 'explore' && <Explorer sel={sel} setSel={setSel} s={s} p={p} />}
+        {tab === 'mix' && <Interactions />}
+        {tab === 'quiz' && <Quiz goExplore={() => setTab('explore')} />}
+      </main>
+      <footer className="wrap mt-8 pt-4 text-xs muted" style={{ borderTop: '1px solid var(--line)' }}>
+        © Hafeez Faridi, PhD · Educational use only. Not a substitute for clinical judgment or current prescribing information.
+      </footer>
+      {tab === 'explore' && <ControlBar s={s} p={p} setS={setS} setP={setP} />}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+</body></html>
